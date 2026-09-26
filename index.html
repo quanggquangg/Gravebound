@@ -119,6 +119,7 @@ kbd{font:600 11px/1 var(--ui);padding:3px 6px;border:1px solid var(--line);borde
 .drv b{font-size:17px}
 .travel{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .travel button{width:100%;text-align:left;appearance:none;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.15);color:var(--parch);padding:12px 14px;font:600 19px/1.2 var(--display);cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+.travel button.hub{border-color:rgba(255,190,110,.55);background:linear-gradient(90deg,rgba(255,170,80,.14),rgba(214,178,94,.03))}
 .travel button:hover,.travel button:focus-visible{border-color:var(--gold);color:var(--gold-hi);outline:none}
 .travel small{font:500 12px/1.6 var(--ui);color:var(--muted);flex:none}
 .travel span small{display:block;line-height:1.4}
@@ -262,6 +263,12 @@ kbd{font:600 11px/1 var(--ui);padding:3px 6px;border:1px solid var(--line);borde
 .travel button,.it,.cls button,.ach li{background:linear-gradient(90deg,rgba(214,178,94,.08),rgba(214,178,94,.02));transition:border-color .15s,box-shadow .15s,background .15s}
 .travel button:hover:not(:disabled),.travel button:focus-visible,.cls button:hover:not(:disabled),.cls button:focus-visible{background:linear-gradient(90deg,rgba(226,186,96,.2),rgba(214,178,94,.04));box-shadow:inset 3px 0 0 var(--gold),0 0 12px rgba(226,186,96,.15)}
 .travel button.on{box-shadow:inset 3px 0 0 var(--gold)}
+.travel button.new{border-color:rgba(255,214,120,.75);box-shadow:inset 3px 0 0 #ffd878,0 0 14px rgba(255,200,90,.22);animation:newpulse 2.2s ease-in-out infinite}
+.newb{display:inline-block;margin-left:8px;padding:1px 6px 2px;font:700 10px/1.3 var(--ui);font-style:normal;letter-spacing:.08em;color:#1a1208;background:linear-gradient(180deg,#ffe7a0,#e0b050);border-radius:3px;vertical-align:3px;box-shadow:0 0 8px rgba(255,210,110,.45)}
+.tab.hasnew{position:relative}
+.tab.hasnew::after{content:'';position:absolute;top:6px;right:4px;width:7px;height:7px;border-radius:50%;background:#ffd36b;box-shadow:0 0 8px #ffb840}
+@keyframes newpulse{50%{box-shadow:inset 3px 0 0 #ffd878,0 0 20px rgba(255,200,90,.38)}}
+@media (prefers-reduced-motion:reduce){.travel button.new{animation:none}}
 .ach li.on{background:linear-gradient(90deg,rgba(226,186,96,.16),rgba(214,178,94,.03));box-shadow:inset 3px 0 0 var(--gold)}
 .stats li{border-bottom:0;background:linear-gradient(90deg,rgba(214,178,94,0),rgba(214,178,94,.22),rgba(214,178,94,0)) 50% 100%/100% 1px no-repeat}
 .sec{display:flex;align-items:center;gap:10px}

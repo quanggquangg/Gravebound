@@ -631,7 +631,7 @@ function openInventory(tab = 'gear') {
   selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.glint();
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
-function closeGrace() { if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }
+function closeGrace() { seenTab(graceTab); if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }
 // đang giao chiến thì không dịch chuyển nhanh được (như Elden Ring)
 function inCombat() {
   if (G.bossFight || G.dfight || G.colo.active || G.finalFight || G.dragonFight || P.x > INST_X && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return true;
@@ -641,7 +641,7 @@ function travelTo(id) {
   const g = GRACES.find(q => q.id === id);
   if (!g) return;
   P.x = g.x; P.y = g.y + 46; P.vx = P.vy = 0; P.state = 'idle'; P.t = 0; P.mounted = false; P.lock = null; P.atk = null; P.flameT = 0;
-  projs.length = 0; aoes.length = 0; puddles.length = 0; allies = [];
+  projs.length = 0; aoes.length = 0; puddles.length = 0; allies = []; syncBoss();
   cam.x = P.x; cam.y = P.y; clampCam(); G.fade = 1; buf = null; G.region = null; SFX.grace(); save();
 }
 const scText = Wp => Object.entries(Wp.sc || {}).map(([k, v]) => STAT_SHORT[k] + ' ' + v).join(' ');
@@ -728,7 +728,7 @@ function renderInv() {
   const sps = SPIRIT_ORDER.filter(k => (S.spirits || []).includes(k));
   if (sps.length) {
     h += '<h3 class="sec">Tro Triệu Hồi' + (S.bell ? '' : ' · cần Chuông Gọi Hồn') + '</h3><ul class="travel">';
-    for (const k of sps) { const sp = SPIRITS[k]; h += row(sp.name, '', sp.desc + ' · ' + sp.fp + ' FP', `<button class="mini" data-spirit="${k}" ${S.spiritSel === k ? 'disabled' : ''}>${S.spiritSel === k ? 'Đang chọn' : 'Chọn'}</button>`); }
+    for (const k of sps) { const sp = SPIRITS[k]; h += row(sp.name + (isNew('p', k) ? ' ★' : ''), '', sp.desc + ' · ' + sp.fp + ' FP', `<button class="mini" data-spirit="${k}" ${S.spiritSel === k ? 'disabled' : ''}>${S.spiritSel === k ? 'Đang chọn' : 'Chọn'}</button>`); }
     h += '</ul>';
   }
   const mats = Object.keys(ITEMDEF).filter(k => ITEMDEF[k].kind !== 'use' && ITEMDEF[k].kind !== 'bell' && invN(k));
@@ -744,32 +744,34 @@ function renderGrace() {
   renderLevel(); renderInv();
   // trang bị
   const ownR = ownedRight(), ownO = OFF_ORDER.filter(w => S.weapons.includes(w)), Wp = WEAPONS[S.equipped];
-  let h = '<h3 class="sec">Tay phải</h3><ul class="travel">' + ownR.map(w => `<li><button data-weapon="${w}" class="${w === S.equipped ? 'on' : ''}"><span>${esc(WEAPONS[w].name)}${upLv(w) ? ' +' + upLv(w) : ''}<br><small>${weaponLine(w)}</small></span><small>${w === S.equipped ? 'Đang cầm' : 'Cầm'}</small></button></li>`).join('') + '</ul>';
-  h += '<h3 class="sec">Tay trái' + (Wp.twoHanded ? ' · bị khóa vì tay phải cầm vũ khí hai tay' : '') + '</h3><ul class="travel">' + ownO.map(w => `<li><button data-off="${w}" class="${w === S.off ? 'on' : ''}"><span>${esc(WEAPONS[w].name)}${upLv(w) ? ' +' + upLv(w) : ''}<br><small>${WEAPONS[w].desc} · ${weaponLine(w)}</small></span><small>${w === S.off ? 'Đang cầm' : 'Cầm'}</small></button></li>`).join('') + '</ul>';
+  let h = '<h3 class="sec">Tay phải</h3><ul class="travel">' + ownR.map(w => `<li><button data-weapon="${w}" class="${w === S.equipped ? 'on' : ''}${isNew('w', w) ? ' new' : ''}"><span>${esc(WEAPONS[w].name)}${NB('w', w)}${upLv(w) ? ' +' + upLv(w) : ''}<br><small>${weaponLine(w)}</small></span><small>${w === S.equipped ? 'Đang cầm' : 'Cầm'}</small></button></li>`).join('') + '</ul>';
+  h += '<h3 class="sec">Tay trái' + (Wp.twoHanded ? ' · bị khóa vì tay phải cầm vũ khí hai tay' : '') + '</h3><ul class="travel">' + ownO.map(w => `<li><button data-off="${w}" class="${w === S.off ? 'on' : ''}${isNew('w', w) ? ' new' : ''}"><span>${esc(WEAPONS[w].name)}${NB('w', w)}${upLv(w) ? ' +' + upLv(w) : ''}<br><small>${WEAPONS[w].desc} · ${weaponLine(w)}</small></span><small>${w === S.off ? 'Đang cầm' : 'Cầm'}</small></button></li>`).join('') + '</ul>';
   if (Wp.type === 'melee') {
     const cur = ashOf(S.equipped), list = Wp.unique ? [Wp.ash] : [...new Set([Wp.ash, ...S.ashes.filter(a => !ASHES[a].unique && !ASHES[a].bow)])];
     const lock = Wp.unique || !g, why = Wp.unique ? ' · kỹ năng riêng, không đổi được' : !g ? ' · chỉ đổi được khi nghỉ ở Ân Điển' : '';
-    h += `<h3 class="sec">Kỹ năng của ${esc(Wp.name)}${why}</h3><ul class="travel">` + list.map(a => `<li><button data-ash="${a}" class="${a === cur ? 'on' : ''}" ${lock ? 'disabled' : ''}><span>${ASHES[a].name}<br><small>${ASHES[a].desc} · ${ASHES[a].fp} FP</small></span><small>${a === cur ? 'Đang gắn' : 'Gắn'}</small></button></li>`).join('') + '</ul>';
+    h += `<h3 class="sec">Kỹ năng của ${esc(Wp.name)}${why}</h3><ul class="travel">` + list.map(a => `<li><button data-ash="${a}" class="${a === cur ? 'on' : ''}${isNew('x', a) ? ' new' : ''}" ${lock ? 'disabled' : ''}><span>${ASHES[a].name}${NB('x', a)}<br><small>${ASHES[a].desc} · ${ASHES[a].fp} FP</small></span><small>${a === cur ? 'Đang gắn' : 'Gắn'}</small></button></li>`).join('') + '</ul>';
   }
-  h += `<h3 class="sec">Giáp · tải trọng ${equipLoad().toFixed(1)} / ${maxLoad().toFixed(1)} (${ROLLS[rollType()].name})</h3><ul class="travel">` + ARMOR_ORDER.filter(a => S.armors.includes(a)).map(a => { const A = ARMORS[a]; return `<li><button data-armor="${a}" class="${a === S.armor ? 'on' : ''}"><span>${A.name}<br><small>${A.desc} · giảm ${Math.round(A.abs * 100)}% · trụ ${A.poise} · nặng ${A.wt}</small></span><small>${a === S.armor ? 'Đang mặc' : 'Mặc'}</small></button></li>`; }).join('') + '</ul>';
-  h += `<h3 class="sec">Bùa hộ mệnh · ${S.tal.length}/${S.talSlots} ô</h3>` + (S.tals.length ? '<ul class="travel">' + TAL_ORDER.filter(t => S.tals.includes(t)).map(t => `<li><button data-tal="${t}" class="${S.tal.includes(t) ? 'on' : ''}"><span>${TALISMANS[t].name}<br><small>${TALISMANS[t].desc}</small></span><small>${S.tal.includes(t) ? 'Đang đeo' : 'Đeo'}</small></button></li>`).join('') + '</ul>' : '<p class="note">Chưa có bùa nào. Tìm trong rương và hầm ngục.</p>');
+  h += `<h3 class="sec">Giáp · tải trọng ${equipLoad().toFixed(1)} / ${maxLoad().toFixed(1)} (${ROLLS[rollType()].name})</h3><ul class="travel">` + ARMOR_ORDER.filter(a => S.armors.includes(a)).map(a => { const A = ARMORS[a]; return `<li><button data-armor="${a}" class="${a === S.armor ? 'on' : ''}${isNew('a', a) ? ' new' : ''}"><span>${A.name}${NB('a', a)}<br><small>${A.desc} · giảm ${Math.round(A.abs * 100)}% · trụ ${A.poise} · nặng ${A.wt}</small></span><small>${a === S.armor ? 'Đang mặc' : 'Mặc'}</small></button></li>`; }).join('') + '</ul>';
+  h += `<h3 class="sec">Bùa hộ mệnh · ${S.tal.length}/${S.talSlots} ô</h3>` + (S.tals.length ? '<ul class="travel">' + TAL_ORDER.filter(t => S.tals.includes(t)).map(t => `<li><button data-tal="${t}" class="${S.tal.includes(t) ? 'on' : ''}${isNew('t', t) ? ' new' : ''}"><span>${TALISMANS[t].name}${NB('t', t)}<br><small>${TALISMANS[t].desc}</small></span><small>${S.tal.includes(t) ? 'Đang đeo' : 'Đeo'}</small></button></li>`).join('') + '</ul>' : '<p class="note">Chưa có bùa nào. Tìm trong rương và hầm ngục.</p>');
   $('gearWrap').innerHTML = h;
   // phép: ghi nhớ ở Ân Điển, ở ngoài chỉ chọn phép đang dùng
   const own = SPELL_ORDER.filter(s => S.spells.includes(s)), cs = curSpell();
   $('spellWrap').innerHTML = (g ? `<p class="note">Ghi nhớ ${S.att.length}/${S.slots} ô. Phép Trí Tuệ cần gậy, phép Đức Tin cần ấn ở tay trái. Giữ chuột phải (hoặc X) để niệm, ↑ để đổi phép.</p>`
     : `<p class="note">Đang ghi nhớ ${S.att.length}/${S.slots} ô. Bấm để chọn phép dùng tiếp theo; ghi nhớ phép mới khi nghỉ ở Ân Điển.</p>`) +
-    (own.length ? '<ul class="travel">' + own.filter(s => g || S.att.includes(s)).map(s => { const sp = SPELLS[s], on = S.att.includes(s); return `<li><button data-spell="${s}" class="${on ? 'on' : ''}"><span>${sp.name} <small class="tag">${sp.school === 'sorc' ? 'Trí Tuệ' : 'Đức Tin'}</small><br><small>${sp.desc} · ${sp.fp} FP · cần ${reqText(sp.req)}</small></span><small>${g ? (on ? 'Đã nhớ' : 'Ghi nhớ') : s === cs ? 'Đang dùng' : 'Dùng'}</small></button></li>`; }).join('') + '</ul>' : '<p class="note">Chưa học phép nào. Học Giả Lyra và Nữ Tu Seraphine ở Sảnh Hearthhold có bán phép.</p>');
+    (own.length ? '<ul class="travel">' + own.filter(s => g || S.att.includes(s)).map(s => { const sp = SPELLS[s], on = S.att.includes(s); return `<li><button data-spell="${s}" class="${on ? 'on' : ''}${isNew('s', s) ? ' new' : ''}"><span>${sp.name}${NB('s', s)} <small class="tag">${sp.school === 'sorc' ? 'Trí Tuệ' : 'Đức Tin'}</small><br><small>${sp.desc} · ${sp.fp} FP · cần ${reqText(sp.req)}</small></span><small>${g ? (on ? 'Đã nhớ' : 'Ghi nhớ') : s === cs ? 'Đang dùng' : 'Dùng'}</small></button></li>`; }).join('') + '</ul>' : '<p class="note">Chưa học phép nào. Học Giả Lyra và Nữ Tu Seraphine ở Sảnh Hearthhold có bán phép.</p>');
   // bình
   const hpF = S.flaskMax - S.flaskFp;
   $('flaskWrap').innerHTML = `<p class="note">Tổng ${S.flaskMax} bình (Hạt Vàng tăng số bình, Nước Mắt Thánh tăng lượng hồi). Chia số bình giữa máu và FP.</p>
     <ul class="stats"><li><div class="nm"><span>Bình Máu</span><span>Hồi ${flaskHeal()} máu mỗi lần</span></div><span class="val">${hpF}</span><button class="plus" data-flask="1" ${S.flaskFp <= 0 ? 'disabled' : ''} aria-label="Thêm Bình Máu">+</button></li>
     <li><div class="nm"><span>Bình FP</span><span>Hồi ${fpFlaskAmt()} FP mỗi lần</span></div><span class="val">${S.flaskFp}</span><button class="plus" data-flask="-1" ${hpF <= 0 ? 'disabled' : ''} aria-label="Thêm Bình FP">+</button></li></ul>`;
   // dịch chuyển
-  const list = GRACES.filter(q => S.discovered.includes(q.id)), busy = !g && inCombat();
+  // Sảnh Hearthhold (lò rèn, cửa hàng) luôn nằm đầu danh sách
+  const list = GRACES.filter(q => S.discovered.includes(q.id)).sort((a, b) => (b.hub ? 1 : 0) - (a.hub ? 1 : 0)), busy = !g && inCombat();
   $('travelNote').textContent = g ? '' : busy ? 'Không thể dịch chuyển khi đang giao chiến.' : 'Dịch chuyển nhanh không hồi máu và không làm quái hồi sinh. Nghỉ ở Ân Điển để hồi phục.';
-  $('travelList').innerHTML = list.map(q => `<li><button data-grace="${q.id}" ${busy ? 'disabled' : ''}><span>${q.name}</span><small>${q.id === S.lastGrace ? 'Nghỉ lần cuối' : 'Dịch chuyển'}</small></button></li>`).join('');
+  $('travelList').innerHTML = list.map(q => `<li><button data-grace="${q.id}" ${busy ? 'disabled' : ''} class="${q.hub ? 'hub' : ''}"><span>${q.name}${q.hub ? '<small>Thợ rèn cường hóa vũ khí · lái buôn · học giả bán phép · nữ tu</small>' : ''}</span><small>${q.id === S.lastGrace ? 'Nghỉ lần cuối' : 'Dịch chuyển'}</small></button></li>`).join('');
   for (const t of TABS) $('pane' + t[0].toUpperCase() + t.slice(1)).hidden = graceTab !== t;
   for (const t of TABS) $('tab' + t[0].toUpperCase() + t.slice(1)).setAttribute('aria-selected', String(graceTab === t));
+  for (const t of TABS) $('tab' + t[0].toUpperCase() + t.slice(1)).classList.toggle('hasnew', tabHasNew(t));
 }
 $('statList').addEventListener('click', e => {
   const b = e.target.closest('button');
@@ -815,11 +817,14 @@ $('invWrap').addEventListener('click', e => {
 });
 $('flaskWrap').addEventListener('click', e => { const b = e.target.closest('[data-flask]'); if (b) { flaskAlloc(-(+b.dataset.flask)); renderGrace(); } });
 const TABS = ['level', 'gear', 'inv', 'spell', 'flask', 'travel', 'beast'];
-function selectTab(which) { graceTab = which; renderGraceTabsOnly(); if (which === 'beast') renderBeast(); }
+const NB = (k, id) => (isNew(k, id) ? ' <em class="newb">MỚI</em>' : '');
+// rời một tab là coi như đã xem các món mới trong đó
+function selectTab(which) { if (which !== graceTab) seenTab(graceTab); graceTab = which; renderGraceTabsOnly(); if (which === 'beast') renderBeast(); }
 function renderGraceTabsOnly() {
   for (const t of TABS) {
     const id = t[0].toUpperCase() + t.slice(1);
     $('tab' + id).setAttribute('aria-selected', String(graceTab === t));
+    $('tab' + id).classList.toggle('hasnew', tabHasNew(t));
     $('pane' + id).hidden = graceTab !== t;
   }
   $('lvConfirm').hidden = !atGrace() || graceTab !== 'level';
@@ -920,6 +925,7 @@ const HINTS = [
   ['level', () => S.runes >= levelCost(), 'Đủ rune để lên cấp', 'Nghỉ ở Ân Điển (<kbd data-k="interact">E</kbd>) để tăng chỉ số', 'Nghỉ ở Ân Điển để tăng chỉ số'],
   ['lost', () => !!S.lost, 'Rune đã rơi', 'Rune rơi lại nơi ngươi chết. Quay lại chạm vào đốm sáng xanh để lấy lại; chết lần nữa là mất hẳn', 'Rune rơi lại nơi ngươi chết. Quay lại chạm vào đốm sáng xanh để lấy lại'],
   ['inv', () => S.weapons.length + S.armors.length + S.tals.length > (G.gear0 || 99), 'Có trang bị mới', 'Nhấn <kbd data-k="inv">I</kbd> để mở hành trang và trang bị', 'Chạm nút Hành trang để trang bị'],
+  ['smith', () => invN('stone1') + invN('stone2') + invN('somber1') > 0 && S.lastGrace !== 22, 'Có đá rèn', 'Mang đá rèn tới Thợ Rèn Hewen ở Sảnh Hearthhold: nghỉ ở Ân Điển, mở tab Dịch chuyển rồi chọn Sảnh Hearthhold', 'Mang đá rèn tới Thợ Rèn Hewen ở Sảnh Hearthhold: nghỉ ở Ân Điển, mở tab Dịch chuyển rồi chọn Sảnh Hearthhold'],
   ['map', () => S.frags.length > 0, 'Bản đồ', 'Nhấn <kbd data-k="map">G</kbd> để xem bản đồ; bấm lên bản đồ để đặt dấu', 'Chạm nút Bản đồ để xem; chạm lên bản đồ để đặt dấu'],
 ];
 let hintCur = null, hintT = 0;
@@ -1072,6 +1078,7 @@ const ENDING_TEXT = {
 let confirmNew = false;
 function startGame(data, cls) {
   S = data ? Object.assign(defaultSave(), migrateSave(data)) : defaultSave();
+  if (data && data.horse === undefined) S.horse = (data.discovered || []).filter(id => id < 22).length >= 3; // bản lưu cũ đã có ngựa từ đầu
   if (!data) { applyClass(cls); S.name = pendingName || 'Gravebound'; S.diff = pendingDiff; }
   if (S.finalDead && !diffUnlocked()) writeUnlock(Object.assign(readUnlock(), { cleared: true, deaths: S.deaths }));
   G.gear0 = S.weapons.length + S.armors.length + S.tals.length;

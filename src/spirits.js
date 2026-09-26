@@ -76,7 +76,7 @@ WEAPONS.nightglaive = {
   name: "Nightrider Glaive", desc: 'Hai tay. Lưỡi đao dài của Kỵ Sĩ Đêm, quét rất rộng', type: 'melee', dt: 'phys', base: 27, sc: { str: 'C', dex: 'D' }, req: { str: 16, dex: 12 }, wt: 9, somber: true, twoHanded: true, ash: 'whirl',
   look: { weapon: 'scythe', wlen: 56, wcol: '#c8c8d8' }, cost: [14, 28],
   light: [S_('slash', 0.18, 0.14, 0.32, 1.05, 104, 2.8, 170, 20, { swing: 1 }), S_('slash', 0.16, 0.14, 0.32, 1.1, 104, 2.8, 170, 20, { swing: -1 }), S_('thrust', 0.2, 0.12, 0.38, 1.2, 116, 0.8, 260, 24, { thrust: true })],
-  heavy: S_('spin', 0.52, 0.42, 0.52, 2.3, 108, TAU, 60, 44, { turns: 2 }),
+  heavy: S_('spin', 0.52, 0.42, 0.52, 1.8, 108, TAU, 60, 44, { turns: 2 }),
 };
 WEAPON_ORDER.splice(WEAPON_ORDER.indexOf('scythe') + 1, 0, 'nightglaive');
 const RIDER_ROUTE = [[1380, 2850], [1500, 2450], [1340, 2050], [1430, 1650], [1500, 2450]].map(([x, y]) => [sk(x), sk(y)]);
@@ -107,20 +107,25 @@ function updateRider(dt) {
 // ───────────────────────── Tro Triệu Hồi ─────────────────────────
 // [loại quái để vẽ, số lượng, máu, sát thương, tầm đánh, tốc độ, FP, bắn xa?]
 const SPIRITS = {
-  wolves: { name: 'Tro Sói Cô Độc', desc: 'Gọi ba con sói hồn nhanh nhẹn, cắn liên tục', draw: 'wolf', n: 3, hp: 120, dmg: 17, range: 44, speed: 235, fp: 26 },
-  skeletons: { name: 'Tro Dân Quân Xương', desc: 'Gọi hai chiến binh xương; ngã xuống một lần sẽ tự ráp lại', draw: 'skeleton', n: 2, hp: 150, dmg: 23, range: 52, speed: 150, fp: 32, revive: true },
-  jelly: { name: 'Tro Sứa Đầm Lầy', desc: 'Gọi một con sứa lơ lửng đứng xa phun dịch vào kẻ thù', draw: 'jelly', n: 1, hp: 200, dmg: 22, range: 260, speed: 120, fp: 30, ranged: true },
-  knight: { name: 'Tro Hiệp Sĩ Lưu Đày', desc: 'Gọi một hiệp sĩ bọc giáp nặng, chịu đòn tốt và chém mạnh', draw: 'knight', n: 1, hp: 560, dmg: 44, range: 70, speed: 140, fp: 44 },
+  wolves: { name: 'Tro Sói Cô Độc', desc: 'Gọi ba con sói hồn nhanh nhẹn, cắn liên tục', draw: 'wolf', n: 3, hp: 70, dmg: 9, range: 44, speed: 235, fp: 34 },
+  skeletons: { name: 'Tro Dân Quân Xương', desc: 'Gọi hai chiến binh xương; ngã xuống một lần sẽ tự ráp lại', draw: 'skeleton', n: 2, hp: 110, dmg: 15, range: 52, speed: 150, fp: 38, revive: true },
+  jelly: { name: 'Tro Sứa Đầm Lầy', desc: 'Gọi một con sứa lơ lửng đứng xa phun dịch vào kẻ thù', draw: 'jelly', n: 1, hp: 140, dmg: 14, range: 260, speed: 120, fp: 36, ranged: true },
+  knight: { name: 'Tro Hiệp Sĩ Lưu Đày', desc: 'Gọi một hiệp sĩ bọc giáp nặng, chịu đòn tốt và chém mạnh', draw: 'knight', n: 1, hp: 380, dmg: 28, range: 70, speed: 140, fp: 58 },
 };
 const SPIRIT_ORDER = Object.keys(SPIRITS);
-ITEMDEF.bell = { name: 'Chuông Gọi Hồn', desc: 'Rung chuông để gọi hồn từ tro đang chọn. Chỉ dùng được khi đang giao chiến', kind: 'bell', col: '#9fc0ff' };
+ITEMDEF.bell = { name: 'Chuông Gọi Hồn', desc: 'Rung chuông để gọi hồn từ tro đang chọn. Chỉ dùng được khi đang đánh boss', kind: 'bell', col: '#9fc0ff' };
 let allies = [];
-const spiritScale = () => 1 + 0.035 * Math.max(0, S.level - 1) + 0.06 * (upLv(S.equipped) || 0);
+// hồn mạnh lên chậm theo cấp người chơi, tối đa gấp 1.8 lần
+const spiritScale = () => Math.min(1.8, 1 + 0.02 * Math.max(0, S.level - 1));
+// như cột Tái Sinh trong Elden Ring: chỉ gọi hồn được khi đang đánh boss hoặc boss ngoài đồng
+function bossEngaged() {
+  if (G.bossFight || G.dfight || G.dragonFight || G.finalFight) return true;
+  return enemies.some(e => !e.dead && e.T.miniboss && (e.state === 'chase' || e.state === 'atk') && dist(e.x, e.y, P.x, P.y) < 900);
+}
 function canSummon() {
   if (!S.bell || !S.spirits || !S.spirits.length) return 'Chưa có tro triệu hồi';
   if (allies.some(a => !a.dead)) return 'Hồn đã được gọi';
-  if (P.x > INST_X && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return 'Không thể gọi hồn ở nơi này';
-  if (!inCombat()) return 'Chỉ gọi hồn được khi đang giao chiến';
+  if (!bossEngaged()) return 'Chỉ gọi hồn được khi đang đánh boss';
   const sp = SPIRITS[S.spiritSel] || SPIRITS[S.spirits[0]];
   if (P.fp < sp.fp) return 'Không đủ FP (' + sp.fp + ')';
   return null;
@@ -280,7 +285,7 @@ function witchVisit() {
   S.bell = true; S.spirits = S.spirits || []; if (!S.spirits.includes('wolves')) S.spirits.push('wolves'); S.spiritSel = S.spiritSel || 'wolves';
   later(0.6, () => {
     subtitle('“Ngươi là kẻ không còn ánh vàng... Hãy cầm lấy chiếc chuông này. Hồn của những kẻ đã khuất sẽ đáp lời ngươi.”', 6);
-    banner('item', 'CHUÔNG GỌI HỒN', 'Tro Sói Cô Độc · chọn tro trong Túi đồ, dùng chuông khi đang giao chiến', 5);
+    banner('item', 'CHUÔNG GỌI HỒN', 'Tro Sói Cô Độc · chọn tro trong Túi đồ, rung chuông khi đánh boss', 5);
     SFX.grace();
   });
   save();

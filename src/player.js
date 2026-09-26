@@ -53,11 +53,16 @@ function makeAtk(kind, combo) {
   if (Wp.type === 'bow' && hasTal('arrow')) mul *= 1.2;
   return Object.assign(a, { kind, combo, maxCombo: Wp.light ? Wp.light.length - 1 : 0, parts: atkParts(mul), hits: new Set(), lunged: false });
 }
+// tiêu thể lực sau một hành động; cạn sạch thì phải thở một nhịp lâu hơn mới hồi lại (như dòng souls)
+function spendSt(n, delay) {
+  P.st = Math.max(0, P.st - n);
+  P.stDelay = P.st <= 0 ? ST_EXHAUST : delay;
+}
 function startAttack(kind, combo, moving, mx, my) {
   if (WEAPONS[S.equipped].type === 'bow' && !P.mounted && S.arrows <= 0) { toast('Hết tên. Nghỉ tại Ân Điển để lấy lại'); return; }
   P.face = aimFace(moving, mx, my);
   P.atk = makeAtk(kind, combo);
-  P.st = Math.max(0, P.st - P.atk.cost); P.stDelay = 0.55;
+  spendSt(P.atk.cost, ST_DELAY);
   P.state = 'attack'; P.t = 0;
 }
 // kỹ năng vũ khí (Tro Chiến Tranh)
@@ -87,7 +92,7 @@ function startSkill(moving, mx, my) {
   if (Wp.type === 'bow' && hasTal('arrow')) mul *= 1.2;
   P.atk = Object.assign(a, { kind: 'skill', combo: 0, maxCombo: 0, parts: atkParts(mul), hits: new Set(), lunged: false });
   if (a.waveDt) P.atk.waveParts = scaleParts(atkParts(a.waveMul, a.waveDt), 1);
-  P.st = Math.max(0, P.st - 10); P.stDelay = 0.55; P.state = 'attack'; P.t = 0;
+  spendSt(12, ST_DELAY); P.state = 'attack'; P.t = 0;
   floatText(P.x, P.y - 34, A.name, '#bcd6ff');
 }
 // ───────────────────────── phép thuật ─────────────────────────
@@ -227,7 +232,7 @@ function doAction(a, moving, mx, my) {
       const rt = rollType();
       if (rt === 'over') { toast('Quá tải! Không thể lăn'); return; }
       P.roll = moving ? ROLLS[rt] : ROLLS.back;
-      P.st = Math.max(0, P.st - P.roll.st * (hasTal('plume') ? 0.8 : 1)); P.stDelay = 0.5; P.state = 'roll'; P.t = 0; P.atk = null;
+      spendSt(P.roll.st * (hasTal('plume') ? 0.8 : 1), 0.75); P.state = 'roll'; P.t = 0; P.atk = null;
       P.rollDir = moving ? Math.atan2(my, mx) : P.face + Math.PI; P.vx *= 0.3; P.vy *= 0.3; SFX.roll(); puff(P.x, P.y + 6, FX_LOW ? 3 : 6);
       break;
     }
@@ -252,6 +257,7 @@ function doAction(a, moving, mx, my) {
   }
 }
 function toggleMount() {
+  if (!S.horse && !P.mounted) { toast('Chưa có Còi Ngựa Hồn · hãy tìm tới Ân Điển thứ ba'); return; }
   if (P.mounted) { P.mounted = false; P.state = 'mount'; P.t = 0; burst(P.x, P.y, 16, '#9fd0ff', 60, 3, 'dot', 0.6); return; }
   if (inArena(P.x, P.y) || G.bossFight || G.colo.active || G.finalFight || G.dfight || P.x > INST_X || inRect(P.x, P.y, FORT) || inRect(P.x, P.y, ACAD) || inRect(P.x, P.y, CAPITAL)) { toast('Không thể gọi ngựa ở đây'); return; }
   P.mounted = true; P.state = 'mount'; P.t = 0; P.lock = null; SFX.whistle();
@@ -282,7 +288,7 @@ function updatePlayer(dt) {
   if (hasTal('tidelocket')) { p.hp = Math.min(p.maxHp, p.hp + 2 * dt); p.poisonB = 0; p.poisonT = 0; }
   if (p.ghostDelay > 0) p.ghostDelay -= dt; else p.ghost = Math.max(p.hp, p.ghost - p.maxHp * 0.5 * dt);
   if (p.ghost < p.hp) p.ghost = p.hp;
-  p.fp = Math.min(p.maxFp, p.fp + 4 * (1 + armorBonus('fpRegen')) * dt);
+  if (armorBonus('fpRegen')) p.fp = Math.min(p.maxFp, p.fp + armorBonus('fpRegen') * dt);
   const pooled = !p.mounted && (inPool(p.x, p.y) || puddles.some(q => dist(q.x, q.y, p.x, p.y) < q.r));
   if (pooled) {
     p.poisonB += 42 * dt * poisonMul();
@@ -299,7 +305,7 @@ function updatePlayer(dt) {
   if (wet && (p.mvx || p.mvy) && Math.random() < dt * 10) addPart(p.x + rand(-10, 10), p.y + rand(4, 8), rand(-20, 20), rand(-20, -5), 0.4, rand(2, 3), 'rgba(200,230,245,.7)');
   const rt = rollType(), slow = (pooled ? 0.7 : 1) * (wet && !hasTal('houndfang') ? (p.mounted ? 0.75 : 0.62) : 1) * (rt === 'over' ? 0.6 : rt === 'heavy' ? 0.9 : 1);
   if (p.stDelay > 0) p.stDelay -= dt;
-  else if (p.state !== 'roll' && p.state !== 'attack') p.st = Math.min(p.maxSt, p.st + (p.state === 'drink' || p.state === 'guard' ? 16 : p.mounted ? 55 : 42) * (1 + armorBonus('stRegen') + (hasTal('collar') ? 0.15 : 0)) * dt);
+  else if (p.state !== 'roll' && p.state !== 'attack') p.st = Math.min(p.maxSt, p.st + (p.state === 'drink' || p.state === 'guard' ? 12 : p.mounted ? 45 : ST_REGEN) * (1 + armorBonus('stRegen') + (hasTal('collar') ? 0.15 : 0)) * dt);
   const ox = p.x, oy = p.y;
   if (p.vx || p.vy) {
     moveCircle(p, p.vx * dt, p.vy * dt, false);
@@ -401,7 +407,7 @@ function updatePlayer(dt) {
     } else {
       if (t > A.wind + A.act + A.rec * 0.35) {
         const a = peekBuf();
-        if (a === 'light' && A.kind === 'light' && A.combo < A.maxCombo && !p.mounted && !critTarget()) { takeBuf(); startAttack('light', A.combo + 1, moving, mx, my); return; }
+        if (a === 'light' && A.kind === 'light' && A.combo < A.maxCombo && !p.mounted && !critTarget()) { takeBuf(); if (p.st <= 0) return; startAttack('light', A.combo + 1, moving, mx, my); return; }
         if (a === 'roll' || a === 'heavy' || a === 'light' || a === 'item' || a === 'skill' || a === 'spell') { takeBuf(); p.state = 'idle'; p.atk = null; doAction(a, moving, mx, my); return; }
       }
       if (t >= A.wind + A.act + A.rec) { p.state = 'idle'; p.t = 0; p.atk = null; }
@@ -628,13 +634,15 @@ function gainRunes(n, x, y) {
   S.runes += n; G.runeGain += n; G.runeGainT = 2.6;
   runeStream(n, x, y);
 }
+const DROP_MUL = 0.5, RARE_MUL = 0.35;
 function dropLoot(e) {
   const T = e.T, items = {};
-  for (const [id, ch, n] of T.drops || []) if (Math.random() < ch) items[id] = (items[id] || 0) + n;
+  // quái thường rơi đồ thưa như dòng souls: nguyên liệu còn một nửa, trang bị hiếm chỉ khoảng 1–3%
+  for (const [id, ch, n] of T.drops || []) if (Math.random() < ch * (id === 'arrows' ? 1 : DROP_MUL)) items[id] = (items[id] || 0) + n;
   if (Object.keys(items).length) loot.push({ x: e.x + rand(-8, 8), y: e.y + rand(-8, 8), loot: { items }, t: 0 });
   // đồ hiếm: giáp, vũ khí hoặc bùa riêng của từng loại quái (đã có rồi thì không rơi nữa)
   const R = T.rare;
-  if (R && Math.random() < R.chance) {
+  if (R && Math.random() < R.chance * RARE_MUL) {
     const [k, id, own] = R.armor ? ['armor', R.armor, S.armors] : R.weapon ? ['weapon', R.weapon, S.weapons] : ['tal', R.tal, S.tals];
     if (!own.includes(id)) loot.push({ x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), loot: { [k]: id }, t: 0, rare: true });
   }

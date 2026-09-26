@@ -8,6 +8,17 @@ function invAdd(id, n = 1) {
 const invN = id => S.inv[id] || 0;
 const weaponHint = Wp => (Wp.hand === 'off' ? ' · trang bị tay trái tại Ân Điển' : G.touch ? ' · bấm Vũ khí để đổi' : ' · ← → để đổi vũ khí');
 // nhận một gói phần thưởng: rune, vật phẩm, vũ khí, giáp, bùa, phép, tro chiến tranh, hạt vàng, Đại Ấn...
+// đồ mới nhận được mang dấu MỚI trong hành trang cho tới khi ngươi xem qua tab chứa nó
+const NEW_TAB = { w: 'gear', a: 'gear', t: 'gear', x: 'gear', s: 'spell', p: 'inv' };
+function markNew(list, id) {
+  const k = list === S.weapons ? 'w' : list === S.armors ? 'a' : list === S.tals ? 't' : list === S.ashes ? 'x' : list === S.spells ? 's' : list === S.spirits ? 'p' : null;
+  if (!k) return;
+  S.newGear = S.newGear || [];
+  if (!S.newGear.includes(k + ':' + id)) S.newGear.push(k + ':' + id);
+}
+const isNew = (k, id) => !!(S.newGear && S.newGear.includes(k + ':' + id));
+const tabHasNew = tab => (S.newGear || []).some(key => NEW_TAB[key[0]] === tab);
+function seenTab(tab) { if (S.newGear && S.newGear.length) S.newGear = S.newGear.filter(key => NEW_TAB[key[0]] !== tab); }
 function grant(L, x = P.x, y = P.y, quiet = false) {
   const got = [];
   let big = null;
@@ -20,12 +31,13 @@ function grant(L, x = P.x, y = P.y, quiet = false) {
   const own = (list, id, def, tail) => {
     if (list.includes(id)) { gainRunes(500, x, y); got.push('+500 rune (đã có ' + def.name + ')'); return; }
     list.push(id); got.push(def.name); big = [def.name, def.desc + tail];
+    markNew(list, id);
   };
   if (L.weapon) own(S.weapons, L.weapon, WEAPONS[L.weapon], weaponHint(WEAPONS[L.weapon]));
   if (L.armor) own(S.armors, L.armor, ARMORS[L.armor], ' · mặc tại Ân Điển');
   if (L.tal) own(S.tals, L.tal, TALISMANS[L.tal], ' · đeo tại Ân Điển');
   if (L.ash) own(S.ashes, L.ash, ASHES[L.ash], ' · gắn vào vũ khí tại Ân Điển');
-  if (L.spirit) { S.spirits = S.spirits || []; own(S.spirits, L.spirit, SPIRITS[L.spirit], S.bell ? ' · chọn trong Túi đồ, dùng Chuông Gọi Hồn khi giao chiến' : ' · cần Chuông Gọi Hồn để dùng'); if (!S.spiritSel) S.spiritSel = L.spirit; }
+  if (L.spirit) { S.spirits = S.spirits || []; own(S.spirits, L.spirit, SPIRITS[L.spirit], S.bell ? ' · chọn trong Túi đồ, rung Chuông Gọi Hồn khi đánh boss' : ' · cần Chuông Gọi Hồn để dùng'); if (!S.spiritSel) S.spiritSel = L.spirit; }
   if (L.spell) {
     const had = S.spells.includes(L.spell);
     own(S.spells, L.spell, SPELLS[L.spell], ' · ghi nhớ tại Ân Điển');

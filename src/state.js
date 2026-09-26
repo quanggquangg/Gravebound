@@ -16,7 +16,7 @@ function defaultSave() {
     ashes: [], ash: {}, inv: {}, quick: 0, arrows: 0, arrowMax: 40, dragonDead: false, finalDead: false, chests: [],
     fortOpen: false, statues: [], glade: false, illusory: [], coloDone: false, mb: {}, explored: '', frags: [],
     gr: [], greatOpen: false, acadOpen: false, levers: [], dg: {}, bought: [], name: '', submitted: false, runId: null, marker: null,
-    readN: [], tips: {}, diff: 'normal', inv: {}, parries: 0, kills: {}, tod: 0.12, bell: false, spirits: [], spiritSel: 'wolves', worldV: 2,
+    readN: [], tips: {}, diff: 'normal', inv: {}, parries: 0, kills: {}, tod: 0.12, bell: false, spirits: [], spiritSel: 'wolves', worldV: 2, horse: false, newGear: [],
   };
 }
 let S = defaultSave();
@@ -25,7 +25,7 @@ function loadSave(i = SLOT) {
   try { const s = JSON.parse(localStorage.getItem(saveKey(i)) || 'null'); if (s && s.stats && s.stats.dex !== undefined) return s; } catch (e) { /* bỏ qua */ }
   return null;
 }
-const FLASK_CAP = 10, TEAR_CAP = 5, SLOT_CAP = 5, TAL_CAP = 4;
+const FLASK_CAP = 8, TEAR_CAP = 5, SLOT_CAP = 5, TAL_CAP = 4;
 const hasTal = id => S.tal.includes(id);
 const hasGR = id => S.gr.includes(id);
 const armorDef = () => ARMORS[S.armor] || ARMORS.rags;
@@ -34,7 +34,7 @@ const armorBonus = k => (armorDef().bonus || {})[k] || 0;
 function curve(s) { return s <= 10 ? 0 : s <= 20 ? (s - 10) * 0.035 : s <= 40 ? 0.35 + (s - 20) * 0.0225 : s <= 60 ? 0.8 + (s - 40) * 0.01 : 1 + (s - 60) * 0.005; }
 const maxHp = () => Math.round((180 + 18 * Math.min(S.stats.vig - 10, 30) + 8 * Math.max(0, S.stats.vig - 40)) * (1 + (hasTal('crimson') ? 0.12 : 0) + (hasGR('east') ? 0.1 : 0)));
 const maxSt = () => Math.round((80 + 5 * (S.stats.end - 10)) * (hasTal('green') ? 1.15 : 1));
-const maxFp = () => Math.round((50 + 7 * (S.stats.mnd - 10)) * (1 + (hasTal('cerulean') ? 0.18 : 0) + (hasGR('west') ? 0.15 : 0)));
+const maxFp = () => Math.round((60 + 7 * (S.stats.mnd - 10)) * (1 + (hasTal('cerulean') ? 0.18 : 0) + (hasGR('west') ? 0.15 : 0)));
 const upLv = id => S.wup[id] || 0;
 const maxUp = id => (WEAPONS[id].somber ? 5 : 9);
 function reqMet(req) { for (const k in req || {}) if (S.stats[k] < req[k]) return false; return true; }
@@ -86,8 +86,8 @@ function absorb(kind) {
   return k;
 }
 const dmgBonus = () => (hasTal('lionmane') && P.hp >= P.maxHp - 0.5 ? 1.1 : 1) * (hasTal('anchor') && inWater(P.x, P.y) ? 1.15 : 1) * (hasGR('swamp') ? 1.08 : 1) * (P.buffs.bless > 0 ? 1.15 : 1) * (hasTal('redseal') && P.hp < P.maxHp * 0.5 ? 1.2 : 1);
-const flaskHeal = () => Math.round(P.maxHp * (0.4 + 0.06 * S.tears) + 15);
-const fpFlaskAmt = () => Math.round(P.maxFp * (0.4 + 0.05 * S.tears) + 10);
+const flaskHeal = () => Math.round(P.maxHp * (0.35 + 0.05 * S.tears) + 10);
+const fpFlaskAmt = () => Math.round(P.maxFp * (0.35 + 0.05 * S.tears) + 10);
 // Như Elden Ring: quái mạnh theo vùng đất, không theo cấp người chơi.
 function regionMul(x, y) {
   const n = regionAt(x, y);
@@ -139,6 +139,8 @@ function makeEnemy(type, x, y) {
     poise: T.poise, poiseAcc: 0, lastHit: 9, hurtFlash: 0, atk: null, atkHit: false, lunged: false, fired: false, glinted: false, wander: null, z: 0,
     strafe: Math.random() < 0.5 ? 1 : -1, elite: !!T.elite, dead: false, anim: rand(0, 10), moving: false, stagDur: 0.5, dm: 1, spd: 1, noParry: !!T.noParry };
 }
+// nhịp thể lực: số điểm hồi mỗi giây, thời gian chờ sau khi đánh, và thời gian chờ khi đã cạn kiệt
+const ST_REGEN = 32, ST_DELAY = 0.85, ST_EXHAUST = 1.4;
 function spawnEnemies() {
   allies = [];
   enemies = SPAWNS.filter(([t]) => !(ETYPES[t].miniboss && S.mb[t])).map(([t, x, y]) => makeEnemy(t, x, y));

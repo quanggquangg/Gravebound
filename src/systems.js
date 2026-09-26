@@ -214,12 +214,23 @@ function takeItem(it) {
   burst(it.x, it.y, 20, '#fff1c2', 90, 3, 'dot', 0.7);
   grant(it.loot, it.x, it.y);
 }
+// như Melina trong Elden Ring: nghỉ ở Ân Điển thứ ba thì một thiếu nữ trao còi gọi ngựa hồn
+function steedGift() {
+  if (S.horse || S.discovered.filter(id => id < 22).length < 3) return;
+  S.horse = true; save();
+  later(0.5, () => {
+    subtitle('“Ta là Melyra. Ngươi đã đi xa tới đây mà chưa gục ngã... Hãy nhận chiếc còi này. Ngựa hồn Vesper sẽ đưa ngươi đi khắp miền đất.”', 6);
+    banner('item', 'CÒI NGỰA HỒN', G.touch ? 'Chạm nút Ngựa để gọi Vesper' : 'Nhấn ' + keyOf('mount') + ' để gọi ngựa hồn Vesper', 5);
+    SFX.whistle();
+  });
+}
 function restAtGrace(g) {
   S.lastGrace = g.id; P.mounted = false; P.lock = null; P.state = 'idle'; P.atk = null;
-  applyStats(true); spawnEnemies(); save(); SFX.grace();
+  applyStats(true); spawnEnemies(); syncBoss(); save(); SFX.grace();
   burst(g.x, g.y, 30, '#f3d27a', 80, 3, 'mote', 1.4);
   openGrace(g);
   witchVisit();
+  steedGift();
 }
 // lần đầu nhìn thấy mỗi loại vật tương tác, nhắc người chơi mới cách dùng nó (mỗi loại chỉ nhắc một lần)
 const TIP_TEXT = {
@@ -268,6 +279,7 @@ function worldChecks(dt) {
     gainRunes(S.lost.amount, S.lost.x, S.lost.y); SFX.pickup(); toast('Đã thu hồi ' + S.lost.amount.toLocaleString(numLoc()) + ' rune');
     S.lost = null; save();
   }
+  if (S.bossDead && !S.boss2Dead && (!boss || boss.v !== 2) && inRect(P.x, P.y, ARENA2, 600)) syncBoss();
   if (boss && !boss.dead && !G.bossFight && inRect(P.x, P.y, boss.A) && P.y > boss.A.y + 20 && P.y < boss.A.y + boss.A.h - 16) startBossFight();
   checkBossRooms();
   if (S.boss2Dead && !S.finalDead && !G.finalFight && dist(P.x, P.y, TREE_POS.x, TREE_POS.y) < 120) enterRealm();

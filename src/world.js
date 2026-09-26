@@ -971,6 +971,33 @@ function fillWorld() {
     ITEMS.push({ id: 'x' + (i++), x, y, loot: pick < 0.35 ? { runes: Math.round(150 * mul * mul / 50) * 50 } : pick < 0.7 ? tier(n) : { items: pick < 0.85 ? { cure: 2 } : { firepot: 2 } } });
   }
 }
+// Ân Điển là chốn an toàn: đẩy quái thường ra xa (ngoài thế giới 480, trong hầm ngục 380); không chỗ đứng thì bỏ hẳn
+const GRACE_CLEAR = 480, GRACE_CLEAR_DG = 380;
+const SWIMMERS = new Set(['crab', 'jelly', 'lakehound', 'drowned', 'crabking', 'bat', 'eagle', 'wisp']);
+function clearGraces() {
+  const keep = [];
+  const standable = (t, x, y, A) => {
+    if (A) { if (x < A.x + 60 || x > A.x + A.w - 60 || y < A.y + 60 || y > A.y + A.h - 60) return false; }
+    else if (x < WX0 + 80 || x > MAPW - 80 || y < WY0 + 80 || y > H - 80 || isVoid(x, y) || (!SWIMMERS.has(t) && (inWater(x, y, 10) || inPool(x, y)))) return false;
+    for (const w of wallsNear(x, y, 40)) if (inRect(x, y, w, 30)) return false;
+    return true;
+  };
+  for (const s of SPAWNS) {
+    const [t] = s;
+    if (BOSSY.has(t)) { keep.push(s); continue; }
+    const A = s[1] >= INST_X ? AREAS.find(a => s[1] >= a.x && s[1] <= a.x + a.w) : null, R = A ? GRACE_CLEAR_DG : GRACE_CLEAR;
+    const g = GRACES.find(q => (q.x >= INST_X) === !!A && dist(q.x, q.y, s[1], s[2]) < R);
+    if (!g) { keep.push(s); continue; }
+    const a0 = Math.atan2(s[2] - g.y, s[1] - g.x) || 0.7;
+    let ok = false;
+    for (const da of [0, 0.35, -0.35, 0.7, -0.7, 1.1, -1.1, 1.6, -1.6, 2.2, -2.2, Math.PI]) {
+      const x = g.x + Math.cos(a0 + da) * (R + 20), y = g.y + Math.sin(a0 + da) * (R + 20);
+      if (standable(t, x, y, A) && !GRACES.some(q => dist(q.x, q.y, x, y) < R)) { s[1] = x; s[2] = y; ok = true; break; }
+    }
+    if (ok) keep.push(s);
+  }
+  SPAWNS.length = 0; SPAWNS.push(...keep);
+}
 // nền đá lát và cột đổ của tàn tích nhỏ, vẽ thẳng lên nền đất đã dựng
 function paintRuins() {
   const g = GROUND.getContext('2d'), r = mulberry32(555);
@@ -992,5 +1019,6 @@ const GROUND = buildGround();   // vẽ ở tọa độ thiết kế
 scaleWorld();                   // rồi mới phóng dữ liệu ra tọa độ thật
 indexWalls();
 fillWorld();
+clearGraces();
 genObstacles();
 paintRuins();

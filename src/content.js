@@ -119,7 +119,7 @@ function updateAffix(e, dt, d) {
 }
 function affixDeath(e) {
   if (hasAff(e, 'burning')) { addDelayed(e.x, e.y, 80, 0.9, 42); SFX.fire(0.4); }
-  if (Math.random() < 0.4) loot.push({ x: e.x + rand(-8, 8), y: e.y + rand(-8, 8), loot: { items: Math.random() < 0.3 ? { stone2: 1 } : { stone1: 2 } }, t: 0 });
+  if (Math.random() < 0.2) loot.push({ x: e.x + rand(-8, 8), y: e.y + rand(-8, 8), loot: { items: Math.random() < 0.3 ? { stone2: 1 } : { stone1: 1 } }, t: 0 });
 }
 function affixOnHit(e) {
   if (!hasAff(e, 'blood') || e.dead) return;

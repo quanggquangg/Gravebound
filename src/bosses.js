@@ -162,6 +162,13 @@ function updateBoss(dt) {
     if (d2 < rr * rr && d2 > 1e-6) { const dd = Math.sqrt(d2); P.x = b.x + dx / dd * rr; P.y = b.y + dy / dd * rr; collide(P, false); }
   }
 }
+// giữ đúng boss Varek cần đánh tiếp theo: hạ Varek ở Cổng Gác thì Vua Ẩn Mặt chờ sẵn ở Sân Ngai
+function syncBoss() {
+  if (G.bossFight) return;
+  const want = !S.bossDead ? 1 : !S.boss2Dead ? 2 : 0;
+  if (!want) { if (boss && boss.dead) boss = null; return; }
+  if (!boss || boss.v !== want || boss.dead) boss = makeBoss(want);
+}
 function startBossFight() {
   G.bossFight = true; boss.state = 'intro'; boss.t = 0;
   if (P.mounted) P.mounted = false;
@@ -181,6 +188,7 @@ function bossDefeated() {
     subtitle('“Ánh vàng... đã chọn... kẻ như ngươi sao...”', 3.6);
     later(4.2, () => subtitle('“Muốn chạm tới Cây... ngươi phải gom ba mảnh Vòng... Greystone phương đông... con rồng dưới đầm Ashmire... và nữ hoàng Starhollow...”', 6));
     later(10.6, () => subtitle('Cổng phía bắc đã mở. Cao Nguyên Aurelia trải vàng phía trước.', 4.5));
+    later(12, syncBoss);
   } else {
     S.boss2Dead = true;
     gainRunes(20000 * DIFF.runes, b.x, b.y);
