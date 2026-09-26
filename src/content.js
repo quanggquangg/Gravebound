@@ -69,7 +69,7 @@ function pickLoot(l) {
   if (!l.rare) { toast('Nhặt được: ' + got.join(', ')); SFX.pickup(); }
 }
 // cổng lớn Kinh Thành cần đủ ba Đại Ấn; cổng Học Viện cần chìa khóa pha lê
-const GREAT_GATE = { x: 1400, y: -914 }, ACAD_GATE = { x: -1550, y: 400 };
+const GREAT_GATE = { x: sk(1400), y: sk(-914) }, ACAD_GATE = { x: sk(-1550), y: sk(400) };
 function gatePrompt() {
   if (!S.greatOpen && dist(P.x, P.y, GREAT_GATE.x, GREAT_GATE.y) < 190) {
     if (S.gr.length >= 3) {
@@ -157,6 +157,7 @@ const INVADERS = [
     look: { body: '#301a10', trim: '#ffb040', head: '#20120a', cloak: '#6a200a', weapon: 'greatsword', wlen: 42, wcol: '#ffd090', scale: 1.25, glow: '#ff7a30' },
     line: '“Ta từng quỳ trước chính cái Cây ấy, rồi nó quay lưng với ta. Ngươi sẽ không bao giờ tới được đó.”', die: '“Nếu ngươi tới được Cây... hãy hỏi nó... vì sao...”' },
 ];
+for (const v of INVADERS) { v.x = sk(v.x); v.y = sk(v.y); }
 for (const v of INVADERS) ETYPES['inv_' + v.id] = Object.assign({}, INVADER_T, { name: v.name, look: v.look });
 function updateInvasions() {
   if (G.invader) {
@@ -164,7 +165,7 @@ function updateInvasions() {
     else if (!enemies.includes(G.invader)) { G.invader = null; G.invCd = G.clock + 30; }
     return;
   }
-  if (!DIFF.inv || G.mode !== 'play' || P.state === 'dead' || P.x > 4800 || G.bossFight || G.dfight || G.dragonFight || G.finalFight || G.colo.active || (G.invCd || 0) > G.clock) return;
+  if (!DIFF.inv || G.mode !== 'play' || P.state === 'dead' || P.x > INST_X || G.bossFight || G.dfight || G.dragonFight || G.finalFight || G.colo.active || (G.invCd || 0) > G.clock) return;
   for (let i = 0; i < Math.min(DIFF.inv, INVADERS.length); i++) {
     const v = INVADERS[i];
     if (!S.inv[v.id] && dist(P.x, P.y, v.x, v.y) < 380) { spawnInvader(v); return; }
@@ -214,5 +215,5 @@ function setupCycleNotes() {
   NOTES.length = NOTE_BASE;
   if (!DIFF.inv) return;
   const u = readUnlock();
-  for (const n of CYCLE_NOTES) NOTES.push({ x: n.x, y: n.y, text: n.text(u), cycle: true });
+  for (const n of CYCLE_NOTES) NOTES.push({ x: sk(n.x), y: sk(n.y), text: n.text(u), cycle: true });
 }

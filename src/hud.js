@@ -313,7 +313,7 @@ function drawHUD() {
   if (G.runeGain > 0) { ctx.font = `600 14px ${FONT_U}`; ctx.fillStyle = `rgba(242,220,151,${Math.min(1, G.runeGainT)})`; ctx.fillText('+' + G.runeGain.toLocaleString(numLoc()), rx, ry + (G.touch ? 26 : -26)); }
   ctx.textAlign = 'left';
   ['east', 'swamp', 'west'].forEach((id, i) => greatRuneGem(dx - 30 - (2 - i) * 19, dy, GREAT_RUNES[id].col, S.gr.includes(id)));
-  if (P.x < 4800) drawSkyDial(dx - 30 - 2 * 19 - 26, dy);
+  if (P.x < INST_X) drawSkyDial(dx - 30 - 2 * 19 - 26, dy);
   // lời nhắc tương tác: khung tối viền vàng, hai hạt kim cương hai đầu, phím dạng nắp phím
   if (G.prompt && G.mode === 'play') {
     const txt = G.prompt.text, py = CH * (G.touch ? 0.56 : 0.7);
@@ -394,7 +394,7 @@ function mapMask() {
 }
 const MAP_LABELS = [['Pháo Đài Greystone', 3600, 900], ['Rừng Wraithwood', 3650, 2180], ['Đấu Trường Bloodsand', 3600, 3230], ['Cao Nguyên Cinderreach', 3700, 1580], ['Đồng Cỏ Mistveil', 1400, 2620],
   ['Tàn Tích Hollowmere', 700, 1900], ['Đầm Lầy Ashmire', 2420, 1520], ['Cổng Gác Thornwall', 1400, 760], ['Nhà Nguyện Dawnrest', 1400, 3480], ['Hồ Crystalmere', -1400, 1500], ['Bờ Biển Saltreach', -1300, 3300],
-  ['Học Viện Starhollow', -1550, -300], ['Cao Nguyên Aurelia', 2200, -100], ['Sườn Núi Goldspire', 3500, -1400], ['Kinh Thành Aurumhold', 1400, -1300], ['Cây Aurum', 1400, -1720]];
+  ['Học Viện Starhollow', -1550, -300], ['Cao Nguyên Aurelia', 2200, -100], ['Sườn Núi Goldspire', 3500, -1400], ['Kinh Thành Aurumhold', 1400, -1300], ['Cây Aurum', 1400, -1720]].map(([n, x, y]) => [n, sk(x), sk(y)]);
 // ── biểu tượng trên bản đồ ──
 function mapGrace(x, y, s = 1) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
@@ -455,7 +455,7 @@ function drawMap() {
   ctx.strokeStyle = 'rgba(214,178,94,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(CW / 2 - tw - 60, top - 30); ctx.lineTo(CW / 2 - tw, top - 30); ctx.moveTo(CW / 2 + tw, top - 30); ctx.lineTo(CW / 2 + tw + 60, top - 30); ctx.stroke();
   mapFrame(mx, my, mw, mh);
   // nền bản đồ nhuộm màu giấy da
-  ctx.drawImage(GROUND, 0, 0, MW / 2, MH / 2, mx, my, mw, mh);
+  ctx.drawImage(GROUND, 0, 0, MW * GS, MH * GS, mx, my, mw, mh);
   ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.55; ctx.fillStyle = '#d4b47c'; ctx.fillRect(mx, my, mw, mh); ctx.restore();
   ctx.fillStyle = 'rgba(70,52,24,.14)'; ctx.fillRect(mx, my, mw, mh);
   const pt = (x, y) => [mx + (x - WX0) * sc, my + (y - WY0) * sc];
@@ -464,8 +464,8 @@ function drawMap() {
   for (const w of WALLS) if (!w.void && !w.sea && w.x < MAPW && (wallOn(w, false) || w.gate === 'colo' || w.gate === 'dg')) { const [x, y] = pt(w.x, w.y); ctx.fillRect(x, y, Math.max(1.5, w.w * sc), Math.max(1.5, w.h * sc)); }
   // lưới tọa độ mờ
   ctx.strokeStyle = 'rgba(60,44,22,.16)'; ctx.lineWidth = 1; ctx.beginPath();
-  for (let gx = Math.ceil(WX0 / 600) * 600; gx < MAPW; gx += 600) { const [x] = pt(gx, 0); ctx.moveTo(x, my); ctx.lineTo(x, my + mh); }
-  for (let gy = Math.ceil(WY0 / 600) * 600; gy < H; gy += 600) { const [, y] = pt(0, gy); ctx.moveTo(mx, y); ctx.lineTo(mx + mw, y); }
+  for (let gx = Math.ceil(WX0 / 900) * 900; gx < MAPW; gx += 900) { const [x] = pt(gx, 0); ctx.moveTo(x, my); ctx.lineTo(x, my + mh); }
+  for (let gy = Math.ceil(WY0 / 900) * 900; gy < H; gy += 900) { const [, y] = pt(0, gy); ctx.moveTo(mx, y); ctx.lineTo(mx + mw, y); }
   ctx.stroke();
   ctx.imageSmoothingEnabled = true; ctx.drawImage(mapMask(), mx, my, mw, mh);
   // mép giấy tối dần vào trong như tấm bản đồ cũ
@@ -490,7 +490,7 @@ function drawMap() {
   if (S.lost && S.lost.x < MAPW) { const [x, y] = pt(S.lost.x, S.lost.y); ctx.fillStyle = 'rgba(157,255,184,.3)'; ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); ctx.fill(); ctx.fillStyle = '#9dffb8'; ctx.strokeStyle = '#123a1e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 4, 0, TAU); ctx.fill(); ctx.stroke(); }
   if (S.marker) { const [x, y] = pt(S.marker.x, S.marker.y); drawMarkerIcon(x, y, 1); }
   mapCompass(mx + mw - (small ? 22 : 30), my + (small ? 26 : 36), small ? 12 : 17);
-  const dg = dungeonAt(P.x, P.y), inMain = P.x < 4800, mpx = inMain ? P.x : dg ? dg.ex : null, mpy = inMain ? P.y : dg ? dg.ey : null;
+  const dg = dungeonAt(P.x, P.y), inMain = P.x < INST_X, mpx = inMain ? P.x : dg ? dg.ex : null, mpy = inMain ? P.y : dg ? dg.ey : null;
   if (mpx !== null) { const [px, py] = pt(mpx, mpy); mapPlayer(px, py, P.face); }
   else textC('Ngươi đang ở ngoài thế giới thường', CW / 2, my + 46, `500 13px ${FONT_U}`, '#f2dc97');
   // chú thích biểu tượng
@@ -518,7 +518,7 @@ function drawMarkerIcon(x, y, s) {
 // mũi tên chỉ về dấu trên bản đồ khi nó nằm ngoài màn hình, kèm khoảng cách
 function drawMarkerGuide() {
   const m = S.marker;
-  if (!m || P.x > 4800 || G.mode !== 'play') return;
+  if (!m || P.x > INST_X || G.mode !== 'play') return;
   const d = dist(P.x, P.y, m.x, m.y);
   if (d < 70) { S.marker = null; toast('Đã tới nơi đánh dấu'); SFX.glint(); return; }
   const sx = CW / 2 + (m.x - cam.x) * ZOOM, sy = CH / 2 + (m.y - cam.y) * ZOOM, pad = 46;
@@ -619,7 +619,7 @@ const atGrace = () => menuAt === 'grace';
 function openGrace(g) {
   currentGrace = g; menuAt = 'grace'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = g.name; $('graceTitle').textContent = 'Nghỉ ngơi'; $('btnLeave').textContent = 'Rời đi';
-  $('btnWait').hidden = g.x > 4800; $('btnWait').textContent = isNight() ? 'Chờ đến sáng' : 'Chờ đến đêm';
+  $('btnWait').hidden = g.x > INST_X; $('btnWait').textContent = isNight() ? 'Chờ đến sáng' : 'Chờ đến đêm';
   selectTab('level'); renderGrace(); UI.grace.hidden = false;
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
@@ -634,7 +634,7 @@ function openInventory(tab = 'gear') {
 function closeGrace() { if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }
 // đang giao chiến thì không dịch chuyển nhanh được (như Elden Ring)
 function inCombat() {
-  if (G.bossFight || G.dfight || G.colo.active || G.finalFight || G.dragonFight || P.x > 4800 && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return true;
+  if (G.bossFight || G.dfight || G.colo.active || G.finalFight || G.dragonFight || P.x > INST_X && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return true;
   return enemies.some(e => !e.dead && (e.state === 'chase' || e.state === 'atk') && dist(e.x, e.y, P.x, P.y) < 900);
 }
 function travelTo(id) {
@@ -1071,7 +1071,7 @@ const ENDING_TEXT = {
 // ───────────────────────── bắt đầu trò chơi ─────────────────────────
 let confirmNew = false;
 function startGame(data, cls) {
-  S = data ? Object.assign(defaultSave(), data) : defaultSave();
+  S = data ? Object.assign(defaultSave(), migrateSave(data)) : defaultSave();
   if (!data) { applyClass(cls); S.name = pendingName || 'Gravebound'; S.diff = pendingDiff; }
   if (S.finalDead && !diffUnlocked()) writeUnlock(Object.assign(readUnlock(), { cleared: true, deaths: S.deaths }));
   G.gear0 = S.weapons.length + S.armors.length + S.tals.length;

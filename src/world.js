@@ -2,8 +2,14 @@
 // Gravebound — Dữ liệu thế giới và hình ảnh dựng sẵn
 // ───────────────────────── thế giới ─────────────────────────
 // Thế giới chính: x từ WX0 tới MAPW, y từ WY0 tới H.
-// Phía đông x > 5000 là các khu biệt lập (Cõi Aurum, Sảnh Hearthhold, hầm ngục), chỉ tới được bằng dịch chuyển.
-const WX0 = -2800, WY0 = -1800, MAPW = 4400, H = 3600, W = 11600;
+// Bố cục được vẽ ở "tọa độ thiết kế" rồi phóng to K lần khi nạp game (xem scaleWorld): đường đi, khoảng cách
+// giữa các vùng và công trình đều rộng ra, còn nhân vật, cây cối và tầm đánh giữ nguyên kích thước.
+const K = 1.5;
+const D = { WX0: -2800, WY0: -1800, MAPW: 4400, H: 3600 }; // biên thế giới ở tọa độ thiết kế
+const WX0 = D.WX0 * K, WY0 = D.WY0 * K, MAPW = D.MAPW * K, H = D.H * K;
+// phía đông x > INST_X là các khu biệt lập (Cõi Aurum, Sảnh Hearthhold, hầm ngục), chỉ tới được bằng dịch chuyển
+const INST_X = 7400, W = 14600;
+const sk = v => v * K;
 // Độ khó chọn một lần khi bắt đầu hành trình. Khó và Chuyên gia chỉ mở sau khi đã phá đảo một lần.
 // hp/dmg: máu và sát thương quái thường · boss: máu boss lớn · elite: tỉ lệ quái tinh anh có thuộc tính
 // aff: số thuộc tính tối đa · inv: số Kẻ Xâm Nhập · cd: nhịp nghỉ giữa các đòn của quái (nhỏ hơn là dồn dập hơn)
@@ -36,11 +42,11 @@ const LAKE = [[-1400, 1450, 850, 600], [-2250, 2250, 380, 260], [-500, 900, 280,
 const ISLES = [[-1750, 1250, 190, 130], [-950, 1700, 170, 120], [-1450, 1800, 130, 90]];
 const inEll = (x, y, [px, py, rx, ry], m = 0) => { const dx = (x - px) / (rx + m), dy = (y - py) / (ry + m); return dx * dx + dy * dy < 1; };
 function inWater(x, y, m = 0) {
-  if (x > 0 || y < 380 || y > 2600) return false;
+  if (x > 0 || y < sk(380) || y > sk(2600)) return false;
   if (!LAKE.some(l => inEll(x, y, l, m))) return false;
   return !ISLES.some(l => inEll(x, y, l, -m));
 }
-function clampLair(x, y, m = 540) { const dx = x - LAIR.x, dy = y - LAIR.y, l = Math.hypot(dx, dy); return l > m ? [LAIR.x + dx / l * m, LAIR.y + dy / l * m] : [x, y]; }
+function clampLair(x, y, m = sk(540)) { const dx = x - LAIR.x, dy = y - LAIR.y, l = Math.hypot(dx, dy); return l > m ? [LAIR.x + dx / l * m, LAIR.y + dy / l * m] : [x, y]; }
 const ROAD = [[1400, 3200], [1380, 2850], [1500, 2450], [1340, 2050], [1430, 1650], [1400, 1128]];
 const ROADS = [ROAD,
   [[1500, 2450], [1900, 2420], [2400, 2560], [2900, 2850], [3600, 2880]],
@@ -66,8 +72,8 @@ const STATUES = [{ id: 's1', x: 2980, y: 1980 }, { id: 's2', x: 4250, y: 1990 },
 const FLAG = { x: 3600, y: 3230 };
 
 // ───────────────────────── khu biệt lập ─────────────────────────
-const RC = { x: 5500, y: 500, r: 420 }; // đấu trường trận cuối trong Cõi Aurum
-const HUB = { x: 6100, y: 0, w: 1000, h: 900 };
+const RC = { x: 8500, y: 500, r: 420 }; // đấu trường trận cuối trong Cõi Aurum
+const HUB = { x: 9100, y: 0, w: 1000, h: 900 };
 // Hầm ngục phụ: mỗi hầm có cửa vào ngoài thế giới, ân điển ở lối vào và một boss ở phòng cuối
 const DUNGEONS = [
   { id: 'd1', name: 'Hầm Mộ Tidewrack', ex: -1600, ey: 3380, boss: 'graveknight', mul: 1.2, theme: 'crypt', reward: { tal: 'vital', pouch: 1, items: { somber1: 1 } } },
@@ -75,14 +81,14 @@ const DUNGEONS = [
   { id: 'd3', name: 'Hang Emberdeep', ex: 4250, ey: 760, boss: 'golem', mul: 1.4, theme: 'fire', reward: { tal: 'shieldtal', items: { somber2: 1, stone2: 2 } } },
   { id: 'd4', name: 'Hầm Mộ Kingsrest', ex: 3900, ey: -1500, boss: 'royalchamp', mul: 1.8, theme: 'royal', reward: { weapon: 'royalsword', mem: 1, tal: 'gold' } },
 ];
-DUNGEONS.forEach((d, i) => { d.area = { x: 7200 + i * 1100, y: 0, w: 1000, h: 1600 }; d.grace = 30 + i; d.bossRoom = { x: d.area.x + 28, y: 28, w: 944, h: 544 }; });
+DUNGEONS.forEach((d, i) => { d.area = { x: 10200 + i * 1100, y: 0, w: 1000, h: 1600 }; d.grace = 30 + i; d.bossRoom = { x: d.area.x + 28, y: 28, w: 944, h: 544 }; });
 const AREAS = [
-  { id: 'realm', x: 5000, y: 0, w: 1000, h: 1000, name: 'Cõi Aurum' },
+  { id: 'realm', x: 8000, y: 0, w: 1000, h: 1000, name: 'Cõi Aurum' },
   Object.assign({ id: 'hub', name: 'Sảnh Hearthhold' }, HUB),
   ...DUNGEONS.map(d => Object.assign({ id: d.id, name: d.name, dg: d }, d.area)),
 ];
 function areaAt(x, y) {
-  if (x < 4800) return null;
+  if (x < INST_X) return null;
   for (const a of AREAS) if (x >= a.x - 60 && x <= a.x + a.w + 60 && y >= a.y - 60 && y <= a.y + a.h + 60) return a;
   return null;
 }
@@ -121,6 +127,24 @@ function expDecode(str) {
   if (!str) return;
   for (let k = 0; k < str.length; k++) { const v = parseInt(str[k], 16) || 0; for (let b = 0; b < 4; b++) if (k * 4 + b < EXP.length) EXP[k * 4 + b] = (v >> b) & 1; }
 }
+// bản lưu từ trước khi thế giới được phóng to: dời rune rơi, dấu trên bản đồ và vùng đã khám phá sang tọa độ mới
+function migrateSave(s) {
+  if (s.worldV >= 2) return s;
+  const mv = p => { if (!p || typeof p.x !== 'number') return; if (p.x < 4800) { p.x *= K; p.y *= K; } else p.x += 3000; };
+  mv(s.lost); mv(s.marker);
+  if (s.explored) {
+    const oc = 72, orw = 54, old = new Uint8Array(oc * orw);
+    for (let i = 0; i < s.explored.length; i++) { const v = parseInt(s.explored[i], 16) || 0; for (let b = 0; b < 4; b++) if (i * 4 + b < old.length) old[i * 4 + b] = (v >> b) & 1; }
+    EXP.fill(0);
+    for (let cy = 0; cy < EXP_ROWS; cy++) for (let cx = 0; cx < EXP_COLS; cx++) {
+      const ox = Math.floor(((WX0 + (cx + 0.5) * EXP_CELL) / K - D.WX0) / 100), oy = Math.floor(((WY0 + (cy + 0.5) * EXP_CELL) / K - D.WY0) / 100);
+      if (ox >= 0 && oy >= 0 && ox < oc && oy < orw && old[oy * oc + ox]) EXP[cy * EXP_COLS + cx] = 1;
+    }
+    s.explored = expEncode();
+  }
+  s.worldV = 2;
+  return s;
+}
 function fragAt(x, y) { return !inRect(x, y, FORT) && MAP_FRAGS.some(f => S.frags.includes(f.id) && f.rects.some(r => inRect(x, y, r))); }
 function revealedAt(x, y) {
   const cx = Math.floor((x - WX0) / EXP_CELL), cy = Math.floor((y - WY0) / EXP_CELL);
@@ -138,13 +162,13 @@ const WALLS = [
   { x: 1360, y: 392, w: 80, h: 28, gate: 'north' },
   { x: 1360, y: 1100, w: 80, h: 28, gate: 'fog' },
   // vách đá ngăn Cao Nguyên Aurelia với miền dưới, rìa phía đông
-  { x: 0, y: 380, w: 972, h: 40, cliff: true }, { x: 1828, y: 380, w: MAPW - 1828, h: 40, cliff: true }, { x: MAPW, y: WY0, w: 90, h: H - WY0, void: true },
+  { x: 0, y: 380, w: 972, h: 40, cliff: true }, { x: 1828, y: 380, w: D.MAPW - 1828, h: 40, cliff: true }, { x: D.MAPW, y: D.WY0, w: 90, h: D.H - D.WY0, void: true },
   // vách đá ngăn miền Tây, có hai lối qua: cạnh tàn tích và phía nam ra bờ biển
   { x: -40, y: 400, w: 40, h: 1460, cliff: true }, { x: -40, y: 1960, w: 40, h: 990, cliff: true }, { x: -40, y: 3150, w: 40, h: 450, cliff: true },
   // vực tối ở phía tây bắc
-  { x: WX0, y: WY0, w: 300 - WX0, h: 900, void: true }, { x: WX0, y: -900, w: 500, h: 1300, void: true }, { x: -800, y: -900, w: 800, h: 1300, void: true },
+  { x: D.WX0, y: D.WY0, w: 300 - D.WX0, h: 900, void: true }, { x: D.WX0, y: -900, w: 500, h: 1300, void: true }, { x: -800, y: -900, w: 800, h: 1300, void: true },
   // biển phía tây nam
-  { x: WX0, y: 2600, w: 320, h: 1000, sea: true },
+  { x: D.WX0, y: 2600, w: 320, h: 1000, sea: true },
   // nhà nguyện khởi đầu
   { x: 1250, y: 3200, w: 100, h: 22 }, { x: 1450, y: 3200, w: 100, h: 22 },
   { x: 1250, y: 3200, w: 22, h: 260 }, { x: 1528, y: 3200, w: 22, h: 260 }, { x: 1250, y: 3438, w: 300, h: 22 },
@@ -228,7 +252,8 @@ function wallOn(w, enemy) {
 }
 // lưới không gian cho tường để va chạm nhanh
 const WCELL = 400, WALL_GRID = new Map();
-(function indexWalls() {
+function indexWalls() {
+  WALL_GRID.clear();
   for (const w of WALLS) {
     for (let gx = Math.floor(w.x / WCELL); gx <= Math.floor((w.x + w.w) / WCELL); gx++)
       for (let gy = Math.floor(w.y / WCELL); gy <= Math.floor((w.y + w.h) / WCELL); gy++) {
@@ -237,7 +262,7 @@ const WCELL = 400, WALL_GRID = new Map();
         WALL_GRID.get(k).push(w);
       }
   }
-})();
+}
 function wallsNear(x, y, r) {
   const out = [], gx0 = Math.floor((x - r) / WCELL), gx1 = Math.floor((x + r) / WCELL), gy0 = Math.floor((y - r) / WCELL), gy1 = Math.floor((y + r) / WCELL);
   for (let gx = gx0; gx <= gx1; gx++) for (let gy = gy0; gy <= gy1; gy++) {
@@ -445,25 +470,25 @@ for (const d of DUNGEONS) {
   SPAWNS.push([d.boss, d.area.x + 500, 280]);
 }
 const REGIONS = [
-  { name: 'Cõi Aurum', test: x => x > 4800 && x < 6050 },
-  { name: 'Sảnh Hearthhold', test: x => x >= 6050 && x < 7150 },
+  { name: 'Cõi Aurum', test: x => x > INST_X && x < 9050 },
+  { name: 'Sảnh Hearthhold', test: x => x >= 9050 && x < 10150 },
   ...DUNGEONS.map(d => ({ name: d.name, test: x => x >= d.area.x - 50 && x < d.area.x + d.area.w + 50 })),
-  { name: 'Cây Aurum', test: (x, y) => y < ARENA2.y && x > 1000 && x < 1800 },
+  { name: 'Cây Aurum', test: (x, y) => y < ARENA2.y && x > sk(1000) && x < sk(1800) },
   { name: 'Sân Ngai Sunthrone', test: (x, y) => inRect(x, y, ARENA2) },
   { name: 'Kinh Thành Aurumhold', test: (x, y) => inRect(x, y, CAPITAL) },
-  { name: 'Sườn Núi Goldspire', test: (x, y) => y < -900 && x > 2500 },
+  { name: 'Sườn Núi Goldspire', test: (x, y) => y < sk(-900) && x > sk(2500) },
   { name: 'Học Viện Starhollow', test: (x, y) => inRect(x, y, ACAD) },
-  { name: 'Cao Nguyên Aurelia', test: (x, y) => x >= 0 && y < 390 },
-  { name: 'Bờ Biển Saltreach', test: (x, y) => x < 0 && y >= 2600 },
+  { name: 'Cao Nguyên Aurelia', test: (x, y) => x >= 0 && y < sk(390) },
+  { name: 'Bờ Biển Saltreach', test: (x, y) => x < 0 && y >= sk(2600) },
   { name: 'Hồ Crystalmere', test: x => x < 0 },
   { name: 'Cổng Gác Thornwall', test: (x, y) => x > ARENA.x && x < ARENA.x + ARENA.w && y > ARENA.y && y < ARENA.y + ARENA.h },
   { name: 'Đầm Lầy Ashmire', test: (x, y) => x > SWAMP.x && x < SWAMP.x + SWAMP.w && y > SWAMP.y && y < SWAMP.y + SWAMP.h },
-  { name: 'Tàn Tích Hollowmere', test: (x, y) => x > 380 && x < 1020 && y > 1600 && y < 2200 },
-  { name: 'Nhà Nguyện Dawnrest', test: (x, y) => x > 1220 && x < 1580 && y > 3170 },
+  { name: 'Tàn Tích Hollowmere', test: (x, y) => x > sk(380) && x < sk(1020) && y > sk(1600) && y < sk(2200) },
+  { name: 'Nhà Nguyện Dawnrest', test: (x, y) => x > sk(1220) && x < sk(1580) && y > sk(3170) },
   { name: 'Pháo Đài Greystone', test: (x, y) => inRect(x, y, FORT) },
   { name: 'Đấu Trường Bloodsand', test: (x, y) => inRect(x, y, COLO.rect) },
   { name: 'Rừng Wraithwood', test: (x, y) => inRect(x, y, FOREST) },
-  { name: 'Cao Nguyên Cinderreach', test: (x) => x > 2800 },
+  { name: 'Cao Nguyên Cinderreach', test: (x) => x > sk(2800) && x < INST_X },
   { name: 'Đồng Cỏ Mistveil', test: () => true },
 ];
 const regionAt = (x, y) => REGIONS.find(r => r.test(x, y)).name;
@@ -489,24 +514,24 @@ function nearRoad(x, y) { let m = 1e9; for (const R of ROADS) for (let i = 1; i 
 function spotBlocked(x, y, pad) {
   if (x < WX0 + 60 || x > MAPW - 60 || y < WY0 + 60 || y > H - 60) return true;
   for (const w of wallsNear(x, y, 60 + pad)) if (inRect(x, y, w, 34 + pad)) return true;
-  if (x > 930 && x < 1870 && y > 380 && y < 1200) return true;
-  if (x > 370 && x < 1030 && y > 1600 && y < 2210) return true;
-  if (x > 1210 && x < 1590 && y > 3150) return true;
+  if (x > sk(930) && x < sk(1870) && y > sk(380) && y < sk(1200)) return true;
+  if (x > sk(370) && x < sk(1030) && y > sk(1600) && y < sk(2210)) return true;
+  if (x > sk(1210) && x < sk(1590) && y > sk(3150)) return true;
   if (inRect(x, y, CAPITAL, 20) || inRect(x, y, ACAD, 20)) return true;
-  if (dist(x, y, TREE_POS.x, TREE_POS.y) < 340) return true;
-  if (nearRoad(x, y) < 58 + pad) return true;
-  if (dist(x, y, LAIR.x, LAIR.y) < 360) return true;
-  if (inRect(x, y, FORT, 34) || inRect(x, y, COLO.rect, 34) || (x > 2920 && x < 3130 && y > 3120 && y < 3330)) return true;
+  if (dist(x, y, TREE_POS.x, TREE_POS.y) < sk(340)) return true;
+  if (nearRoad(x, y) < sk(58) + pad) return true;
+  if (dist(x, y, LAIR.x, LAIR.y) < sk(360)) return true;
+  if (inRect(x, y, FORT, 34) || inRect(x, y, COLO.rect, 34) || (x > sk(2920) && x < sk(3130) && y > sk(3120) && y < sk(3330))) return true;
   if (dist(x, y, BARRIER.x, BARRIER.y) < BARRIER.r + 40) return true;
-  if (x > 3380 && x < 3820 && y > 1330 && y < 1560) return true;
+  if (x > sk(3380) && x < sk(3820) && y > sk(1330) && y < sk(1560)) return true;
   if (LAKE.some(l => inEll(x, y, l, 30 + pad))) return true;
   for (const [px, py, rx, ry] of POOLS) { const dx = (x - px) / (rx + pad + 16), dy = (y - py) / (ry + pad + 16); if (dx * dx + dy * dy < 1) return true; }
-  for (const g of GRACES) if (dist(x, y, g.x, g.y) < 130) return true;
-  for (const it of ITEMS) if (dist(x, y, it.x, it.y) < 60) return true;
-  for (const n of NOTES) if (dist(x, y, n.x, n.y) < 50) return true;
-  for (const s of SPAWNS) if (dist(x, y, s[1], s[2]) < 55) return true;
-  for (const d of DOORS) if (dist(x, y, d.x, d.y) < 110) return true;
-  for (const l of LEVERS) if (dist(x, y, l.x, l.y) < 60) return true;
+  // chừa chỗ quanh ân điển, vật phẩm, lời nhắn, quái, cửa hầm và cần gạt (tra theo lưới cho nhanh)
+  const kx = Math.floor(x / KEEP_CELL), ky = Math.floor(y / KEEP_CELL);
+  for (let gx = kx - 1; gx <= kx + 1; gx++) for (let gy = ky - 1; gy <= ky + 1; gy++) {
+    const c = KEEP.get(gx * 100000 + gy);
+    if (c) for (const [px, py, pr] of c) if (dist(x, y, px, py) < pr) return true;
+  }
   const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL);
   for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) {
     const c = GRID.get(gx + ',' + gy);
@@ -514,8 +539,16 @@ function spotBlocked(x, y, pad) {
   }
   return false;
 }
-(function genObstacles() {
+const KEEP = new Map(), KEEP_CELL = 140;
+function keepOut(x, y, rr) { const key = Math.floor(x / KEEP_CELL) * 100000 + Math.floor(y / KEEP_CELL); if (!KEEP.has(key)) KEEP.set(key, []); KEEP.get(key).push([x, y, rr]); }
+function genObstacles() {
   const r = mulberry32(20250311);
+  for (const g of GRACES) keepOut(g.x, g.y, 130);
+  for (const it of ITEMS) keepOut(it.x, it.y, 60);
+  for (const n of NOTES) keepOut(n.x, n.y, 50);
+  for (const sp of SPAWNS) keepOut(sp[1], sp[2], 55);
+  for (const d of DOORS) keepOut(d.x, d.y, 110);
+  for (const l of LEVERS) keepOut(l.x, l.y, 60);
   for (const c of CHESTS) if (!c.noObst) addObst({ kind: 'chest', x: c.x, y: c.y, r: 14, chest: c });
   for (const b of BRAZIERS) addObst({ kind: 'brazier', x: b.x, y: b.y, r: 14 });
   for (const st of STATUES) addObst({ kind: 'statue', x: st.x, y: st.y, r: 16 });
@@ -526,10 +559,12 @@ function spotBlocked(x, y, pad) {
   addObst({ kind: 'bigtree', x: TREE_POS.x, y: TREE_POS.y, r: 58 });
   // cột đổ trong tàn tích, Học Viện, Sân Ngai Sunthrone và các hầm ngục
   const pillar = (x, y, rr) => addObst({ kind: 'rock', x, y, r: rr, seed: (x * 7 + y) | 0, pillar: true });
-  [[560, 1760, 16], [820, 1800, 18], [520, 2040, 15], [880, 2080, 14], [760, 1720, 12]].forEach(p => pillar(...p));
-  [[-2000, -760, 20], [-1100, -760, 20], [-2000, -620, 18], [-1100, -620, 18], [-1800, 250, 16], [-1300, 180, 16]].forEach(p => pillar(...p));
-  [[1150, -1480, 18], [1650, -1480, 18], [1150, -1220, 18], [1650, -1220, 18]].forEach(p => pillar(...p));
+  const wpillar = (x, y, rr) => pillar(sk(x), sk(y), rr);
+  [[560, 1760, 16], [820, 1800, 18], [520, 2040, 15], [880, 2080, 14], [760, 1720, 12]].forEach(p => wpillar(...p));
+  [[-2000, -760, 20], [-1100, -760, 20], [-2000, -620, 18], [-1100, -620, 18], [-1800, 250, 16], [-1300, 180, 16]].forEach(p => wpillar(...p));
+  [[1150, -1480, 18], [1650, -1480, 18], [1150, -1220, 18], [1650, -1220, 18]].forEach(p => wpillar(...p));
   for (const d of DUNGEONS) [[250, 250], [750, 250], [250, 430], [750, 430], [380, 1250], [620, 1250]].forEach(([x, y]) => pillar(d.area.x + x, y, 18));
+  ruinPillars(pillar);
   // cây và đá theo từng vùng
   const zones = [
     { x: 0, y: 420, w: 4400, h: 3180, trees: 370, rocks: 85 },
@@ -538,7 +573,9 @@ function spotBlocked(x, y, pad) {
     { x: 0, y: -900, w: 4400, h: 1280, trees: 190, rocks: 40, golden: 1 },
     { x: 2500, y: -1800, w: 1900, h: 900, trees: 70, rocks: 40, golden: 1 },
   ];
-  for (const z of zones) {
+  for (const z0 of zones) {
+    // vùng rộng ra K² lần diện tích nên số cây đá cũng tăng theo, giữ nguyên mật độ
+    const z = Object.assign({}, z0, { x: sk(z0.x), y: sk(z0.y), w: sk(z0.w), h: sk(z0.h), trees: Math.round(z0.trees * K * K), rocks: Math.round(z0.rocks * K * K), crystals: Math.round((z0.crystals || 0) * K * K) });
     let n = 0, tries = 0;
     while (n < z.trees && tries++ < z.trees * 40) {
       const x = z.x + r() * z.w, y = z.y + r() * z.h, tr = 13 + r() * 6;
@@ -562,14 +599,14 @@ function spotBlocked(x, y, pad) {
   }
   // mép vách đá
   for (let x = 20; x < MAPW; x += 44) {
-    if ((x > 940 && x < 1860) || x > MAPW - 30) continue;
-    addObst({ kind: 'rock', x: x + r() * 12, y: 398 + r() * 14, r: 20 + r() * 10, seed: (r() * 1e6) | 0, cliff: true });
+    if ((x > sk(940) && x < sk(1860)) || x > MAPW - 30) continue;
+    addObst({ kind: 'rock', x: x + r() * 12, y: sk(398) + r() * 14, r: 20 + r() * 10, seed: (r() * 1e6) | 0, cliff: true });
   }
-  for (let y = 420; y < H; y += 44) {
-    if ((y > 1840 && y < 1990) || (y > 2930 && y < 3170)) continue;
-    addObst({ kind: 'rock', x: -20 + r() * 12, y: y + r() * 12, r: 20 + r() * 10, seed: (r() * 1e6) | 0, cliff: true });
+  for (let y = sk(420); y < H; y += 44) {
+    if ((y > sk(1840) && y < sk(1990)) || (y > sk(2930) && y < sk(3170))) continue;
+    addObst({ kind: 'rock', x: sk(-20) + r() * 12, y: y + r() * 12, r: 20 + r() * 10, seed: (r() * 1e6) | 0, cliff: true });
   }
-})();
+}
 
 // ───────────────────────── dựng sẵn hình ảnh ─────────────────────────
 function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
@@ -604,10 +641,15 @@ function blobs(g, r, n, x, y, w, h, cols, a0, a1, s0 = 30, s1 = 90) {
   }
   g.globalAlpha = 1;
 }
-const GROUND = (function buildGround() {
+// nền đất vẽ ở tọa độ thiết kế trước khi thế giới được phóng to, rồi dùng phép biến đổi để phủ đúng kích thước thật;
+// GS là số điểm ảnh của nền trên mỗi đơn vị thế giới (thấp hơn 0.5 để canvas không vượt giới hạn của điện thoại)
+const GS = 0.36;
+function buildGround() {
+  const WX0 = D.WX0, WY0 = D.WY0, MAPW = D.MAPW, H = D.H;
+  const inWater = (x, y) => y >= 380 && y <= 2600 && x <= 0 && LAKE.some(l => inEll(x, y, l)) && !ISLES.some(l => inEll(x, y, l));
   const GW = MAPW - WX0, GH = H - WY0;
-  const c = makeCanvas(GW / 2, GH / 2), g = c.getContext('2d'), r = mulberry32(77);
-  g.scale(0.5, 0.5); g.translate(-WX0, -WY0);
+  const c = makeCanvas(Math.ceil(GW * K * GS), Math.ceil(GH * K * GS)), g = c.getContext('2d'), r = mulberry32(77);
+  g.scale(GS * K, GS * K); g.translate(-WX0, -WY0);
   g.fillStyle = '#454f2e'; g.fillRect(WX0, WY0, GW, GH);
   blobs(g, r, 5200, WX0, WY0, GW, GH, ['#3d4729', '#4f5a33', '#5a6138', '#48532d', '#626a3c', '#3a4226', '#57603a'], 0.22, 0.25, 20, 110);
   g.globalAlpha = 0.5; g.lineWidth = 2;
@@ -750,9 +792,9 @@ const GROUND = (function buildGround() {
   edge(MAPW - 140, WY0, MAPW, H, MAPW, 0, MAPW - 140, 0); edge(WX0, H - 140, MAPW, H, 0, H, 0, H - 140); edge(300, WY0, MAPW, WY0 + 60, 0, WY0, 0, WY0 + 60);
   edge(-800, -900, -660, 400, -800, 0, -660, 0); edge(-2440, -900, -2300, 400, -2300, 0, -2440, 0); edge(0, -900, 140, 400, 0, 0, 140, 0);
   return c;
-})();
+}
 // nền cho các khu biệt lập (Cõi Aurum, Sảnh Hearthhold, hầm ngục)
-const IX0 = 5000, IH = 1600;
+const IX0 = 8000, IH = 1600;
 const GROUND2 = (function buildInstanceGround() {
   const GW = W - IX0, c = makeCanvas(GW / 2, IH / 2), g = c.getContext('2d'), r = mulberry32(99);
   g.scale(0.5, 0.5); g.translate(-IX0, 0);
@@ -856,3 +898,99 @@ const BIGTREE = (function () {
   g.globalAlpha = 1;
   return c;
 })();
+
+// ───────────────────────── phóng bố cục ra kích thước thật ─────────────────────────
+// mọi thứ ở thế giới chính (x < 4800 ở tọa độ thiết kế) nhân K; khu biệt lập ở phía đông giữ nguyên
+function scaleWorld() {
+  const done = new Set();
+  const pt = o => { if (!o || done.has(o)) return; done.add(o); o.x *= K; o.y *= K; };
+  const rect = o => { if (!o || done.has(o)) return; done.add(o); o.x *= K; o.y *= K; o.w *= K; o.h *= K; };
+  const ell = a => { a[0] *= K; a[1] *= K; a[2] *= K; a[3] *= K; };
+  [ARENA, ARENA2, SWAMP, FORT, ACAD, CAPITAL, FOREST, ACAD_BOSS.bossRoom, COLO.rect].forEach(rect);
+  [TREE_POS, LAIR, COLO, FLAG, ...BRAZIERS, ...STATUES].forEach(pt);
+  BARRIER.x *= K; BARRIER.y *= K; BARRIER.r *= K;
+  POOLS.forEach(ell); LAKE.forEach(ell); ISLES.forEach(ell);
+  for (const R of ROADS) for (const p of R) if (!done.has(p)) { done.add(p); p[0] *= K; p[1] *= K; }
+  for (const d of DUNGEONS) { d.ex *= K; d.ey *= K; }
+  for (const f of MAP_FRAGS) { pt(f); f.rects.forEach(rect); }
+  for (const w of WALLS) if (w.x < 4800) rect(w);
+  for (const o of [...LEVERS, ...GRACES, ...ITEMS, ...CHESTS, ...NOTES]) if (o.x < 4800) pt(o);
+  for (const s of SPAWNS) if (s[1] < 4800) { s[1] *= K; s[2] *= K; }
+  for (const d of DOORS) if (d.kind === 'enter') pt(d);
+}
+
+// ───────────────────────── lấp khoảng trống của thế giới rộng hơn ─────────────────────────
+// thêm vài nhóm quái, vật phẩm rơi và tàn tích nhỏ có rương vào những vùng đồng trống giữa các địa danh,
+// sinh bằng seed cố định nên mỗi lần chơi đều giống nhau (id ổn định cho file lưu)
+const RUINS = [];
+const FILL_REGIONS = ['Đồng Cỏ Mistveil', 'Hồ Crystalmere', 'Bờ Biển Saltreach', 'Cao Nguyên Cinderreach', 'Cao Nguyên Aurelia', 'Sườn Núi Goldspire', 'Rừng Wraithwood', 'Đầm Lầy Ashmire'];
+const BOSSY = new Set(['warden', 'wraith', 'selvara', 'crabking', 'admiral', 'ramking', 'graveknight', 'minerg', 'golem', 'royalchamp']);
+const PACK = { wolf: 3, bat: 2, lakehound: 2, boar: 2, ghoul: 2, crab: 2, soldier: 2, toad: 2, wisp: 2, drowned: 2, garcher: 2, ram: 2 };
+function openSpot(x, y, clear) {
+  if (x < WX0 + 120 || x > MAPW - 120 || y < WY0 + 120 || y > H - 120) return false;
+  if (isVoid(x, y) || inWater(x, y, 20) || inPool(x, y)) return false;
+  for (const w of wallsNear(x, y, clear)) if (inRect(x, y, w, clear)) return false;
+  for (const r of [ARENA, ARENA2, FORT, ACAD, CAPITAL, COLO.rect]) if (inRect(x, y, r, 120)) return false;
+  if (dist(x, y, LAIR.x, LAIR.y) < sk(560) || dist(x, y, BARRIER.x, BARRIER.y) < BARRIER.r + 120 || dist(x, y, TREE_POS.x, TREE_POS.y) < sk(420)) return false;
+  for (const g of GRACES) if (dist(x, y, g.x, g.y) < 340) return false;
+  for (const d of DOORS) if (dist(x, y, d.x, d.y) < 220) return false;
+  for (const f of MAP_FRAGS) if (dist(x, y, f.x, f.y) < 200) return false;
+  return true;
+}
+function fillWorld() {
+  const r = mulberry32(31337), pool = {};
+  for (const [t, x, y] of SPAWNS) {
+    if (x >= INST_X || BOSSY.has(t)) continue;
+    const n = regionAt(x, y);
+    if (FILL_REGIONS.includes(n)) (pool[n] = pool[n] || []).push(t);
+  }
+  const near = (list, x, y, d) => list.some(s => dist(x, y, s[1], s[2]) < d);
+  const extra = [], step = 540;
+  for (let gy = WY0 + 320; gy < H - 200; gy += step) for (let gx = WX0 + 320; gx < MAPW - 200; gx += step) {
+    const x = gx + (r() - 0.5) * step * 0.7, y = gy + (r() - 0.5) * step * 0.7, n = regionAt(x, y), roll = r();
+    if (!pool[n] || roll < 0.18 || !openSpot(x, y, 60) || near(SPAWNS, x, y, 340) || near(extra, x, y, 380)) continue;
+    const t = pool[n][(r() * pool[n].length) | 0], cnt = PACK[t] || 1;
+    for (let i = 0; i < cnt; i++) { const a = i / cnt * TAU + r(), d = cnt > 1 ? 40 + r() * 20 : 0; extra.push([t, x + Math.cos(a) * d, y + Math.sin(a) * d]); }
+  }
+  SPAWNS.push(...extra);
+  // tàn tích nhỏ: vòng cột đổ quanh một chiếc rương, ở chỗ trống cách xa nhau
+  const tier = n => (REGION_MUL[n] || 1) < 1.3 ? { items: { stone1: 2 } } : (REGION_MUL[n] || 1) < 1.6 ? { items: { stone2: 1, stone1: 1 } } : { items: { stone2: 2, stone3: 1 } };
+  for (let i = 0, tries = 0; RUINS.length < 12 && tries < 4000; tries++) {
+    const x = WX0 + r() * (MAPW - WX0), y = WY0 + r() * (H - WY0), n = regionAt(x, y);
+    if (!FILL_REGIONS.includes(n) || !openSpot(x, y, 160) || nearRoad(x, y) < 180 || RUINS.some(q => dist(x, y, q.x, q.y) < 1300)) continue;
+    if (near(SPAWNS, x, y, 150) || CHESTS.some(c => dist(x, y, c.x, c.y) < 500)) continue;
+    const id = 'c_ruin' + (i++), mul = REGION_MUL[n] || 1;
+    RUINS.push({ x, y, n });
+    CHESTS.push({ id, x, y, loot: Object.assign({ runes: Math.round(200 * mul * mul / 50) * 50 }, tier(n)) });
+  }
+  // vật phẩm lấp lánh rải trên đường đi
+  for (let i = 0, tries = 0; i < 18 && tries < 4000; tries++) {
+    const x = WX0 + r() * (MAPW - WX0), y = WY0 + r() * (H - WY0), n = regionAt(x, y);
+    if (!FILL_REGIONS.includes(n) || !openSpot(x, y, 50) || ITEMS.some(it => dist(x, y, it.x, it.y) < 700) || CHESTS.some(c => dist(x, y, c.x, c.y) < 200)) continue;
+    const mul = REGION_MUL[n] || 1, pick = r();
+    ITEMS.push({ id: 'x' + (i++), x, y, loot: pick < 0.35 ? { runes: Math.round(150 * mul * mul / 50) * 50 } : pick < 0.7 ? tier(n) : { items: pick < 0.85 ? { cure: 2 } : { firepot: 2 } } });
+  }
+}
+// nền đá lát và cột đổ của tàn tích nhỏ, vẽ thẳng lên nền đất đã dựng
+function paintRuins() {
+  const g = GROUND.getContext('2d'), r = mulberry32(555);
+  g.setTransform(GS, 0, 0, GS, -WX0 * GS, -WY0 * GS);
+  for (const q of RUINS) {
+    const rg = g.createRadialGradient(q.x, q.y, 20, q.x, q.y, 170);
+    rg.addColorStop(0, 'rgba(40,36,28,.5)'); rg.addColorStop(1, 'rgba(40,36,28,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(q.x, q.y, 170, 0, TAU); g.fill();
+    paintFloor(g, r, q.x - 110, q.y - 90, 220, 180, 44, 0.35, 66);
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0);
+}
+function ruinPillars(addPillar) {
+  for (const q of RUINS) for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + 0.3, d = 118 + (i % 2) * 14; addPillar(q.x + Math.cos(a) * d, q.y + Math.sin(a) * d * 0.8, 14 + (i % 3) * 2); }
+}
+
+// ───────────────────────── trình tự dựng thế giới ─────────────────────────
+const GROUND = buildGround();   // vẽ ở tọa độ thiết kế
+scaleWorld();                   // rồi mới phóng dữ liệu ra tọa độ thật
+indexWalls();
+fillWorld();
+genObstacles();
+paintRuins();

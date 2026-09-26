@@ -1439,14 +1439,20 @@ function drawWall(w) {
   ctx.strokeStyle = 'rgba(12,10,8,.85)'; ctx.lineWidth = 1.6; ctx.strokeRect(w.x + 0.5, w.y + 0.5, w.w - 1, w.h - 1);
 }
 function drawGates() {
+  // cổng vẽ theo tọa độ thiết kế, phóng K lần cho khớp tường đã phóng
+  ctx.save(); ctx.scale(K, K);
+  try { drawGatesD(); } finally { ctx.restore(); }
+}
+const inViewD = (x, y, m) => inView(sk(x), sk(y), sk(m));
+function drawGatesD() {
   const t = G.clock;
-  if (!S.fortOpen && inView(3600, 1286, 120)) {
+  if (!S.fortOpen && inViewD(3600, 1286, 120)) {
     // cửa song sắt Pháo Đài: nền tối, song có viền, thanh ngang có đinh tán
     ctx.fillStyle = '#141210'; ctx.fillRect(3540, 1272, 120, 28);
     for (let x = 3548; x < 3660; x += 12) olLine(x, 1273, x, 1299, 3, '#6c6a64');
     for (const y of [1279, 1292]) { olLine(3542, y, 3658, y, 3, '#5c5a55'); ctx.fillStyle = '#a8a298'; for (let x = 3548; x < 3660; x += 12) { ctx.beginPath(); ctx.arc(x, y, 1.3, 0, TAU); ctx.fill(); } }
   }
-  if (G.colo.active && inView(3600, 2964, 120)) {
+  if (G.colo.active && inViewD(3600, 2964, 120)) {
     for (let i = 0; i < 6; i++) {
       const x = 3600 + Math.sin(t * 1.5 + i * 1.7) * 40, y = 2964 + Math.cos(t + i) * 6;
       const gr = ctx.createRadialGradient(x, y, 2, x, y, 50);
@@ -1454,7 +1460,7 @@ function drawGates() {
       ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, 60, 22, 0, 0, TAU); ctx.fill();
     }
   }
-  if (!S.bossDead && inView(1400, 1114, 120)) {
+  if (!S.bossDead && inViewD(1400, 1114, 120)) {
     const a = G.bossFight ? 0.55 : 0.34;
     for (let i = 0; i < 7; i++) {
       const x = 1400 + Math.sin(t * 1.3 + i * 1.7) * 26, y = 1114 + Math.cos(t * 0.9 + i) * 7;
@@ -1463,7 +1469,7 @@ function drawGates() {
       ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, 52, 22, 0, 0, TAU); ctx.fill();
     }
   }
-  if (inView(1400, 406, 120)) {
+  if (inViewD(1400, 406, 120)) {
     if (!S.bossDead) {
       // cổng gỗ bọc đồng phía bắc: ván gỗ, nẹp sắt, ấn vàng niêm phong ở giữa
       ctx.fillStyle = '#3b362d'; ctx.fillRect(1360, 392, 80, 28);
@@ -1825,10 +1831,11 @@ function render() {
   const vw = CW / ZOOM, vh = CH / ZOOM, x0 = cam.x - vw / 2 + sx, y0 = cam.y - vh / 2 + sy;
   VIEW = { x0, y0, x1: x0 + vw, y1: y0 + vh };
   ctx.setTransform(WZ, 0, 0, WZ, -x0 * WZ, -y0 * WZ);
-  const inst = cam.x > 4800 && G.mode !== 'title';
+  const inst = cam.x > INST_X && G.mode !== 'title';
   const [GC, ox, oy, ow, oh] = inst ? [GROUND2, IX0, 0, W - IX0, IH] : [GROUND, WX0, WY0, MAPW - WX0, H - WY0];
   const gx0 = clamp(Math.floor(x0), ox, ox + ow), gy0 = clamp(Math.floor(y0), oy, oy + oh), gx1 = clamp(Math.ceil(x0 + vw), ox, ox + ow), gy1 = clamp(Math.ceil(y0 + vh), oy, oy + oh);
-  if (gx1 > gx0 && gy1 > gy0) ctx.drawImage(GC, (gx0 - ox) / 2, (gy0 - oy) / 2, (gx1 - gx0) / 2, (gy1 - gy0) / 2, gx0, gy0, gx1 - gx0, gy1 - gy0);
+  const gs = inst ? 0.5 : GS;
+  if (gx1 > gx0 && gy1 > gy0) ctx.drawImage(GC, (gx0 - ox) * gs, (gy0 - oy) * gs, (gx1 - gx0) * gs, (gy1 - gy0) * gs, gx0, gy0, gx1 - gx0, gy1 - gy0);
   drawGroundDetail();
   drawDecals();
   drawFxGround();
@@ -1877,7 +1884,7 @@ function render() {
   drawGodRays();
   drawScreenFx();
   const top = ctx.createLinearGradient(0, 0, 0, CH * 0.5);
-  top.addColorStop(0, `rgba(255,205,110,${cam.y < 400 && !inst ? 0.14 : 0.06})`); top.addColorStop(1, 'rgba(255,205,110,0)');
+  top.addColorStop(0, `rgba(255,205,110,${cam.y < sk(400) && !inst ? 0.14 : 0.06})`); top.addColorStop(1, 'rgba(255,205,110,0)');
   ctx.fillStyle = top; ctx.fillRect(0, 0, CW, CH * 0.5);
   ctx.fillStyle = VIGNETTE; ctx.fillRect(0, 0, CW, CH);
   flushWText(x0, y0);
@@ -1926,7 +1933,7 @@ const AMB_DEFAULT = AMB['Đồng Cỏ Mistveil'];
 G.amb = AMB_DEFAULT.slice();
 function updateAmbient(dt) {
   let tgt = AMB[G.region] || AMB_DEFAULT; const k = 1 - Math.exp(-1.4 * dt);
-  if (G.mode !== 'title' && cam.x <= 4800) tgt = skyMix(tgt);
+  if (G.mode !== 'title' && cam.x <= INST_X) tgt = skyMix(tgt);
   for (let i = 0; i < 8; i++) G.amb[i] += (tgt[i] - G.amb[i]) * k;
 }
 const LIGHTS = [];
@@ -1935,7 +1942,7 @@ const PCOL = { glint: '170,200,255', orb: '140,170,255', porb: '190,170,255', ho
   shard: '170,220,255', comet: '180,220,255', bolt: '255,245,170', hwave: '255,220,130', hbolt: '255,225,140', cwave: '170,220,255' };
 function collectLights() {
   LIGHTS.length = 0;
-  const t = G.clock, inst = P.x > 4800 && G.mode !== 'title', A = inst ? areaAt(P.x, P.y) : null;
+  const t = G.clock, inst = P.x > INST_X && G.mode !== 'title', A = inst ? areaAt(P.x, P.y) : null;
   if (G.mode !== 'title' && P.state !== 'dead') light(P.x, P.y, 170, 0.75, null);
   for (const g of GRACES) light(g.x, g.y - 10, S.discovered.includes(g.id) ? 280 : 170, 0.95 + Math.sin(t * 2.4 + g.id) * 0.05, '255,214,120');
   light(TREE_POS.x, TREE_POS.y, 820, 1, null); // cây đã tự phát sáng, chỉ cần xua bóng tối
@@ -2026,7 +2033,7 @@ function renderLighting(x0, y0) {
   ctx.globalCompositeOperation = 'source-over';
 }
 function drawGodRays() {
-  const near = cam.x > 4800 && G.mode !== 'title' ? 0 : clamp((2400 - dist(cam.x, cam.y, TREE_POS.x, TREE_POS.y)) / 1600, 0, 1) + (cam.y < 380 && cam.x < 4800 ? 0.35 : 0);
+  const near = cam.x > INST_X && G.mode !== 'title' ? 0 : clamp((2400 - dist(cam.x, cam.y, TREE_POS.x, TREE_POS.y)) / 1600, 0, 1) + (cam.y < sk(380) && cam.x < INST_X ? 0.35 : 0);
   if (near <= 0 || FX_LOW) return;
   const t = G.clock, nn = Math.min(1, near);
   ctx.globalCompositeOperation = 'lighter';
@@ -2050,7 +2057,7 @@ function weather(dt, x0, y0, vw, vh) {
     addPart(x0 - 150 + Math.random() * (vw + 150), y0 + Math.random() * vh, rand(6, 16), rand(-3, 3), rand(10, 16), rand(120, 240), fogCol, 'fog', { alpha: reg === 'Đồng Cỏ Mistveil' || reg === 'Nhà Nguyện Dawnrest' || reg === 'Bờ Biển Saltreach' ? rand(0.05, 0.08) : rand(0.07, 0.11) });
   if (['Cao Nguyên Cinderreach', 'Pháo Đài Greystone', 'Đấu Trường Bloodsand', 'Cổng Gác Thornwall', 'Hang Emberdeep'].includes(reg) && Math.random() < dt * (FX_LOW ? 8 : 22))
     addPart(x0 + Math.random() * vw, y0 - 10, rand(5, 20), rand(18, 36), 7, rand(1, 2), Math.random() < 0.8 ? '#b8b0a4' : '#e09060', 'ash');
-  const nk = G.mode === 'title' || cam.x > 4800 ? 0 : nightK();
+  const nk = G.mode === 'title' || cam.x > INST_X ? 0 : nightK();
   if (nk > 0.5 && ff < 30 && Math.random() < dt * 5 * nk && !['Kinh Thành Aurumhold', 'Sân Ngai Sunthrone'].includes(reg))
     addPart(x0 + Math.random() * vw, y0 + Math.random() * vh, rand(-10, 10), rand(-10, 10), rand(4, 7), rand(1.3, 2), '#e8f08a', 'firefly', { seed: rand(0, 10) });
   if ((reg === 'Rừng Wraithwood' || reg === 'Đầm Lầy Ashmire') && ff < 40 && Math.random() < dt * (reg === 'Rừng Wraithwood' ? 10 : 4))
@@ -2069,13 +2076,13 @@ const GRASS_PAL = {
 function grassAt(x, y) {
   if (x > MAPW - 20 || y > H - 20 || x < WX0 + 20 || y < WY0 + 20) return null;
   if (isVoid(x, y) || inRect(x, y, CAPITAL, 20) || inRect(x, y, ACAD, 20) || inWater(x, y, 10)) return null;
-  if (y < 380 && x >= 0) return y > 360 ? null : GRASS_PAL.gold;
-  if (x < 0) { if (nearRoad(x, y) < 44 || x < -2440) return null; return y >= 2600 ? GRASS_PAL.coast : GRASS_PAL.lake; }
-  if (y < 440 || inArena(x, y) || inRect(x, y, FORT, 20) || inRect(x, y, COLO.rect, 20) || (x > 370 && x < 1030 && y > 1600 && y < 2210) || (x > 1220 && x < 1580 && y > 3170)) return null;
-  if (nearRoad(x, y) < 44 || inPool(x, y) || dist(x, y, LAIR.x, LAIR.y) < 260) return null;
+  if (y < sk(380) && x >= 0) return y > sk(360) ? null : GRASS_PAL.gold;
+  if (x < 0) { if (nearRoad(x, y) < sk(44) || x < sk(-2440)) return null; return y >= sk(2600) ? GRASS_PAL.coast : GRASS_PAL.lake; }
+  if (y < sk(440) || inArena(x, y) || inRect(x, y, FORT, 20) || inRect(x, y, COLO.rect, 20) || (x > sk(370) && x < sk(1030) && y > sk(1600) && y < sk(2210)) || (x > sk(1220) && x < sk(1580) && y > sk(3170))) return null;
+  if (nearRoad(x, y) < sk(44) || inPool(x, y) || dist(x, y, LAIR.x, LAIR.y) < sk(260)) return null;
   if (inRect(x, y, FOREST)) return GRASS_PAL.forest;
-  if (x > SWAMP.x && x < 2800 && y > SWAMP.y && y < SWAMP.y + SWAMP.h) return GRASS_PAL.swamp;
-  if (x > 2800) return GRASS_PAL.east;
+  if (x > SWAMP.x && x < sk(2800) && y > SWAMP.y && y < SWAMP.y + SWAMP.h) return GRASS_PAL.swamp;
+  if (x > sk(2800)) return GRASS_PAL.east;
   return GRASS_PAL.meadow;
 }
 // lớp chi tiết mặt đất: cọng cỏ và sỏi nhỏ sáng/tối trong suốt, lát lặp ở độ phân giải đầy đủ
@@ -2095,18 +2102,18 @@ let DETAIL_PAT = null;
 const PAVED = new Set(['Kinh Thành Aurumhold', 'Sân Ngai Sunthrone', 'Pháo Đài Greystone', 'Học Viện Starhollow', 'Đấu Trường Bloodsand', 'Cổng Gác Thornwall']);
 function drawGroundDetail() {
   // chỉ phủ cỏ sỏi ngoài trời, không phủ lên sàn đá lát của các công trình và khu biệt lập
-  if (FX_LOW || cam.x > 4800 || PAVED.has(G.region)) return;
+  if (FX_LOW || cam.x > INST_X || PAVED.has(G.region)) return;
   if (!DETAIL_PAT) DETAIL_PAT = ctx.createPattern(DETAIL, 'repeat');
   ctx.save(); ctx.fillStyle = DETAIL_PAT;
   // khoét vùng nước (hồ, biển) ra khỏi lớp cỏ sỏi: mỗi lần cắt bỏ một vùng, các lần cắt giao nhau
   const vx = VIEW.x0 - 10, vy = VIEW.y0 - 10, vw = VIEW.x1 - VIEW.x0 + 20, vh = VIEW.y1 - VIEW.y0 + 20;
   const hole = draw => { ctx.beginPath(); ctx.rect(vx, vy, vw, vh); draw(); ctx.clip('evenodd'); };
   for (const [px, py, rx, ry] of LAKE) if (inView(px, py, Math.max(rx, ry))) hole(() => { ctx.moveTo(px + rx, py); ctx.ellipse(px, py, rx, ry, 0, 0, TAU); });
-  if (VIEW.x0 < -2400 && VIEW.y1 > 2600) hole(() => ctx.rect(WX0 - 50, 2600, -2480 - WX0 + 50 + 20, H - 2600 + 50));
+  if (VIEW.x0 < sk(-2400) && VIEW.y1 > sk(2600)) hole(() => ctx.rect(WX0 - 50, sk(2600), sk(-2480) - WX0 + 50 + 20, H - sk(2600) + 50));
   ctx.fillRect(vx, vy, vw, vh); ctx.restore();
 }
 function drawGrass() {
-  if (FX_LOW || (cam.x > 4800 && G.mode !== 'title')) return;
+  if (FX_LOW || (cam.x > INST_X && G.mode !== 'title')) return;
   const cell = 46, t = G.clock;
   const gx0 = Math.floor(VIEW.x0 / cell), gx1 = Math.ceil(VIEW.x1 / cell), gy0 = Math.floor(VIEW.y0 / cell), gy1 = Math.ceil(VIEW.y1 / cell);
   ctx.lineWidth = 1.6; ctx.lineCap = 'round';
@@ -2153,7 +2160,7 @@ function drawWater() {
     ctx.strokeStyle = `rgba(200,160,220,${0.18 + 0.08 * Math.sin(t * 1.5 + px)})`; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.ellipse(px, py, rx * (0.85 + 0.05 * Math.sin(t + py)), ry * (0.85 + 0.05 * Math.sin(t + py)), 0, 0, TAU); ctx.stroke();
   }
-  if (VIEW.x0 < 0 && VIEW.y1 > 380 && VIEW.y0 < 2700) {
+  if (VIEW.x0 < 0 && VIEW.y1 > sk(380) && VIEW.y0 < sk(2700)) {
     // gợn sáng trên mặt hồ, đặt theo lưới cố định để không nhấp nháy
     const cell = 90;
     for (let gx = Math.floor(VIEW.x0 / cell); gx <= Math.ceil(Math.min(0, VIEW.x1) / cell); gx++) for (let gy = Math.floor(VIEW.y0 / cell); gy <= Math.ceil(VIEW.y1 / cell); gy++) {
@@ -2177,9 +2184,9 @@ function drawWater() {
     ctx.stroke(); ctx.lineCap = 'butt';
     for (const e of [P, ...enemies]) if (!e.dead && inView(e.x, e.y, 30) && inWater(e.x, e.y) && !(e.T && e.T.flier)) { ctx.strokeStyle = `rgba(210,240,255,${0.35 + 0.15 * Math.sin(t * 5)})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(e.x, e.y + 6, e.r + 6, (e.r + 6) * 0.45, 0, 0, TAU); ctx.stroke(); }
   }
-  if (VIEW.x0 < -2400 && VIEW.y1 > 2600) {
+  if (VIEW.x0 < sk(-2400) && VIEW.y1 > sk(2600)) {
     ctx.strokeStyle = `rgba(235,245,250,${0.35 + 0.2 * Math.sin(t * 1.3)})`; ctx.lineWidth = 3;
-    const fx = -2480 + Math.sin(t * 0.9) * 14, y0 = Math.max(2600, VIEW.y0), y1 = Math.min(H, VIEW.y1);
+    const fx = sk(-2480) + Math.sin(t * 0.9) * 14, y0 = Math.max(sk(2600), VIEW.y0), y1 = Math.min(H, VIEW.y1);
     // cát ướt sẫm màu chạy theo sóng, vạch bọt thứ hai mờ hơn phía ngoài, và ánh nắng lấp lánh trên biển
     ctx.fillStyle = 'rgba(70,62,40,.22)'; ctx.beginPath(); ctx.moveTo(fx, y0);
     for (let y = y0; y <= y1; y += 20) ctx.lineTo(fx + 26 + Math.sin(y * 0.03 + t) * 8 + Math.sin(t * 0.9) * 6, y);

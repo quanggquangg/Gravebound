@@ -253,7 +253,7 @@ function doAction(a, moving, mx, my) {
 }
 function toggleMount() {
   if (P.mounted) { P.mounted = false; P.state = 'mount'; P.t = 0; burst(P.x, P.y, 16, '#9fd0ff', 60, 3, 'dot', 0.6); return; }
-  if (inArena(P.x, P.y) || G.bossFight || G.colo.active || G.finalFight || G.dfight || P.x > 4800 || inRect(P.x, P.y, FORT) || inRect(P.x, P.y, ACAD) || inRect(P.x, P.y, CAPITAL)) { toast('Không thể gọi ngựa ở đây'); return; }
+  if (inArena(P.x, P.y) || G.bossFight || G.colo.active || G.finalFight || G.dfight || P.x > INST_X || inRect(P.x, P.y, FORT) || inRect(P.x, P.y, ACAD) || inRect(P.x, P.y, CAPITAL)) { toast('Không thể gọi ngựa ở đây'); return; }
   P.mounted = true; P.state = 'mount'; P.t = 0; P.lock = null; SFX.whistle();
   burst(P.x, P.y, 26, '#9fd0ff', 90, 3.5, 'dot', 0.8);
 }

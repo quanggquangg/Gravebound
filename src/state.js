@@ -16,7 +16,7 @@ function defaultSave() {
     ashes: [], ash: {}, inv: {}, quick: 0, arrows: 0, arrowMax: 40, dragonDead: false, finalDead: false, chests: [],
     fortOpen: false, statues: [], glade: false, illusory: [], coloDone: false, mb: {}, explored: '', frags: [],
     gr: [], greatOpen: false, acadOpen: false, levers: [], dg: {}, bought: [], name: '', submitted: false, runId: null, marker: null,
-    readN: [], tips: {}, diff: 'normal', inv: {}, parries: 0, kills: {}, tod: 0.12, bell: false, spirits: [], spiritSel: 'wolves',
+    readN: [], tips: {}, diff: 'normal', inv: {}, parries: 0, kills: {}, tod: 0.12, bell: false, spirits: [], spiritSel: 'wolves', worldV: 2,
   };
 }
 let S = defaultSave();
@@ -91,7 +91,7 @@ const fpFlaskAmt = () => Math.round(P.maxFp * (0.4 + 0.05 * S.tears) + 10);
 // Như Elden Ring: quái mạnh theo vùng đất, không theo cấp người chơi.
 function regionMul(x, y) {
   const n = regionAt(x, y);
-  if (n === 'Đồng Cỏ Mistveil' && y < 1600) return 1.1;
+  if (n === 'Đồng Cỏ Mistveil' && y < sk(1600)) return 1.1;
   return REGION_MUL[n] || 1;
 }
 const levelCost = () => Math.floor(150 + 60 * S.level + 6 * S.level * S.level);
@@ -103,7 +103,7 @@ const G = {
   colo: { active: false, wave: 0, cool: 0 }, braziers: [], finalFight: false, white: 0, dfight: null,
 };
 const P = {
-  x: 1400, y: 3376, r: 13, vx: 0, vy: 0, face: -Math.PI / 2, state: 'idle', t: 0,
+  x: sk(1400), y: sk(3376), r: 13, vx: 0, vy: 0, face: -Math.PI / 2, state: 'idle', t: 0,
   hp: 180, maxHp: 180, ghost: 180, ghostDelay: 0, st: 80, maxSt: 80, stDelay: 0, fp: 50, maxFp: 50,
   flasks: 3, fpflasks: 0, invuln: 0, mounted: false, lock: null, atk: null, walk: 0, mvx: 0, mvy: 0, rollDir: 0, hurtDur: 0.3,
   poisonB: 0, poisonT: 0, lastGuardAt: -9, parryOk: false, blockedAt: -9, buffs: { flame: 0, holy: 0, bless: 0 }, roll: ROLLS.mid,
@@ -149,7 +149,7 @@ function spawnEnemies() {
 }
 function makeBoss(v = 1) {
   const A = v === 1 ? ARENA : ARENA2, hp = Math.round((v === 1 ? 1300 : 5400) * DIFF.boss);
-  return { isBoss: true, v, A, name: v === 1 ? 'Varek, Kẻ Gác Cổng Bội Thề' : 'Varek, Vua Ẩn Mặt', x: A.x + A.w / 2, y: v === 1 ? 640 : A.y + 130, r: v === 1 ? 28 : 30,
+  return { isBoss: true, v, A, name: v === 1 ? 'Varek, Kẻ Gác Cổng Bội Thề' : 'Varek, Vua Ẩn Mặt', x: A.x + A.w / 2, y: v === 1 ? sk(640) : A.y + sk(130), r: v === 1 ? 28 : 30,
     hp, maxHp: hp, ghost: hp, face: Math.PI / 2, state: 'dormant', t: 0, cd: 1, vx: 0, vy: 0, poise: v === 1 ? 170 : 240, poiseAcc: 0, lastHit: 9, hurtFlash: 0,
     phase: 1, atk: null, dead: false, z: 0, elite: true, invuln: 0, anim: 0, stagDur: 0.8, lastMove: '', bleedMax: v === 1 ? 180 : 300, res: { holy: 0.8 },
     look: v === 1 ? { body: '#4d4234', trim: '#c9a34a', head: '#2c2721', cloak: '#2a241b', weapon: 'greatsword', wlen: 40, wcol: '#dcc06a', scale: 1.9, hood: true, glow: true }
@@ -180,7 +180,7 @@ function collide(e, enemy) {
     const cell = WALL_GRID.get(gx * 1000 + gy);
     if (cell) for (const w of cell) if (wallOn(w, enemy)) pushOutWall(e, w);
   }
-  const A = e.x > 4800 ? areaAt(e.x, e.y) : null;
+  const A = e.x > INST_X ? areaAt(e.x, e.y) : null;
   if (A && A.id === 'realm') {
     const dx = e.x - RC.x, dy = e.y - RC.y, d = Math.hypot(dx, dy), m = RC.r - e.r;
     if (d > m) { e.x = RC.x + dx / d * m; e.y = RC.y + dy / d * m; }

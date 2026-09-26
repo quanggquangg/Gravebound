@@ -23,7 +23,7 @@ function updateSky(dt) {
   const was = isNight();
   S.tod = (S.tod + dt / DAY_LEN) % 1;
   const now = isNight();
-  if (now !== was && P.x < 4800 && G.mode === 'play') {
+  if (now !== was && P.x < INST_X && G.mode === 'play') {
     if (now) { toast(S.bell ? 'Màn đêm buông xuống' : 'Màn đêm buông xuống. Nghe đồn có một phù thủy hiện ra bên Ân Điển lúc đêm khuya...', 4); }
     else toast('Trời đã sáng');
   }
@@ -79,7 +79,7 @@ WEAPONS.nightglaive = {
   heavy: S_('spin', 0.52, 0.42, 0.52, 2.3, 108, TAU, 60, 44, { turns: 2 }),
 };
 WEAPON_ORDER.splice(WEAPON_ORDER.indexOf('scythe') + 1, 0, 'nightglaive');
-const RIDER_ROUTE = [[1380, 2850], [1500, 2450], [1340, 2050], [1430, 1650], [1500, 2450]];
+const RIDER_ROUTE = [[1380, 2850], [1500, 2450], [1340, 2050], [1430, 1650], [1500, 2450]].map(([x, y]) => [sk(x), sk(y)]);
 const NIGHT_HORSE = { col: '#16151c', dark: '#0b0a0f', flame: ['rgba(120,90,200,.25)', 'rgba(170,140,240,.6)', 'rgba(230,220,255,.9)'], saddle: '#2a2436', trim: '#8a80b0', eye: '#d8c8ff', glow: 'rgba(150,120,240,.5)' };
 let rider = null;
 function updateRider(dt) {
@@ -119,7 +119,7 @@ const spiritScale = () => 1 + 0.035 * Math.max(0, S.level - 1) + 0.06 * (upLv(S.
 function canSummon() {
   if (!S.bell || !S.spirits || !S.spirits.length) return 'Chưa có tro triệu hồi';
   if (allies.some(a => !a.dead)) return 'Hồn đã được gọi';
-  if (P.x > 4800 && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return 'Không thể gọi hồn ở nơi này';
+  if (P.x > INST_X && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return 'Không thể gọi hồn ở nơi này';
   if (!inCombat()) return 'Chỉ gọi hồn được khi đang giao chiến';
   const sp = SPIRITS[S.spiritSel] || SPIRITS[S.spirits[0]];
   if (P.fp < sp.fp) return 'Không đủ FP (' + sp.fp + ')';

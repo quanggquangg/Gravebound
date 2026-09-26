@@ -123,7 +123,7 @@ function updateFx(dt) {
 // mưa ở Đầm Lầy Ashmire và mưa phùn ở Bờ Biển Saltreach; đầm lầy thỉnh thoảng có sét
 const RAIN_REG = { 'Đầm Lầy Ashmire': 1, 'Bờ Biển Saltreach': 0.45 };
 function updateRain(dt) {
-  const inst = cam.x > 4800;
+  const inst = cam.x > INST_X;
   const tgt = G.mode === 'title' || inst ? 0 : RAIN_REG[G.region] || 0;
   RAIN.k += (tgt - RAIN.k) * (1 - Math.exp(-0.6 * dt));
   const vw = CW / ZOOM, vh = CH / ZOOM, x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;

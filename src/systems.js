@@ -288,14 +288,14 @@ function updateCam(dt) {
   clampCam();
 }
 function clampCam() {
-  const hw = CW / ZOOM / 2, hh = CH / ZOOM / 2, A = G.mode !== 'title' && P.x > 4800 ? areaAt(P.x, P.y) : null;
+  const hw = CW / ZOOM / 2, hh = CH / ZOOM / 2, A = G.mode !== 'title' && P.x > INST_X ? areaAt(P.x, P.y) : null;
   const x0 = A ? A.x : WX0, x1 = A ? A.x + A.w : MAPW, y0 = A ? A.y : WY0, y1 = A ? A.y + A.h : H;
   cam.x = x1 - x0 > hw * 2 ? clamp(cam.x, x0 + hw, x1 - hw) : (x0 + x1) / 2;
   cam.y = y1 - y0 > hh * 2 ? clamp(cam.y, y0 + hh, y1 - hh) : (y0 + y1) / 2;
 }
 function ambient(dt) {
   const vw = CW / ZOOM, vh = CH / ZOOM, x0 = cam.x - vw / 2, y0 = cam.y - vh / 2;
-  const motes = cam.y < 380 && cam.x < 4800 ? 22 : 7;
+  const motes = cam.y < sk(380) && cam.x < INST_X ? 22 : 7;
   for (const [px, py, rx, ry] of POOLS) {
     if (Math.abs(px - cam.x) > vw / 2 + rx || Math.abs(py - cam.y) > vh / 2 + ry || Math.random() > dt * 3) continue;
     const a = rand(0, TAU), k = Math.sqrt(Math.random());
@@ -345,7 +345,7 @@ function step(now) {
     tick(dt);
   } else if (G.mode === 'title') {
     G.clock += dt;
-    cam.x = 1400 + Math.sin(G.clock * 0.07) * 140; cam.y = 3050 + Math.cos(G.clock * 0.05) * 90;
+    cam.x = sk(1400) + Math.sin(G.clock * 0.07) * 140; cam.y = sk(3050) + Math.cos(G.clock * 0.05) * 90;
     clampCam();
     updateParts(dt); ambient(dt);
   }
