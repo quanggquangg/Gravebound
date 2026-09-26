@@ -11,6 +11,7 @@ function toggleLock() {
     if (score < bd) { bd = score; best = e; }
   }
   P.lock = best;
+  if (best) SFX.lock();
 }
 function aimFace(moving, mx, my) {
   if (P.lock) return Math.atan2(P.lock.y - P.y, P.lock.x - P.x);
@@ -57,6 +58,7 @@ function makeAtk(kind, combo) {
 function spendSt(n, delay) {
   P.st = Math.max(0, P.st - n);
   P.stDelay = P.st <= 0 ? ST_EXHAUST : delay;
+  if (P.st <= 0) SFX.exhaust();
 }
 function startAttack(kind, combo, moving, mx, my) {
   if (WEAPONS[S.equipped].type === 'bow' && !P.mounted && S.arrows <= 0) { toast('Hết tên. Nghỉ tại Ân Điển để lấy lại'); return; }
@@ -215,7 +217,7 @@ function equip(id) {
   const Wp = WEAPONS[id];
   if (Wp.hand === 'off') return equipOff(id);
   if (S.equipped !== id) {
-    S.equipped = id; SFX.glint(); save();
+    S.equipped = id; SFX.equip(); save();
     toast('Tay phải: ' + Wp.name + (reqMet(Wp.req) ? '' : ' (thiếu chỉ số!)') + (Wp.twoHanded && offDef().type !== 'shield' ? ' · tay trái bị khóa' : ''));
   }
   return true;
@@ -318,6 +320,9 @@ function updatePlayer(dt) {
   const rt = rollType(), slow = (pooled ? 0.7 : 1) * (wet && !hasTal('houndfang') ? (p.mounted ? 0.75 : 0.62) : 1) * (rt === 'over' ? 0.6 : rt === 'heavy' ? 0.9 : 1);
   if (p.stDelay > 0) p.stDelay -= dt;
   else if (p.state !== 'roll' && p.state !== 'attack') p.st = Math.min(p.maxSt, p.st + (p.state === 'drink' || p.state === 'guard' ? 12 : p.mounted ? 45 : ST_REGEN) * (1 + armorBonus('stRegen') + (hasTal('collar') ? 0.15 : 0)) * dt);
+  // bước chân: cỏ, đá lát hay nước; cưỡi ngựa thì tiếng vó; máu dưới một phần tư thì nghe tim đập
+  if (p.stepD > (p.mounted ? 64 : p.sprinting ? 52 : 40)) { p.stepD = 0; if (p.mounted) SFX.gallop(); else SFX.step(wet ? 'water' : p.x > INST_X || PAVED.has(G.region) || regionAt(p.x, p.y) === 'Cổng Gác Thornwall' ? 'stone' : 'grass'); }
+  if (p.hp < p.maxHp * 0.25 && G.mode === 'play' && (p.heartT = (p.heartT || 0) - dt) <= 0) { p.heartT = 0.95; SFX.heart(); }
   const ox = p.x, oy = p.y;
   if (p.vx || p.vy) {
     moveCircle(p, p.vx * dt, p.vy * dt, false);
@@ -456,6 +461,7 @@ function updatePlayer(dt) {
     if (p.t >= 0.3) { p.state = 'idle'; p.t = 0; }
   }
   p.mvx = (p.x - ox) / dt; p.mvy = (p.y - oy) / dt;
+  if (p.state !== 'roll') p.stepD = (p.stepD || 0) + Math.hypot(p.x - ox, p.y - oy);
 }
 // ghi nhớ kẻ vừa gây sát thương để màn chết nói ai đã hạ ngươi
 const foeId = e => (e.isBoss ? (e.v === 2 ? 'varek2' : 'varek') : e.isDragon ? 'dragon' : e.isFinal ? 'final' : e.type);
@@ -639,7 +645,7 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
   e.poiseAcc += poise;
   if (e.poiseAcc >= e.poise && e.state !== 'phase') {
     e.poiseAcc = 0; e.atk = null; e.z = 0;
-    if (e.elite) { e.state = 'broken'; e.t = 0; floatText(e.x, e.y - e.r - 36, 'MẤT THẾ', '#f2dc97', true); }
+    if (e.elite) { e.state = 'broken'; e.t = 0; SFX.crack(); floatText(e.x, e.y - e.r - 36, 'MẤT THẾ', '#f2dc97', true); }
     else { e.state = 'stagger'; e.t = 0; e.stagDur = 0.5; }
   }
 }
@@ -676,7 +682,7 @@ function killEnemy(e) {
     return;
   }
   e.dead = true; e.state = 'dead'; e.t = 0; e.hp = 0;
-  if (!e.isBoss && !e.isDragon && !e.isFinal) recordKill(e.type);
+  if (!e.isBoss && !e.isDragon && !e.isFinal) { recordKill(e.type); SFX.die(); }
   if (P.lock === e) P.lock = null;
   burst(e.x, e.y, 24, 'rgba(60,55,45,.8)', 80, 5, 'dot', 1);
   dissolve(e, e.T && e.T.ghost ? '#cfefff' : e.invader ? '#ff8a6a' : '#f3cf6e');

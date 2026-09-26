@@ -143,7 +143,7 @@ function summonSpirits() {
     collide(a, true); allies.push(a);
     burst(a.x, a.y, 24, '#bcd6ff', 110, 3, 'mote', 0.9); ripple(a.x, a.y + 6, 26, 0.5);
   }
-  tone(660, 0.9, 'sine', 0.06, -60); tone(990, 1.1, 'sine', 0.04, -80); SFX.spell();
+  SFX.summon();
   toast('Đã gọi hồn: ' + sp.name);
   return true;
 }

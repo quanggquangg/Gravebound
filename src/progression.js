@@ -79,7 +79,7 @@ function levelUp(stat) {
   const cost = levelCost();
   if (S.runes < cost || S.stats[stat] >= 99) return false;
   S.runes -= cost; S.level++; S.stats[stat]++;
-  applyStats(true); save(); SFX.pickup();
+  applyStats(true); save(); SFX.levelup();
   return true;
 }
 

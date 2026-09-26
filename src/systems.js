@@ -205,7 +205,7 @@ function updateColo(dt) {
 }
 function openChest(c) {
   S.chests.push(c.id); c.openAt = G.clock;
-  noise(0.5, 0.2, 400, 0.8);
+  SFX.chest();
   burst(c.x, c.y - 6, 24, '#ffe7a3', 110, 3, 'mote', 1.1);
   grant(c.loot, c.x, c.y);
 }

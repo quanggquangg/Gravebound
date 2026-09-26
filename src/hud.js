@@ -621,7 +621,7 @@ function openGrace(g) {
   currentGrace = g; menuAt = 'grace'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = g.name; $('graceTitle').textContent = 'Nghỉ ngơi'; $('btnLeave').textContent = 'Rời đi';
   $('btnWait').hidden = g.x > INST_X; $('btnWait').textContent = isNight() ? 'Chờ đến sáng' : 'Chờ đến đêm';
-  selectTab('level'); renderGrace(); UI.grace.hidden = false;
+  selectTab('level'); renderGrace(); UI.grace.hidden = false; SFX.uiOpen();
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
 function openInventory(tab = 'gear') {
@@ -629,10 +629,10 @@ function openInventory(tab = 'gear') {
   UI.pause.hidden = true;
   currentGrace = null; menuAt = 'field'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = regionAt(P.x, P.y); $('graceTitle').textContent = 'Hành trang'; $('btnLeave').textContent = 'Đóng'; $('btnWait').hidden = true;
-  selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.glint();
+  selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.uiOpen();
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
-function closeGrace() { seenTab(graceTab); if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }
+function closeGrace() { SFX.uiClose(); seenTab(graceTab); if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }
 // đang giao chiến thì không dịch chuyển nhanh được (như Elden Ring)
 function inCombat() {
   if (G.bossFight || G.dfight || G.colo.active || G.finalFight || G.dragonFight || P.x > INST_X && areaAt(P.x, P.y) && areaAt(P.x, P.y).id === 'realm') return true;
@@ -1200,3 +1200,6 @@ spawnEnemies();
 boss = makeBoss(1);
 dragon = makeDragon();
 requestAnimationFrame(frame);
+
+// tiếng bấm nút nhẹ cho mọi nút trong menu (trừ khi nút đã có tiếng riêng)
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button'); if (b && !b.disabled && AC) SFX.ui(); }, true);

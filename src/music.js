@@ -41,8 +41,8 @@ function mNode(type, f, t, dur, vol, att, rel, cut, det = 0) {
 function mNoise(t, dur, vol, type, freq, att = 0.002) {
   if (!MUSIC.nb) { MUSIC.nb = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); const d = MUSIC.nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
   const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
-  s.buffer = MUSIC.nb; f.type = type; f.frequency.value = freq;
-  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + att + dur);
+  s.buffer = MUSIC.nb; s.loop = true; f.type = type; f.frequency.value = freq; // lặp: tiếng sóng dài hơn bộ đệm không bị cắt
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + Math.max(att, 0.004)); g.gain.exponentialRampToValueAtTime(0.0001, t + att + dur);
   s.connect(f); f.connect(g); g.connect(MUSIC.gain); s.start(t, Math.random()); s.stop(t + att + dur + 0.05);
 }
 const INST = {
@@ -112,7 +112,7 @@ function pickTrack() {
 }
 function updateMusic(dt) {
   if (!AC) return;
-  if (!MUSIC.gain) { MUSIC.gain = AC.createGain(); MUSIC.gain.gain.value = 0.0001; MUSIC.gain.connect(AC.destination); MUSIC.timer = setInterval(musicTick, 90); }
+  if (!MUSIC.gain) { MUSIC.gain = AC.createGain(); MUSIC.gain.gain.value = 0.0001; MUSIC.gain.connect(musicOut || AC.destination); MUSIC.timer = setInterval(musicTick, 90); }
   MUSIC.last += dt;
   if (MUSIC.last < 0.25) return;
   MUSIC.last = 0;

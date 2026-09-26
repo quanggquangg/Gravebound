@@ -143,8 +143,28 @@ function updateRain(dt) {
   if (RAIN.k > 0.75 && G.region === 'Đầm Lầy Ashmire' && G.mode === 'play' && (RAIN.boltT -= dt) <= 0) {
     RAIN.boltT = rand(14, 30); RAIN.bolt = 1;
     later(0.14, () => { RAIN.bolt = Math.max(RAIN.bolt, 0.7); });
-    later(rand(0.6, 1.4), () => { noise(1.8, 0.28 * RAIN.k, 140, 0.4); tone(42, 1.6, 'sine', 0.12, -12); });
+    later(rand(0.6, 1.4), () => { noise(2.6, 0.3 * RAIN.k, 140, 0.4, 0, 'lowpass'); tone(42, 2.2, 'sine', 0.12, -12); noise(1.2, 0.12 * RAIN.k, 420, 0.6, 0.3, 'lowpass'); });
   }
+  updateAmbience(dt, inst);
+}
+// âm nền: mưa rì rào theo cơn mưa, gió thổi mạnh hơn ở vùng cao trống trải, tiếng nước nhỏ giọt trong hầm ngục
+const AMBS = { rg: null, wg: null };
+const WINDY = new Set(['Cao Nguyên Aurelia', 'Sườn Núi Goldspire', 'Bờ Biển Saltreach', 'Cao Nguyên Cinderreach', 'Hạ Thành Aurumhold']);
+function ambNode(freq, type, q) {
+  const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  src.buffer = noiseBuf; src.loop = true; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = 0.0001;
+  src.connect(f); f.connect(g); g.connect(master); src.start(0, Math.random() * 1.5);
+  return g;
+}
+function updateAmbience(dt, inst) {
+  if (!AC || !master) return;
+  if (!noiseBuf) noise(0.01, 0.0001);
+  if (!noiseBuf) return;
+  if (!AMBS.rg) { AMBS.rg = ambNode(2400, "bandpass", 0.45); AMBS.wg = ambNode(360, "lowpass", 0.8); }
+  const t = AC.currentTime, on = !muted && G.mode !== 'title' ? (G.mode === 'play' ? 1 : 0.45) : 0;
+  const rain = Math.max(0.0001, RAIN.k * 0.085 * on), wind = Math.max(0.0001, (inst ? 0.006 : WINDY.has(G.region) ? 0.05 : 0.018) * (0.65 + 0.35 * Math.sin(G.clock * 0.37)) * on);
+  AMBS.rg.gain.setTargetAtTime(rain, t, 0.6); AMBS.wg.gain.setTargetAtTime(wind, t, 0.9);
+  if (inst && on && G.mode === 'play' && Math.random() < dt * 0.5) { const A = areaAt(P.x, P.y); if (A && A.dg) { const f = rand(1800, 2800); tone(f, 0.12, 'sine', 0.018, -f * 0.3); tone(f * 0.8, 0.2, 'sine', 0.008, -f * 0.2, 0.18); } }
 }
 
 // ───────────────────────── vẽ ─────────────────────────
