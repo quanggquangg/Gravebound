@@ -622,7 +622,7 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
   floatText(e.x, e.y - e.r - 12, String(dmg), crit ? '#ffd36b' : '#f1e6c8', crit);
   if (crit) { SFX.crit(); floatText(e.x, e.y - e.r - 40, label, '#ffd36b', true); } else if (!quiet) SFX.hit();
   if (e.isDragon && (e.state === 'sleep' || e.state === 'return')) wakeDragon();
-  if (!e.isBoss && !e.isDragon && !e.isFinal && (e.state === 'idle' || e.state === 'return')) { const wasIdle = e.state === 'idle'; e.state = 'chase'; e.t = 0; e.lostT = 0; if (wasIdle) alertGroup(e); }
+  if (!e.isBoss && !e.isDragon && !e.isFinal && !e.ally) provoke(e, opt.ally ? fx : P.x, opt.ally ? fy : P.y);
   if (!e.isBoss && !e.isDragon && !e.isFinal && !quiet) { const kb = e.elite ? 40 : kind === 'heavy' ? 240 : 120; e.vx += Math.cos(a) * kb; e.vy += Math.sin(a) * kb; }
   if (opt.bleed && e.hp > 0) {
     e.bleed = (e.bleed || 0) + opt.bleed * (hasTal('blood') ? 1.4 : 1);

@@ -64,6 +64,21 @@ function alertGroup(e) {
   mates.sort((a, b) => dist(a.x, a.y, e.x, e.y) - dist(b.x, b.y, e.x, e.y));
   for (const o of mates.slice(0, Math.min(GROUP_MAX, CROWD_CAP - CHASERS))) o.wakeAt = G.clock + rand(0.2, 0.6);
 }
+// bị đánh là biết ngay kẻ đánh mình ở đâu: tỉnh dậy (kể cả đang quay về nhà), đuổi xa hơn giới hạn thường một lúc,
+// và tiếng giao tranh làm quái đứng gần quay sang nghe ngóng rồi kéo tới xem
+const PROVOKE_T = 6, HEAR_R = 260;
+function provoke(e, x, y) {
+  if (e.state === 'idle') wake(e, true);
+  else if (e.state === 'return' || e.state === 'search') { e.state = 'chase'; e.t = 0; e.alertT = 0.7; }
+  e.aggroT = PROVOKE_T; e.lostT = 0; e.lkx = x; e.lky = y;
+  if (CHASERS >= CROWD_CAP) return;
+  for (const o of enemies) {
+    if (o === e || o.dead || o.state !== 'idle' || o.wakeAt || o.T.miniboss || (o.room && G.dfight !== o.room)) continue;
+    if (Math.abs(o.x - e.x) > HEAR_R || Math.abs(o.y - e.y) > HEAR_R || dist(o.x, o.y, e.x, e.y) > HEAR_R) continue;
+    o.sus = Math.max(o.sus || 0, 0.55); o.face = Math.atan2(e.y - o.y, e.x - o.x);
+    if (Math.random() < 0.6) { o.state = 'search'; o.t = 0; o.lkx = e.x + rand(-30, 30); o.lky = e.y + rand(-30, 30); }
+  }
+}
 function wake(e, group) { e.state = 'chase'; e.t = 0; e.wakeAt = 0; e.sus = 0; e.alertT = 0.9; if (e.T.intro && !e.introd) { e.introd = true; subtitle(e.T.intro); SFX.roar(); } if (group) alertGroup(e); }
 // quái thường chỉ được ra đòn khi còn lượt: mỗi lúc tối đa 2 con cận chiến và 2 con bắn xa (theo độ khó);
 // boss, quái tinh anh và Kẻ Xâm Nhập không bị giới hạn. Đòn bắn xa chỉ bắn khi đã vào khung hình và không bị tường chắn.
@@ -349,9 +364,13 @@ function updateEnemies(dt) {
         break;
       }
       case 'chase': {
-        if ((!alive && !foe) || asleep || (homeD > (T.leash || LEASH) && !e.challenge) || (pInArena && !e.arena && !foe)) { e.state = 'return'; e.t = 0; break; }
-        // mất dấu: không thấy người chơi đủ lâu và đã ở xa thì quay về
+        const leash = (T.leash || LEASH) * (e.aggroT > 0 ? 2.4 : 1);
+        if ((!alive && !foe) || asleep || (homeD > leash && !e.challenge) || (pInArena && !e.arena && !foe)) { e.state = 'return'; e.t = 0; e.aggroT = 0; break; }
+        if (e.aggroT > 0) e.aggroT -= dt;
+        if (e.los) { e.lkx = tx; e.lky = ty; }
+        // mất dấu: không thấy người chơi một lúc thì tới chỗ thấy lần cuối, nhìn quanh tìm, không thấy mới quay về
         e.lostT = !e.los && d > sightR(T) * 0.5 && !e.challenge ? (e.lostT || 0) + dt : 0;
+        if (e.lostT > LOST_T * 0.5 && e.lkx !== undefined) { e.state = 'search'; e.t = 0; e.lostT = 0; break; }
         if (e.lostT > LOST_T) { e.state = 'return'; e.t = 0; e.lostT = 0; break; }
         e.face = turn(e.face, ang, 7 * dt);
         const pick = e.p2 && T.p2.pick ? T.p2.pick : T.pick;
@@ -380,6 +399,16 @@ function updateEnemies(dt) {
             if (idx >= 0) { if (foe) startEnemyAtk(e, idx); else tryAttack(e, idx); }
           }
         }
+        break;
+      }
+      case 'search': {
+        // đi tới nơi nghe động hoặc thấy lần cuối, rồi đứng ngó quanh; thấy người chơi thì lao vào
+        if (!alive || asleep || homeD > (T.leash || LEASH) * 2.4) { e.state = 'return'; e.t = 0; break; }
+        if (seesPlayer(e, d, ang) || (d < sightR(T) * 0.35 && e.los)) { wake(e, false); e.aggroT = PROVOKE_T * 0.5; break; }
+        const dl = dist(e.x, e.y, e.lkx, e.lky);
+        if (dl > 24 && e.t < 4) { const a = Math.atan2(e.lky - e.y, e.lkx - e.x); e.face = turn(e.face, a, 5 * dt); goTo(a, spd * 0.7); trackProgress(e, dt, [e.lkx, e.lky]); }
+        else { e.look = (e.look || 0) + dt; e.face += Math.sin(e.look * 1.7) * 2.4 * dt; }
+        if (e.t > 7) { e.state = 'return'; e.t = 0; e.look = 0; }
         break;
       }
       case 'atk': updateEnemyAtk(e, dt, ang); break;

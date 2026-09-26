@@ -1169,7 +1169,7 @@ function drawEnemy(e) {
 // dấu hiệu nhận biết trên đầu quái: mắt mở dần khi đang nghi ngờ, dấu chấm than khi vừa phát hiện
 function drawAwareness(e, y) {
   if (e.dead || e.state === 'bones') return;
-  const sus = e.state === 'idle' ? e.sus || 0 : 0, alert = e.alertT > 0 && e.state !== 'idle' ? e.alertT : 0;
+  const sus = e.state === 'idle' ? e.sus || 0 : e.state === 'search' ? 0.75 : 0, alert = e.alertT > 0 && e.state !== 'idle' ? e.alertT : 0;
   if (sus < 0.04 && !alert) return;
   const x = e.x, cy = y - 12;
   ctx.save();
