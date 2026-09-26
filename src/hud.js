@@ -297,6 +297,7 @@ function drawHUD() {
   if (P.buffs.flame > 0) bf.push('Lửa ' + Math.ceil(P.buffs.flame) + 's');
   if (P.buffs.holy > 0) bf.push('Thánh ' + Math.ceil(P.buffs.holy) + 's');
   if (P.buffs.bless > 0) bf.push('Phúc lành ' + Math.ceil(P.buffs.bless) + 's');
+  if (P.buffs.warcry > 0) bf.push('Chiến hống ' + Math.ceil(P.buffs.warcry) + 's');
   if (bf.length) l3 += (l3 ? ' · ' : '') + bf.join(' · ');
   if (rollType() === 'over') l3 += (l3 ? ' · ' : '') + 'QUÁ TẢI';
   if (l3) { ctx.fillStyle = rollType() === 'over' ? '#f0a58f' : '#e6c98a'; ctx.fillText(l3, tx, fy + 43); }
@@ -840,7 +841,7 @@ function openShop(id) {
   renderShop(); UI.shop.hidden = false; SFX.glint();
   setTimeout(() => $('btnShopLeave').focus({ preventScroll: true }), 30);
 }
-function closeShop() { UI.shop.hidden = true; currentShop = null; setMode('play'); }
+function closeShop() { UI.shop.hidden = true; currentShop = null; G.respecArm = false; setMode('play'); }
 function renderShop() {
   const id = currentShop;
   $('shopRunes').textContent = S.runes.toLocaleString(numLoc());
@@ -860,7 +861,13 @@ function renderShop() {
   }
   const sh = SHOPS[id];
   $('shopName').textContent = sh.name; $('shopLine').textContent = sh.line;
-  $('shopList').innerHTML = sh.stock.map((r, i) => {
+  // Nữ Tu Seraphine còn nhận tái sinh: tẩy điểm để thử lối chơi khác
+  const rs = id === 'priestess' ? (() => {
+    const free = respecFree(), can = S.level > 1 && (free || invN('larval') > 0), arm = G.respecArm && can;
+    const cost = free ? 'Lần đầu miễn phí' : 'Cần 1 Nước Mắt Ấu Trùng (có ' + invN('larval') + ')';
+    return `<li><button data-respec="1" class="${arm ? 'arm' : 'hub'}" ${can ? '' : 'disabled'}><span>Tái Sinh${arm ? ' · bấm lần nữa để xác nhận' : ''}<br><small>Chỉ số về như lúc mới chọn xuất thân, nhận lại ${respecRefund().toLocaleString(numLoc())} rune đã dùng để lên cấp rồi phân lại tùy ý. ${cost}</small></span><small>${S.level > 1 ? 'Cấp ' + S.level + ' → 1' : 'Cấp 1'}</small></button></li>`;
+  })() : '';
+  $('shopList').innerHTML = rs + sh.stock.map((r, i) => {
     const info = shopRow(r), can = !info.sold && !info.locked && S.runes >= r.price;
     const tail = info.sold ? 'Đã có' : info.locked ? (r.lock || 'Chưa mở') : r.price.toLocaleString(numLoc()) + ' rune';
     return `<li><button data-buy="${i}" ${can ? '' : 'disabled'}><span>${esc(info.name)}<br><small>${esc(info.desc)}</small></span><small>${tail}</small></button></li>`;
@@ -871,6 +878,8 @@ $('shopList').addEventListener('click', e => {
   if (!b) return;
   if (b.dataset.up) { if (doUpgrade(b.dataset.up)) { toast('Cường hóa thành công: ' + WEAPONS[b.dataset.up].name + ' +' + upLv(b.dataset.up)); shake(4); } }
   else if (b.dataset.buy !== undefined) buyRow(currentShop, +b.dataset.buy);
+  else if (b.dataset.respec) { if (G.respecArm) { G.respecArm = false; doRespec(); } else { G.respecArm = true; SFX.glint(); } }
+  if (!b.dataset.respec) G.respecArm = false;
   renderShop();
 });
 $('btnShopLeave').onclick = closeShop;

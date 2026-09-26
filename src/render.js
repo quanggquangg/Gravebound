@@ -38,6 +38,145 @@ function litGrad(c, x, y, r) {
 // vũ khí hai tay: tay trái nắm ngay sau tay phải trên chuôi (cán dài thì nắm cao hơn, cung thì kéo dây)
 const TWO_HAND = new Set(['greatsword', 'club', 'scythe', 'bow']);
 let HAND2 = null;
+// hình dáng riêng của từng vũ khí (L.form); vẽ dọc trục +x từ chuôi, bề rộng theo trục y
+const WFORM = {
+  // kiếm gãy: lưỡi mẻ, đầu gãy lởm chởm
+  broken(L, s, len) {
+    const hw = 1.9 * s, b0 = 6 * s, e = len * 0.78;
+    ctx.fillStyle = L.wcol; ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(b0, -hw); ctx.lineTo(e - 3 * s, -hw); ctx.lineTo(e + 1 * s, -hw * 0.3); ctx.lineTo(e - 2 * s, 0.2 * s); ctx.lineTo(e + 2 * s, hw * 0.6); ctx.lineTo(e - 4 * s, hw); ctx.lineTo(b0 + 9 * s, hw); ctx.lineTo(b0 + 7 * s, hw * 0.55); ctx.lineTo(b0 + 4 * s, hw); ctx.lineTo(b0, hw); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(b0 + 2 * s, -hw * 0.3, e - b0 - 6 * s, hw * 0.3);
+    swordHilt(s, hw, '#7a6a50');
+  },
+  // dao găm: lưỡi lá ngắn, gốc rộng, chuôi có vòng tròn
+  dagger(L, s, len) {
+    const b0 = 5 * s, hw = 2.5 * s;
+    ctx.fillStyle = L.wcol; ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(b0, -hw); ctx.quadraticCurveTo(len * 0.6, -hw * 1.1, len, 0); ctx.quadraticCurveTo(len * 0.6, hw * 1.1, b0, hw); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(b0 + 1 * s, 0); ctx.lineTo(len - 2 * s, 0); ctx.stroke();
+    ctx.fillStyle = '#8a7a5a'; ctx.strokeStyle = OL; ctx.lineWidth = 1; ctx.fillRect(b0 - 2 * s, -hw - 1 * s, 2 * s, hw * 2 + 2 * s); ctx.strokeRect(b0 - 2 * s, -hw - 1 * s, 2 * s, hw * 2 + 2 * s);
+    ctx.fillStyle = '#3a2e22'; ctx.fillRect(-3 * s, -1.1 * s, b0 - 1 * s, 2.2 * s);
+    ctx.strokeStyle = '#b08d4c'; ctx.lineWidth = 1.4 * s; ctx.beginPath(); ctx.arc(-4.5 * s, 0, 1.9 * s, 0, TAU); ctx.stroke();
+  },
+  // dao nanh: một chiếc nanh thú cong làm lưỡi
+  tusk(L, s, len) {
+    ctx.fillStyle = litGrad('#e8dcc0', len * 0.5, -3 * s, len * 0.6); ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(3 * s, -3 * s); ctx.quadraticCurveTo(len * 0.55, -5 * s, len, -8 * s); ctx.quadraticCurveTo(len * 0.6, 1 * s, 3 * s, 3 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(120,100,70,.5)'; ctx.lineWidth = 0.8; for (const k of [0.3, 0.5, 0.7]) { ctx.beginPath(); ctx.moveTo(len * k, -2.5 * s - k * 3 * s); ctx.lineTo(len * k + 1.5 * s, 0.5 * s - k * 2 * s); ctx.stroke(); }
+    ctx.fillStyle = '#5a3a24'; ctx.fillRect(-4 * s, -1.6 * s, 7 * s, 3.2 * s); ctx.strokeStyle = '#b08d4c'; ctx.lineWidth = 0.8; for (let k = -3; k < 3; k += 1.6) { ctx.beginPath(); ctx.moveTo(k * s, -1.6 * s); ctx.lineTo(k * s, 1.6 * s); ctx.stroke(); }
+  },
+  // kiếm liễu: lưỡi kim mảnh, chắn tay hình chén có vòng bảo vệ
+  rapier(L, s, len) {
+    olLine(4 * s, 0, len, 0, 1.1 * s, L.wcol);
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(5 * s, -0.3 * s); ctx.lineTo(len - 2 * s, -0.3 * s); ctx.stroke();
+    ctx.fillStyle = litGrad('#c9a44e', 3 * s, -2 * s, 5 * s); ctx.strokeStyle = OL; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.arc(3.5 * s, 0, 3.8 * s, -1.9, 1.9); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#c9a44e'; ctx.lineWidth = 1.1 * s; ctx.beginPath(); ctx.moveTo(3 * s, -3.6 * s); ctx.quadraticCurveTo(-3 * s, -5 * s, -5 * s, -0.5 * s); ctx.stroke();
+    ctx.fillStyle = '#3a2e22'; ctx.fillRect(-5 * s, -1 * s, 6 * s, 2 * s); ctx.fillStyle = '#c9a44e'; ctx.beginPath(); ctx.arc(-5.5 * s, 0, 1.6 * s, 0, TAU); ctx.fill();
+  },
+  // kiếm pha lê: lưỡi nhiều mặt cắt trong suốt, ánh xanh
+  crystal(L, s, len) {
+    const b0 = 6 * s, hw = 2.6 * s;
+    ctx.shadowColor = '#9fd0ff'; ctx.shadowBlur = 10;
+    ctx.fillStyle = 'rgba(190,225,255,.85)'; ctx.strokeStyle = 'rgba(20,40,70,.9)'; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.moveTo(b0, -hw * 0.7); ctx.lineTo(len * 0.45, -hw); ctx.lineTo(len * 0.8, -hw * 0.8); ctx.lineTo(len + 2 * s, 0); ctx.lineTo(len * 0.8, hw * 0.8); ctx.lineTo(len * 0.45, hw); ctx.lineTo(b0, hw * 0.7); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.moveTo(b0, -hw * 0.7); ctx.lineTo(len * 0.45, -hw); ctx.lineTo(len * 0.8, -hw * 0.8); ctx.lineTo(len + 2 * s, 0); ctx.lineTo(len * 0.5, -hw * 0.1); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,170,230,.7)'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(len * 0.45, -hw); ctx.lineTo(len * 0.5, hw * 0.1); ctx.lineTo(len * 0.45, hw); ctx.moveTo(len * 0.8, -hw * 0.8); ctx.lineTo(len * 0.78, hw * 0.8); ctx.stroke();
+    swordHilt(s, hw, '#7fb0d8');
+  },
+  // kiếm hoàng gia: lưỡi rộng mạ vàng, chắn tay hình mặt trời
+  royal(L, s, len) {
+    const b0 = 6 * s, hw = 2.9 * s, tip = 6 * s;
+    ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 10;
+    ctx.fillStyle = litGrad(L.wcol, len * 0.5, -hw, len * 0.6); ctx.strokeStyle = OL; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(b0, -hw); ctx.lineTo(len - tip, -hw * 0.85); ctx.lineTo(len, 0); ctx.lineTo(len - tip, hw * 0.85); ctx.lineTo(b0, hw); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+    ctx.strokeStyle = 'rgba(150,100,20,.8)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(b0 + 2 * s, 0); ctx.lineTo(len - tip, 0); ctx.stroke();
+    ctx.fillStyle = '#ffe9a8'; for (let k = 0.3; k < 0.85; k += 0.18) { ctx.beginPath(); ctx.arc(len * k, 0, 0.9 * s, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = '#f0c85a'; ctx.strokeStyle = OL; ctx.lineWidth = 1;
+    ctx.beginPath(); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU, r = i % 2 ? 3.2 * s : 5.6 * s; ctx.lineTo(b0 - 1 * s + Math.cos(a) * r * 0.55, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4a3a28'; ctx.fillRect(-3 * s, -1.2 * s, b0 - 1 * s, 2.4 * s); ctx.fillStyle = '#f0c85a'; ctx.beginPath(); ctx.arc(-3.6 * s, 0, 2 * s, 0, TAU); ctx.fill(); ctx.stroke();
+  },
+  // đại kiếm của Varek: lưỡi sẫm có răng cưa, đường khắc vàng chạy dọc
+  varek(L, s, len) {
+    const b0 = 7 * s, hw = 3.3 * s;
+    ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 8;
+    ctx.fillStyle = litGrad('#5a5448', len * 0.5, -hw, len * 0.6); ctx.strokeStyle = OL; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(b0, -hw); for (let x = b0 + 4 * s; x < len - 8 * s; x += 5 * s) { ctx.lineTo(x, -hw); ctx.lineTo(x + 2.5 * s, -hw - 1.2 * s); } ctx.lineTo(len - 8 * s, -hw); ctx.lineTo(len, 0); ctx.lineTo(len - 8 * s, hw); ctx.lineTo(b0, hw); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+    ctx.strokeStyle = '#ffd76a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(b0 + 3 * s, 0); for (let x = b0 + 3 * s; x < len - 10 * s; x += 4 * s) ctx.lineTo(x + 2 * s, (x / s) % 8 < 4 ? -0.8 * s : 0.8 * s); ctx.stroke();
+    swordHilt(s, hw + 1 * s, '#8a6a2a', 3.4);
+  },
+  // đại kiếm: phiến thép rộng bản, mũi vát, như một tấm sắt
+  slab(L, s, len) {
+    const b0 = 7 * s, hw = 4.4 * s;
+    ctx.fillStyle = litGrad(L.wcol, len * 0.5, -hw, len * 0.6); ctx.strokeStyle = OL; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(b0, -hw); ctx.lineTo(len - 4 * s, -hw); ctx.lineTo(len, -hw + 3 * s); ctx.lineTo(len, hw * 0.6); ctx.lineTo(len - 6 * s, hw); ctx.lineTo(b0, hw); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(b0, hw * 0.25, len - b0 - 6 * s, hw * 0.75);
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(b0 + 2 * s, -hw + 1 * s, len - b0 - 8 * s, 1.2 * s);
+    ctx.strokeStyle = 'rgba(40,30,20,.5)'; ctx.lineWidth = 1; for (const k of [0.35, 0.6, 0.82]) { ctx.beginPath(); ctx.moveTo(len * k, -hw); ctx.lineTo(len * k + 2 * s, -hw + 2.2 * s); ctx.stroke(); }
+    swordHilt(s, hw + 1 * s, '#6a5a44', 4);
+  },
+  // đại rìu hai lưỡi
+  greataxe(L, s, len) {
+    olLine(-8 * s, 0, len + 2 * s, 0, 3.2 * s, '#4a3a28');
+    ctx.fillStyle = litGrad(L.wcol, len - 6 * s, -8 * s, 14 * s); ctx.strokeStyle = OL; ctx.lineWidth = 1.4;
+    for (const sy of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(len - 12 * s, sy * 2 * s); ctx.quadraticCurveTo(len - 16 * s, sy * 13 * s, len - 8 * s, sy * 18 * s); ctx.quadraticCurveTo(len - 2 * s, sy * 10 * s, len + 2 * s, sy * 16 * s); ctx.quadraticCurveTo(len + 3 * s, sy * 6 * s, len - 1 * s, sy * 2 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(len - 7 * s, sy * 17 * s); ctx.quadraticCurveTo(len - 2 * s, sy * 10 * s, len + 1.5 * s, sy * 15 * s); ctx.stroke(); ctx.strokeStyle = OL; ctx.lineWidth = 1.4;
+    }
+    ctx.fillStyle = '#6a5a44'; ctx.fillRect(len - 13 * s, -2.6 * s, 13 * s, 5.2 * s); ctx.strokeRect(len - 13 * s, -2.6 * s, 13 * s, 5.2 * s);
+  },
+  // búa tạ: khối đầu búa vuông, mặt sau có gai
+  warhammer(L, s, len) {
+    olLine(-6 * s, 0, len - 4 * s, 0, 3.4 * s, '#4a3a28');
+    ctx.fillStyle = '#b08d4c'; for (const k of [0.3, 0.55]) ctx.fillRect(len * k, -2 * s, 2 * s, 4 * s);
+    ctx.fillStyle = litGrad(L.wcol, len - 4 * s, -6 * s, 12 * s); ctx.strokeStyle = OL; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.roundRect(len - 10 * s, -9 * s, 12 * s, 18 * s, 2 * s); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = tint(L.wcol, 0.7); ctx.fillRect(len - 10 * s, -9 * s, 3 * s, 18 * s);
+    ctx.fillStyle = L.wcol; ctx.beginPath(); ctx.moveTo(len - 4 * s, -9 * s); ctx.lineTo(len - 4 * s, -15 * s); ctx.lineTo(len - 1 * s, -9 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 1; ctx.strokeRect(len - 8 * s, -7 * s, 8 * s, 14 * s);
+  },
+  // sừng vàng: đầu chùy là một chiếc sừng xoắn mạ vàng
+  horn(L, s, len) {
+    olLine(-4 * s, 0, len - 10 * s, 0, 3 * s, '#5a4630');
+    ctx.fillStyle = litGrad('#e8c060', len - 6 * s, -6 * s, 14 * s); ctx.strokeStyle = OL; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(len - 12 * s, -5 * s); ctx.quadraticCurveTo(len + 2 * s, -12 * s, len + 6 * s, -2 * s); ctx.quadraticCurveTo(len + 8 * s, 6 * s, len + 1 * s, 9 * s); ctx.quadraticCurveTo(len + 2 * s, 3 * s, len - 2 * s, 1 * s); ctx.quadraticCurveTo(len - 6 * s, 3 * s, len - 12 * s, 5 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(120,80,20,.7)'; ctx.lineWidth = 1; for (const k of [-8, -4, 0, 3]) { ctx.beginPath(); ctx.moveTo(len + k * s, -8 * s + Math.abs(k) * 0.3 * s); ctx.quadraticCurveTo(len + k * s + 3 * s, -1 * s, len + k * s + 1 * s, 5 * s); ctx.stroke(); }
+  },
+  // kích: cán dài, mũi giáo và một lưỡi rìu đá bên hông
+  halberd(L, s, len) {
+    olLine(-12 * s, 0, len - 6 * s, 0, 2.8 * s, '#5a5048');
+    ctx.fillStyle = L.wcol; ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(len + 8 * s, 0); ctx.lineTo(len - 4 * s, -3 * s); ctx.lineTo(len - 4 * s, 3 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(len - 14 * s, -1.5 * s); ctx.lineTo(len - 12 * s, -12 * s); ctx.quadraticCurveTo(len - 6 * s, -10 * s, len - 2 * s, -12 * s); ctx.lineTo(len - 4 * s, -1.5 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(len - 12 * s, 1.5 * s); ctx.lineTo(len - 14 * s, 6 * s); ctx.lineTo(len - 8 * s, 1.5 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(len - 12 * s, -11 * s); ctx.quadraticCurveTo(len - 6 * s, -9 * s, len - 2.5 * s, -11 * s); ctx.stroke();
+  },
+  // càng cua pha lê: hai ngàm kẹp phát sáng
+  pincer(L, s, len) {
+    olLine(-6 * s, 0, len - 12 * s, 0, 3 * s, '#4a6a84');
+    ctx.shadowColor = '#9fd0ff'; ctx.shadowBlur = 8;
+    ctx.fillStyle = litGrad('#cfefff', len - 6 * s, -6 * s, 14 * s); ctx.strokeStyle = 'rgba(20,40,70,.9)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(len - 14 * s, -4 * s); ctx.quadraticCurveTo(len, -12 * s, len + 6 * s, -2 * s); ctx.quadraticCurveTo(len - 2 * s, -5 * s, len - 8 * s, -1 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(len - 14 * s, 4 * s); ctx.quadraticCurveTo(len - 2 * s, 9 * s, len + 3 * s, 3 * s); ctx.quadraticCurveTo(len - 4 * s, 4 * s, len - 8 * s, 1 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.arc(len - 3 * s, -6 * s, 1.2 * s, 0, TAU); ctx.fill();
+  },
+  // đao dài: cán dài, lưỡi đơn cong nhẹ ở đầu
+  glaive(L, s, len) {
+    olLine(-10 * s, 0, len - 14 * s, 0, 2.6 * s, '#2a2830');
+    ctx.fillStyle = '#8a80b0'; ctx.fillRect(len - 16 * s, -2 * s, 3 * s, 4 * s);
+    ctx.fillStyle = litGrad(L.wcol, len - 4 * s, -4 * s, 16 * s); ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(len - 14 * s, -1.6 * s); ctx.quadraticCurveTo(len + 2 * s, -3 * s, len + 10 * s, -8 * s); ctx.quadraticCurveTo(len + 6 * s, 0, len - 14 * s, 2 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(len - 12 * s, -1.5 * s); ctx.quadraticCurveTo(len + 2 * s, -3 * s, len + 9 * s, -7.4 * s); ctx.stroke();
+  },
+};
+// chắn tay và chuôi kiếm dùng chung
+function swordHilt(s, hw, col, grip = 2.4) {
+  const b0 = 6 * s;
+  ctx.fillStyle = col; ctx.strokeStyle = OL; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.rect(b0 - 2 * s, -hw - 3 * s, 2.4 * s, hw * 2 + 6 * s); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#4a3a28'; ctx.fillRect(-2 * s - (grip - 2.4) * 2 * s, -1.2 * s, b0 + (grip - 2.4) * 2 * s, 2.4 * s);
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(-2.6 * s - (grip - 2.4) * 2 * s, 0, 1.9 * s, 0, TAU); ctx.fill(); ctx.stroke();
+}
 function drawWeapon(L, s, wAng, o) {
   const ox = 3 * s + (o.thrust || 0) * 14 * s, oy = 8 * s, len = L.wlen * s;
   if (o.twoHand) {
@@ -45,7 +184,9 @@ function drawWeapon(L, s, wAng, o) {
     HAND2 = [ox + Math.cos(wAng) * g, oy + Math.sin(wAng) * g];
   } else HAND2 = null;
   ctx.save(); ctx.translate(ox, oy); ctx.rotate(wAng);
-  if (o.hammer !== undefined) {
+  if (L.form && WFORM[L.form] && o.hammer === undefined) {
+    WFORM[L.form](L, s, len, o);
+  } else if (o.hammer !== undefined) {
     const g = o.hammer;
     ctx.strokeStyle = '#6b5a3e'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(70, 0); ctx.stroke();
     ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 20 + g * 30;
@@ -313,7 +454,7 @@ function drawPlayer() {
     const k = ph === 0 ? t / A.wind : ph === 1 ? (t - A.wind) / A.act : (t - A.wind - A.act) / A.rec;
     if (anim === 'bow') { wAng = -0.1; charge = ph === 0 ? k : 0; if (ph === 0 && A.pierce && k > 0.5) { ctx.strokeStyle = `rgba(255,240,200,${0.4 * k})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + Math.cos(p.face) * 260, p.y + Math.sin(p.face) * 260); ctx.stroke(); } }
     else if (anim === 'thrust' || (anim === 'dash' && A.thrust)) {
-      wAng = -0.12; thrust = ph === 0 ? -0.5 * k : ph === 1 ? 1 : 1 - k; stab = ph === 1;
+      wAng = -0.12; thrust = ph === 0 ? -0.5 * k : ph === 1 ? (A.multi ? 0.3 + 0.7 * Math.abs(Math.sin(k * A.multi * Math.PI)) : 1) : 1 - k; stab = ph === 1;
       if (anim === 'dash' && ph === 1) fx = 'dash';
     } else if (anim === 'spin') {
       wAng = ph === 0 ? lerp(0.6, 1.7, k) : ph === 1 ? 1.7 : lerp(1.7, 0.6, k);
@@ -336,7 +477,7 @@ function drawPlayer() {
   else if (p.state === 'guard') wAng = 1.1;
   const th = twoHanded(), cat = catalyst(), off = offDef();
   if (th && p.state === 'guard') wAng = -1.1;
-  const o = { anim: p.walk, trail, thrust, stab, charge, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT), shield: th || cat ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
+  const o = { anim: p.walk, trail, thrust, stab, charge, z: p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
   if (trail) { const hv = p.atk && p.atk.kind === 'heavy'; o.trailCol = playerTrailCol(hv); o.hot = hv || P.buffs.flame > 0 || P.buffs.holy > 0; }
   if (p.state === 'roll' && p.roll.back) {
     // nhảy lùi: không lộn người, chỉ hơi thu mình

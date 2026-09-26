@@ -74,7 +74,7 @@ ETYPES.nightrider = {
 };
 WEAPONS.nightglaive = {
   name: "Nightrider Glaive", desc: 'Hai tay. Lưỡi đao dài của Kỵ Sĩ Đêm, quét rất rộng', type: 'melee', dt: 'phys', base: 27, sc: { str: 'C', dex: 'D' }, req: { str: 16, dex: 12 }, wt: 9, somber: true, twoHanded: true, ash: 'whirl',
-  look: { weapon: 'scythe', wlen: 56, wcol: '#c8c8d8' }, cost: [14, 28],
+  look: { form: 'glaive', weapon: 'scythe', wlen: 56, wcol: '#c8c8d8' }, cost: [14, 28],
   light: [S_('slash', 0.18, 0.14, 0.32, 1.05, 104, 2.8, 170, 20, { swing: 1 }), S_('slash', 0.16, 0.14, 0.32, 1.1, 104, 2.8, 170, 20, { swing: -1 }), S_('thrust', 0.2, 0.12, 0.38, 1.2, 116, 0.8, 260, 24, { thrust: true })],
   heavy: S_('spin', 0.52, 0.42, 0.52, 1.8, 108, TAU, 60, 44, { turns: 2 }),
 };

@@ -125,6 +125,28 @@ function buyRow(npc, i) {
   return true;
 }
 
+// ───────────────────────── tái sinh (tẩy điểm) ─────────────────────────
+// như Rennala trong Elden Ring: chỉ số về như lúc mới chọn xuất thân, rune đã dùng để lên cấp được trả lại để phân bổ lại.
+// Lần đầu miễn phí, các lần sau cần một Nước Mắt Ấu Trùng.
+function respecRefund() {
+  const L0 = S.level; let n = 0;
+  for (let l = 1; l < L0; l++) { S.level = l; n += levelCost(); }
+  S.level = L0;
+  return n;
+}
+const respecFree = () => !S.respecs;
+function doRespec() {
+  if (S.level <= 1) { toast('Chưa lên cấp lần nào, không cần tái sinh'); return false; }
+  if (!respecFree() && invN('larval') < 1) { toast('Cần một Nước Mắt Ấu Trùng'); return false; }
+  if (!respecFree()) { S.inv.larval--; if (!S.inv.larval) delete S.inv.larval; }
+  const C = CLASSES.find(c => c.id === S.cls) || CLASSES[0], refund = respecRefund();
+  S.stats = Object.assign({}, C.stats); S.level = 1; S.runes += refund; S.respecs = (S.respecs || 0) + 1;
+  applyStats(true); save(); SFX.grace();
+  burst(P.x, P.y, 40, '#bfe4ff', 140, 3, 'mote', 1.2);
+  banner('grace', 'TÁI SINH', 'Nhận lại ' + refund.toLocaleString(numLoc()) + ' rune · lên cấp lại ở Ân Điển', 4);
+  return true;
+}
+
 // ───────────────────────── trang bị ở Ân Điển ─────────────────────────
 function setArmor(id) { if (S.armors.includes(id)) { S.armor = id; applyStats(false); save(); SFX.glint(); } }
 function toggleTal(id) {

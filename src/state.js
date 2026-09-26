@@ -85,7 +85,7 @@ function absorb(kind) {
   if (kind === 'magic' && armorBonus('magicRes')) k *= 1 - armorBonus('magicRes');
   return k;
 }
-const dmgBonus = () => (hasTal('lionmane') && P.hp >= P.maxHp - 0.5 ? 1.1 : 1) * (hasTal('anchor') && inWater(P.x, P.y) ? 1.15 : 1) * (hasGR('swamp') ? 1.08 : 1) * (P.buffs.bless > 0 ? 1.15 : 1) * (hasTal('redseal') && P.hp < P.maxHp * 0.5 ? 1.2 : 1);
+const dmgBonus = () => (hasTal('lionmane') && P.hp >= P.maxHp - 0.5 ? 1.1 : 1) * (hasTal('anchor') && inWater(P.x, P.y) ? 1.15 : 1) * (hasGR('swamp') ? 1.08 : 1) * (P.buffs.bless > 0 ? 1.15 : 1) * (P.buffs.warcry > 0 ? 1.2 : 1) * (hasTal('redseal') && P.hp < P.maxHp * 0.5 ? 1.2 : 1);
 const flaskHeal = () => Math.round(P.maxHp * (0.35 + 0.05 * S.tears) + 10);
 const fpFlaskAmt = () => Math.round(P.maxFp * (0.35 + 0.05 * S.tears) + 10);
 // Như Elden Ring: quái mạnh theo vùng đất, không theo cấp người chơi.
@@ -106,7 +106,7 @@ const P = {
   x: sk(1400), y: sk(3376), r: 13, vx: 0, vy: 0, face: -Math.PI / 2, state: 'idle', t: 0,
   hp: 180, maxHp: 180, ghost: 180, ghostDelay: 0, st: 80, maxSt: 80, stDelay: 0, fp: 50, maxFp: 50,
   flasks: 3, fpflasks: 0, invuln: 0, mounted: false, lock: null, atk: null, walk: 0, mvx: 0, mvy: 0, rollDir: 0, hurtDur: 0.3,
-  poisonB: 0, poisonT: 0, lastGuardAt: -9, parryOk: false, blockedAt: -9, buffs: { flame: 0, holy: 0, bless: 0 }, roll: ROLLS.mid,
+  poisonB: 0, poisonT: 0, lastGuardAt: -9, parryOk: false, blockedAt: -9, buffs: { flame: 0, holy: 0, bless: 0, warcry: 0 }, roll: ROLLS.mid,
 };
 const cam = { x: P.x, y: P.y };
 let enemies = [];
@@ -154,7 +154,7 @@ function makeBoss(v = 1) {
   return { isBoss: true, v, A, name: v === 1 ? 'Varek, Kẻ Gác Cổng Bội Thề' : 'Varek, Vua Ẩn Mặt', x: A.x + A.w / 2, y: v === 1 ? sk(640) : A.y + sk(130), r: v === 1 ? 28 : 30,
     hp, maxHp: hp, ghost: hp, face: Math.PI / 2, state: 'dormant', t: 0, cd: 1, vx: 0, vy: 0, poise: v === 1 ? 170 : 240, poiseAcc: 0, lastHit: 9, hurtFlash: 0,
     phase: 1, atk: null, dead: false, z: 0, elite: true, invuln: 0, anim: 0, stagDur: 0.8, lastMove: '', bleedMax: v === 1 ? 180 : 300, res: { holy: 0.8 },
-    look: v === 1 ? { body: '#4d4234', trim: '#c9a34a', head: '#2c2721', cloak: '#2a241b', weapon: 'greatsword', wlen: 40, wcol: '#dcc06a', scale: 1.9, hood: true, glow: true }
+    look: v === 1 ? { body: '#4d4234', trim: '#c9a34a', head: '#2c2721', cloak: '#2a241b', weapon: 'greatsword', form: 'varek', wlen: 40, wcol: '#dcc06a', scale: 1.9, hood: true, glow: true }
       : { body: '#2e2a26', trim: '#ffd76a', head: '#1e1a16', cloak: '#5a1410', weapon: 'greatsword', wlen: 48, wcol: '#fff0b0', scale: 2.1, hood: true, glow: true } };
 }
 const targets = () => {

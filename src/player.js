@@ -72,6 +72,12 @@ function startSkill(moving, mx, my) {
   if (P.fp < A.fp) { toast('Không đủ FP'); G.fpWarn = 1; return; }
   if (Wp.type === 'bow' && S.arrows <= 0) { toast('Hết tên'); return; }
   P.fp -= A.fp; P.face = aimFace(moving, mx, my);
+  if (id === 'warcry') {
+    P.buffs.warcry = 20; P.state = 'cast'; P.t = 0; P.cast = true; P.spell = null;
+    burst(P.x, P.y, 30, '#ff8a5a', 160, 3, 'dot', 0.6); aoes.push({ kind: 'ring', x: P.x, y: P.y, r0: 20, r1: 140, dur: 0.4, t: 0, dmg: 0, hit: true });
+    SFX.roar(); shake(6); toast(A.name + ': sát thương +20% trong 20 giây');
+    return;
+  }
   if (id === 'flame' || id === 'holy') {
     P.buffs[id] = 30; P.state = 'cast'; P.t = 0; P.cast = true; P.spell = null;
     burst(P.x, P.y, 24, id === 'flame' ? '#ff9a4a' : '#ffe08a', 120, 3, 'mote', 0.8); SFX.spell();
@@ -86,6 +92,12 @@ function startSkill(moving, mx, my) {
     wave: { anim: 'slash', wind: 0.32, act: 0.12, rec: 0.45, mul: 1.1, range: 80, arc: 2.2, lunge: 120, poise: 26, swing: 1, wave: 'gwave', waveMul: 1.4, waveDt: 'holy' },
     crystal: { anim: 'slash', wind: 0.32, act: 0.12, rec: 0.45, mul: 1.1, range: 80, arc: 2.2, lunge: 120, poise: 26, swing: 1, wave: 'cwave', waveMul: 1.35, waveDt: 'magic' },
     barrage: { anim: 'bow', wind: 0.3, act: 0.04, rec: 0.36, mul: 0.7, poise: 10, barrage: 5 },
+    flurry: { anim: 'thrust', wind: 0.1, act: 0.5, rec: 0.3, mul: 0.55, range: 64, arc: 0.9, lunge: 60, poise: 8, thrust: true, multi: 4, bleed: bl[0] },
+    needle: { anim: 'thrust', wind: 0.14, act: 0.36, rec: 0.32, mul: 0.75, range: 90, arc: 0.5, lunge: 90, poise: 14, thrust: true, multi: 3 },
+    impale: { anim: 'thrust', wind: 0.45, act: 0.16, rec: 0.45, mul: 2.0, range: 170, arc: 0.36, lunge: 300, poise: 55, thrust: true },
+    wildspin: { anim: 'spin', wind: 0.22, act: 0.9, rec: 0.45, mul: 0.9, range: 92, arc: TAU, lunge: 0, poise: 30, turns: 3, multi: 3, drift: 170 },
+    leap: { anim: 'overhead', wind: 0.55, act: 0.15, rec: 0.55, mul: 2.1, range: 100, arc: 1.2, off: 50, r: 100, lunge: 0, leap: 330, poise: 90, shake: 12, ring: true, quake: true },
+    horncharge: { anim: 'dash', wind: 0.3, act: 0.5, rec: 0.45, mul: 1.5, range: 70, arc: 1.8, lunge: 0, dashSpeed: 640, poise: 70 },
   }[id];
   const a = Object.assign({ cost: 10, bleed: bl[0], hyper: true }, M);
   let mul = a.mul;
@@ -360,6 +372,7 @@ function updatePlayer(dt) {
   } else if (p.state === 'attack') {
     const A = p.atk, t = p.t;
     if (t < A.wind) {
+      if (A.leap) { moveCircle(p, Math.cos(p.face) * A.leap * dt, Math.sin(p.face) * A.leap * dt, false); p.invuln = Math.max(p.invuln, 0.12); }
       if (p.lock) p.face = turn(p.face, Math.atan2(p.lock.y - p.y, p.lock.x - p.x), 10 * dt);
       else if (A.anim === 'bow' && aimMode === 'mouse' && mouse.inside) p.face = turn(p.face, Math.atan2(mouse.wy - p.y, mouse.wx - p.x), 12 * dt);
     } else if (t < A.wind + A.act) {
@@ -393,6 +406,12 @@ function updatePlayer(dt) {
         moveCircle(p, Math.cos(p.face) * A.dashSpeed * dt, Math.sin(p.face) * A.dashSpeed * dt, false);
         addPart(p.x, p.y, 0, 0, 0.3, 7, 'rgba(255,240,200,.3)');
       }
+      if (A.multi) {
+        // đòn nhiều nhịp: mỗi nhịp được trúng lại cùng một kẻ địch
+        const seg = Math.min(A.multi - 1, Math.floor((t - A.wind) / (A.act / A.multi)));
+        if (seg !== A.seg) { if (A.seg !== undefined) { A.hits.clear(); SFX.swing(); } A.seg = seg; }
+      }
+      if (A.drift) moveCircle(p, Math.cos(p.face) * A.drift * dt, Math.sin(p.face) * A.drift * dt, false);
       if (A.anim !== 'bow') for (const e of targets()) {
         if (A.hits.has(e) || (e.z || 0) > 30 || (A.critT && e !== A.critT)) continue;
         const hit = A.anim === 'overhead' ? dist(A.ix, A.iy, e.x, e.y) < A.r + e.r || inArc(p.x, p.y, p.face, A.range * 0.7, A.arc, e.x, e.y, e.r)
@@ -401,7 +420,7 @@ function updatePlayer(dt) {
         if (hit) {
           A.hits.add(e);
           if (A.critT) { critHit(e, A); continue; }
-          hitEnemy(e, A.parts, A.poise * (A.kind === 'heavy' && hasTal('ramhorn') ? 1.3 : 1), p.x, p.y, A.kind === 'skill' ? 'heavy' : A.kind, { bleed: (A.bleed || 0) + (hasTal('venomfang') ? 7 : 0) || undefined });
+          hitEnemy(e, A.parts, A.poise * (A.kind === 'heavy' && hasTal('ramhorn') ? 1.3 : 1) * (p.buffs.warcry > 0 ? 1.4 : 1), p.x, p.y, A.kind === 'skill' ? 'heavy' : A.kind, { bleed: (A.bleed || 0) + (hasTal('venomfang') ? 7 : 0) || undefined });
         }
       }
     } else {
