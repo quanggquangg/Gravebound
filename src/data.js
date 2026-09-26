@@ -364,7 +364,8 @@ const ETYPES = {
   warden: {
     name: 'Dornach, Vệ Binh Greystone', hp: 1150, r: 26, speed: 100, aggro: 300, runes: 2400, poise: 230, elite: true, miniboss: true, bar: true,
     atkRange: 90, cd: [0.6, 1.3], track: 2.6, leash: 420, loot: { weapon: 'hammer', gr: 'east' },
-    look: { body: '#3c4250', trim: '#7d8fb0', head: '#4a5060', cloak: '#1d2438', weapon: 'club', wlen: 44, wcol: '#9aa3b5', scale: 1.8 },
+    shield: true, shieldMul: 0.4,
+    look: { body: '#3c4250', trim: '#7d8fb0', head: '#4a5060', cloak: '#1d2438', weapon: 'mace', form: 'warhammer', bform: 'warden', wlen: 46, wcol: '#9aa3b5', scale: 1.8 },
     attacks: [
       { wind: 0.7, act: 0.16, rec: 0.15, range: 108, arc: 2.3, dmg: 46, lunge: 240, swing: 1, next: 1 },
       { wind: 1.0, act: 0.16, rec: 0.8, range: 108, arc: 2.3, dmg: 50, lunge: 260, swing: -1 },
@@ -373,26 +374,30 @@ const ETYPES = {
       { kind: 'charge', wind: 0.4, dur: 0.6, speed: 620, rec: 0.1, dmg: 50, next: 5 },
       { kind: 'charge', wind: 0.25, dur: 0.6, speed: 620, rec: 0.3, dmg: 50, next: 6 },
       { kind: 'leap', wind: 0.5, air: 0.7, rec: 0.9, r: 120, dmg: 62, ring: [120, 320, 0.55, 30] },
+      { wind: 0.85, act: 0.4, rec: 0.9, range: 124, arc: TAU, dmg: 50, lunge: 60, swing: 1, spin: true },
+      { wind: 0.4, act: 0.12, rec: 0.55, range: 74, arc: 1.4, dmg: 34, lunge: 360, swing: 0, bash: true, next: 0 },
     ],
-    pick: (e, d) => (d > 200 && d < 520 ? 2 : d < 125 ? (Math.random() < 0.3 ? 3 : 0) : -1),
+    pick: (e, d) => { const r = Math.random(); return d > 200 && d < 520 ? 2 : d < 125 ? (r < 0.25 ? 3 : r < 0.45 ? 7 : r < 0.65 ? 8 : 0) : -1; },
     p2: {
       at: 0.5, speed: 1.2, cdMul: 0.7, dmgMul: 1.12, line: '“Pháo đài này... chưa từng thất thủ!”',
-      pick: (e, d) => { const r = Math.random(); return d > 200 && d < 560 ? (r < 0.5 ? 4 : 6) : d < 130 ? (r < 0.3 ? 3 : r < 0.5 ? 6 : 0) : -1; },
+      pick: (e, d) => { const r = Math.random(); return d > 200 && d < 560 ? (r < 0.5 ? 4 : 6) : d < 130 ? (r < 0.25 ? 3 : r < 0.45 ? 7 : r < 0.6 ? 8 : r < 0.72 ? 6 : 0) : -1; },
     },
   },
   wraith: {
     name: 'Seluna, Nữ Vương Hồn Ma', hp: 900, r: 20, speed: 95, aggro: 520, runes: 2200, poise: 180, elite: true, miniboss: true, bar: true, ghost: true, loot: { weapon: 'scythe' },
     atkRange: 90, cd: [0.6, 1.2], track: 3.5, leash: 420, res: { holy: 1.4 },
-    look: { body: '#7a8fb8', trim: '#d6e6ff', head: '#a8bde0', cloak: '#34406a', weapon: 'scythe', wlen: 46, wcol: '#d6f0ff', scale: 1.6, hood: true },
+    look: { body: '#7a8fb8', trim: '#d6e6ff', head: '#a8bde0', cloak: '#34406a', weapon: 'scythe', bform: 'wraith', wlen: 50, wcol: '#d6f0ff', scale: 1.6 },
     attacks: [
       { kind: 'blink', wind: 0.3, next: 1 },
       { wind: 0.55, act: 0.18, rec: 0.7, range: 104, arc: 3.0, dmg: 40, lunge: 200, swing: 1 },
       { kind: 'orbs', wind: 0.8, rec: 0.8, n: 12, dmg: 18 },
       { kind: 'summon', wind: 1.0, rec: 0.8 },
+      { kind: 'charge', wind: 0.5, dur: 0.45, speed: 760, rec: 0.6, dmg: 38, ghost: true },
+      { kind: 'pillars', wind: 0.7, rec: 0.8, n: 6, r: 50, delay: 0.75, dmg: 40, col: '170,230,255' },
     ],
     pick: (e, d) => {
       const r = Math.random();
-      if (d > 200) return r < 0.5 ? 0 : 2;
+      if (d > 200) return r < 0.3 ? 0 : r < 0.55 ? 2 : r < 0.8 ? 5 : 4;
       if (r < 0.45) return 1;
       if (r < 0.65) return 2;
       if (r < 0.8 && enemies.filter(x => x.summoned && !x.dead).length < 3) return 3;
@@ -447,7 +452,7 @@ const ETYPES = {
     name: 'Selvara, Nữ Hoàng Trăng Pha Lê', hp: 2600, r: 22, speed: 70, aggro: 460, runes: 9000, poise: 240, elite: true, miniboss: true, bar: true, ranged: true, keep: 250,
     cd: [0.8, 1.5], track: 3, leash: 900, res: { magic: 0.5 }, floats: true, noParry: true, arenaId: 'acad',
     loot: { gr: 'west', weapon: 'staff2', spell: 'comet' },
-    look: { body: '#4a5a9a', trim: '#e0ecff', head: '#bcd0ff', cloak: '#2a3470', weapon: 'staff', wlen: 44, wcol: '#b8b8d0', scale: 1.7, hood: true, orb: '#cfeaff' },
+    look: { body: '#4a5a9a', trim: '#e0ecff', head: '#bcd0ff', cloak: '#2a3470', weapon: 'staff', form: 'moonstaff', bform: 'selvara', wlen: 44, wcol: '#b8b8d0', scale: 1.7, orb: '#cfeaff' },
     attacks: [
       { kind: 'orbs', wind: 0.8, rec: 0.7, n: 12, dmg: 22 },
       { kind: 'shot', wind: 0.6, rec: 0.6, n: 5, spread: 0.14, proj: { speed: 400, dmg: 24, r: 8, kind: 'shard' } },
@@ -645,7 +650,7 @@ const ETYPES = {
     name: 'Veyl, Đô Đốc Chết Đuối', hp: 1600, r: 24, speed: 92, aggro: 420, runes: 5000, poise: 220, elite: true, miniboss: true, bar: true, atkRange: 100, cd: [0.7, 1.3], track: 2.6, leash: 650,
     swim: true, drip: true, res: { fire: 0.8, holy: 1.3 }, loot: { tal: 'tidelocket' },
     intro: '“Hạm đội của ta nằm dưới đáy biển... và ngươi sẽ nằm cạnh chúng.”',
-    look: { body: '#46584f', trim: '#b8a46a', head: '#7f9088', cloak: '#1f3a38', weapon: 'club', wlen: 50, wcol: '#5f6a66', scale: 1.8, weed: true },
+    look: { body: '#2e3a4a', trim: '#c8aa5a', head: '#8a9a8c', cloak: '#1c2838', weapon: 'club', form: 'anchor', bform: 'admiral', wlen: 54, wcol: '#6a7270', scale: 1.8 },
     attacks: [
       { wind: 0.75, act: 0.18, rec: 0.2, range: 120, arc: 2.2, dmg: 50, lunge: 220, swing: 1, next: 1 },
       { wind: 0.5, act: 0.18, rec: 0.85, range: 120, arc: 2.2, dmg: 48, lunge: 200, swing: -1 },
@@ -653,8 +658,10 @@ const ETYPES = {
       { kind: 'orbs', wind: 0.9, rec: 0.9, n: 12, dmg: 20, proj: 'bubble' },
       { kind: 'summon', wind: 1.0, rec: 0.8, what: 'drowned', n: 2 },
       { kind: 'leap', wind: 0.6, air: 0.75, rec: 0.9, r: 110, dmg: 62, ring: [110, 280, 0.55, 28] },
+      { kind: 'shot', wind: 0.75, rec: 0.8, n: 1, spread: 0, proj: { speed: 430, dmg: 56, r: 16, kind: 'anchor', life: 1.4 } },
+      { kind: 'pillars', wind: 0.8, rec: 0.9, n: 6, r: 58, delay: 0.7, dmg: 50, col: '120,200,255' },
     ],
-    pick: (e, d) => { const r = Math.random(), m = enemies.filter(x => x.summoned && !x.dead).length; if (d < 140) return r < 0.55 ? 0 : r < 0.8 ? 2 : 3; if (d < 420) return r < 0.45 ? 5 : r < 0.75 || m >= 2 ? 3 : 4; return -1; },
+    pick: (e, d) => { const r = Math.random(), m = enemies.filter(x => x.summoned && !x.dead).length; if (d < 140) return r < 0.5 ? 0 : r < 0.75 ? 2 : 7; if (d < 420) return r < 0.3 ? 5 : r < 0.55 ? 6 : r < 0.75 ? 7 : r < 0.9 || m >= 2 ? 3 : 4; return -1; },
     p2: { at: 0.5, speed: 1.15, cdMul: 0.75, dmgMul: 1.1, line: '“Biển cả... đòi lại những gì nó đã mất!”' },
   },
   ramking: {
@@ -674,50 +681,58 @@ const ETYPES = {
   // ─── boss hầm ngục ───
   graveknight: {
     name: 'Kỵ Sĩ Mộ Phần', hp: 1000, r: 20, speed: 104, aggro: 600, runes: 2600, poise: 200, elite: true, miniboss: true, bar: true, atkRange: 80, cd: [0.6, 1.2], track: 3, leash: 900, res: { holy: 1.4 },
-    look: { body: '#3a4450', trim: '#9fc0e0', head: '#4a5462', cloak: '#1a2230', weapon: 'greatsword', wlen: 40, wcol: '#b8d0f0', scale: 1.5, glow: '#9fd0ff' },
+    look: { body: '#4a4640', trim: '#9fc0e0', head: '#5a5650', cloak: '#1e2430', weapon: 'greatsword', form: 'gravesword', bform: 'graveknight', wlen: 44, wcol: '#b8d0f0', scale: 1.55, glow: '#9fd0ff' },
     attacks: [
       { wind: 0.65, act: 0.15, rec: 0.15, range: 96, arc: 2.2, dmg: 42, lunge: 230, swing: 1, next: 1 },
       { wind: 0.5, act: 0.15, rec: 0.8, range: 96, arc: 2.2, dmg: 44, lunge: 230, swing: -1 },
       { kind: 'blink', wind: 0.3, next: 3 },
       { wind: 0.4, act: 0.15, rec: 0.8, range: 96, arc: 2.2, dmg: 46, lunge: 200, swing: 1 },
       { kind: 'orbs', wind: 0.8, rec: 0.8, n: 10, dmg: 20 },
+      { wind: 0.8, act: 0.38, rec: 0.9, range: 110, arc: TAU, dmg: 44, lunge: 80, swing: 1, spin: true },
+      { kind: 'pillars', wind: 0.75, rec: 0.9, n: 7, r: 46, delay: 0.7, dmg: 40, col: '140,200,255' },
     ],
-    pick: (e, d) => { const r = Math.random(); return d < 120 ? (r < 0.65 ? 0 : 4) : d < 400 ? (r < 0.6 ? 2 : 4) : -1; },
+    pick: (e, d) => { const r = Math.random(); return d < 120 ? (r < 0.5 ? 0 : r < 0.75 ? 5 : 4) : d < 400 ? (r < 0.4 ? 2 : r < 0.75 ? 6 : 4) : -1; },
   },
   minerg: {
     name: 'Khổng Lồ Pha Lê', hp: 1700, r: 32, speed: 72, aggro: 600, runes: 3400, poise: 280, elite: true, miniboss: true, bar: true, atkRange: 120, cd: [0.8, 1.5], track: 2, leash: 900, res: { magic: 0.4 },
-    look: { body: '#7aa0c0', trim: '#d8f0ff', head: '#9ac0dc', cloak: '#3a5a7a', weapon: 'club', wlen: 44, wcol: '#cfefff', scale: 2.4, glow: '#9fd0ff' },
+    look: { body: '#6a8298', trim: '#d8f0ff', head: '#7a94aa', cloak: '#3a5a7a', weapon: 'club', form: 'pickaxe', bform: 'minerg', wlen: 50, wcol: '#cfefff', scale: 2.3 },
     attacks: [
       { wind: 0.85, act: 0.2, rec: 0.8, range: 132, arc: 2.3, dmg: 58, lunge: 160, swing: 1 },
       { kind: 'slam', wind: 1.0, rec: 1.0, off: 70, r: 115, dmg: 66, ring: [115, 320, 0.6, 30] },
       { kind: 'orbs', wind: 0.9, rec: 0.9, n: 14, dmg: 22, proj: 'shard' },
       { kind: 'charge', wind: 0.7, dur: 0.8, speed: 520, rec: 0.9, dmg: 56 },
+      { kind: 'pillars', wind: 0.9, rec: 0.9, n: 8, r: 52, delay: 0.8, dmg: 54, col: '170,220,255' },
+      { kind: 'rain', wind: 0.9, rec: 0.9, n: 8, r: 54, dmg: 46, spread: 190, delay: 1.0, col: '170,220,255' },
     ],
-    pick: (e, d) => { const r = Math.random(); return d < 150 ? (r < 0.5 ? 0 : r < 0.8 ? 1 : 2) : d < 500 ? (r < 0.5 ? 3 : 2) : -1; },
+    pick: (e, d) => { const r = Math.random(); return d < 150 ? (r < 0.45 ? 0 : r < 0.75 ? 1 : 4) : d < 500 ? (r < 0.3 ? 3 : r < 0.6 ? 4 : r < 0.8 ? 5 : 2) : -1; },
   },
   golem: {
     name: 'Hộ Vệ Đá Cổ', hp: 1800, r: 34, speed: 62, aggro: 600, runes: 3200, poise: 320, elite: true, miniboss: true, bar: true, atkRange: 125, cd: [0.9, 1.6], track: 1.8, leash: 900, res: { fire: 0.5, phys: 0.9 },
-    look: { body: '#6a5a4a', trim: '#e08040', head: '#7a6a56', cloak: '#3a2a1e', weapon: 'club', wlen: 48, wcol: '#5a4632', scale: 2.6 },
+    look: { body: '#6e665c', trim: '#e08040', head: '#7a7066', cloak: '#3a2a1e', weapon: 'fist', form: 'fist', bform: 'golem', wlen: 30, wcol: '#5a4632', scale: 2.5 },
     attacks: [
       { wind: 1.0, act: 0.2, rec: 0.9, range: 138, arc: 2.2, dmg: 64, lunge: 140, swing: 1 },
       { kind: 'slam', wind: 1.1, rec: 1.0, off: 0, r: 130, dmg: 60, ring: [130, 360, 0.7, 32] },
       { kind: 'lob', wind: 0.9, rec: 1.0, n: 4, dmg: 40, r: 70 },
       { kind: 'charge', wind: 0.8, dur: 0.9, speed: 480, rec: 1.0, dmg: 60 },
+      { wind: 0.5, act: 0.16, rec: 0.25, range: 120, arc: 1.6, dmg: 46, lunge: 200, swing: -1, next: 0 },
+      { kind: 'rain', wind: 1.0, rec: 1.0, n: 9, r: 58, dmg: 48, spread: 210, delay: 1.1, col: '255,130,50' },
     ],
-    pick: (e, d) => { const r = Math.random(); return d < 150 ? (r < 0.55 ? 0 : 1) : d < 520 ? (r < 0.55 ? 2 : 3) : -1; },
+    pick: (e, d) => { const r = Math.random(); return d < 150 ? (r < 0.4 ? 4 : r < 0.7 ? 1 : 0) : d < 520 ? (r < 0.35 ? 2 : r < 0.65 ? 5 : 3) : -1; },
   },
   royalchamp: {
     name: 'Nhà Vô Địch Hoàng Gia', hp: 2500, r: 22, speed: 122, aggro: 600, runes: 6500, poise: 250, elite: true, miniboss: true, bar: true, atkRange: 92, cd: [0.5, 1.1], track: 3.2, leash: 900, res: { holy: 0.6 },
-    look: { body: '#9a8240', trim: '#fff0b0', head: '#b09a58', cloak: '#7a1a14', weapon: 'greatsword', wlen: 46, wcol: '#fff0c0', scale: 1.6, glow: '#ffd76a' },
+    look: { body: '#b0923e', trim: '#fff0b0', head: '#c0a458', cloak: '#8a1a14', weapon: 'sword', form: 'royal', bform: 'royalchamp', wlen: 40, wcol: '#fff0c0', scale: 1.6 },
     attacks: [
       { wind: 0.55, act: 0.14, rec: 0.12, range: 104, arc: 2.3, dmg: 48, lunge: 250, swing: 1, next: 1 },
       { wind: 0.45, act: 0.14, rec: 0.12, range: 104, arc: 2.3, dmg: 48, lunge: 250, swing: -1, next: 2 },
-      { wind: 0.7, act: 0.16, rec: 0.9, range: 112, arc: 2.6, dmg: 60, lunge: 300, swing: 1 },
+      { wind: 0.5, act: 0.16, rec: 0.1, range: 112, arc: 2.6, dmg: 52, lunge: 300, swing: 1, next: 6 },
       { kind: 'shot', wind: 0.7, rec: 0.7, n: 3, spread: 0.22, proj: { speed: 460, dmg: 40, r: 12, kind: 'hwave' } },
       { kind: 'leap', wind: 0.55, air: 0.7, rec: 0.9, r: 110, dmg: 64, ring: [110, 300, 0.55, 32] },
       { kind: 'rain', wind: 0.8, rec: 0.8, n: 8, r: 50, dmg: 42, spread: 150, delay: 0.95 },
+      { wind: 0.35, act: 0.14, rec: 0.85, range: 160, arc: 0.5, dmg: 58, lunge: 460, thrust: true, swing: 1 },
+      { wind: 0.45, act: 0.3, rec: 0.8, range: 108, arc: TAU, dmg: 46, lunge: 120, swing: 1, spin: true },
     ],
-    pick: (e, d) => { const r = Math.random(); return d < 130 ? (r < 0.6 ? 0 : r < 0.8 ? 4 : 5) : d < 500 ? (r < 0.4 ? 3 : r < 0.75 ? 4 : 5) : -1; },
+    pick: (e, d) => { const r = Math.random(); return d < 130 ? (r < 0.5 ? 0 : r < 0.65 ? 7 : r < 0.8 ? 4 : 5) : d < 260 ? (r < 0.4 ? 6 : r < 0.7 ? 4 : 3) : d < 500 ? (r < 0.4 ? 3 : r < 0.75 ? 4 : 5) : -1; },
   },
 };
 for (const [k, T] of Object.entries(ETYPES)) T.id = k;

@@ -19,7 +19,7 @@ function aoeBlast(x, y, r, dmg, col) {
   aoes.push({ kind: 'flash', x, y, r, t: 0, dur: 0.35, col });
 }
 function addRing(x, y, r0, r1, dur, dmg) { aoes.push({ kind: 'ring', x, y, r0, r1, dur, dmg, t: 0, hit: false }); }
-function addDelayed(x, y, r, delay, dmg) { aoes.push({ kind: 'delayed', x, y, r, delay, dmg, t: 0 }); }
+function addDelayed(x, y, r, delay, dmg, col) { aoes.push({ kind: 'delayed', x, y, r, delay, dmg, t: 0, col }); }
 function addMark(x, y, r, dur) { aoes.push({ kind: 'mark', x, y, r, dur, t: 0 }); }
 function bossChoose(d) {
   const b = boss, p2 = b.phase === 2 || b.v === 2, opts = [];
@@ -394,7 +394,7 @@ function makeFinal() {
   return { isFinal: true, res: { holy: 0.6 }, name: 'Aurel, Vị Vua Tro Tàn', x: RC.x, y: RC.y - 170, r: 26, hp, maxHp: hp, ghost: hp, face: Math.PI / 2, state: 'intro', t: 0, cd: 1.2,
     vx: 0, vy: 0, poise: 240, poiseAcc: 0, lastHit: 9, hurtFlash: 0, phase: 1, atk: null, dead: false, z: 0, elite: true, invuln: 0, anim: 0, stagDur: 0.8,
     lastMove: '', bleedMax: 240, beamDir: 0, beaming: false, charge: 0, fx: false,
-    look: { body: '#8a6a2a', trim: '#f0d27a', head: '#6a5020', cloak: '#b8952f', weapon: 'club', wlen: 46, wcol: '#ffe08a', scale: 1.8, glow: true } };
+    look: { body: '#5a544c', trim: '#f0d27a', head: '#4a443c', cloak: '#b8952f', weapon: 'club', form: 'sunhammer', bform: 'aurel', wlen: 56, wcol: '#ffe08a', scale: 1.9, glow: true } };
 }
 const finalEnraged = () => fb.phase === 2 && fb.hp < fb.maxHp * 0.4;
 const FINAL_MOVES = {

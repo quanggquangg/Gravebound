@@ -238,7 +238,7 @@ function updateEnemyAtk(e, dt, ang) {
       if (t < A.wind + A.dur) {
         if (!e.lunged) { e.lunged = true; SFX.heavy(); }
         moveCircle(e, Math.cos(e.face) * A.speed * dt, Math.sin(e.face) * A.speed * dt, true);
-        if (Math.random() < dt * 30) addPart(e.x + rand(-8, 8), e.y + rand(-8, 8), 0, 0, 0.5, rand(4, 7), 'rgba(120,105,80,.5)');
+        if (Math.random() < dt * 30) addPart(e.x + rand(-8, 8), e.y + rand(-8, 8), 0, 0, 0.5, rand(4, 7), A.ghost ? 'rgba(190,230,255,.6)' : 'rgba(120,105,80,.5)', A.ghost ? 'mote' : 'dot');
         if (!e.atkHit && dist(e.x, e.y, P.x, P.y) < e.r + P.r + 10 && hurtPlayer(A.dmg, e.x, e.y, true, e)) e.atkHit = true;
         allyArcHit(e, e.x, e.y, e.face, e.r + 16, TAU, A.dmg * e.dm);
         return;
@@ -255,14 +255,14 @@ function updateEnemyAtk(e, dt, ang) {
     case 'pillars':
       if (once) {
         const a = Math.atan2(tg.y - e.y, tg.x - e.x);
-        for (let i = 0; i < A.n; i++) addDelayed(e.x + Math.cos(a) * (70 + i * 70), e.y + Math.sin(a) * (70 + i * 70), A.r, A.delay + i * 0.1, A.dmg * e.dm);
+        for (let i = 0; i < A.n; i++) addDelayed(e.x + Math.cos(a) * (70 + i * 70), e.y + Math.sin(a) * (70 + i * 70), A.r, A.delay + i * 0.1, A.dmg * e.dm, A.col);
         SFX.spell();
       }
       break;
     case 'rain':
       if (once) {
-        addDelayed(tg.x + (tg.mvx || 0) * 0.3, tg.y + (tg.mvy || 0) * 0.3, A.r, A.delay, A.dmg * e.dm);
-        for (let i = 1; i < A.n; i++) { const a = rand(0, TAU), rr = Math.sqrt(Math.random()) * A.spread; addDelayed(tg.x + Math.cos(a) * rr, tg.y + Math.sin(a) * rr, A.r, A.delay + rand(0, 0.5), A.dmg * e.dm); }
+        addDelayed(tg.x + (tg.mvx || 0) * 0.3, tg.y + (tg.mvy || 0) * 0.3, A.r, A.delay, A.dmg * e.dm, A.col);
+        for (let i = 1; i < A.n; i++) { const a = rand(0, TAU), rr = Math.sqrt(Math.random()) * A.spread; addDelayed(tg.x + Math.cos(a) * rr, tg.y + Math.sin(a) * rr, A.r, A.delay + rand(0, 0.5), A.dmg * e.dm, A.col); }
         SFX.spell();
       }
       break;

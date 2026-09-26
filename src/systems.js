@@ -66,9 +66,9 @@ function updateAoes(dt) {
       if (a.t >= a.dur) aoes.splice(i, 1);
     } else if (a.kind === 'delayed') {
       if (a.t >= a.delay) {
-        if (a.friendly) friendlyBlast(a.x, a.y, a.r, a.parts, a.poise); else aoeBlast(a.x, a.y, a.r, a.dmg);
+        if (a.friendly) friendlyBlast(a.x, a.y, a.r, a.parts, a.poise); else aoeBlast(a.x, a.y, a.r, a.dmg, a.col);
         noise(0.25, 0.2, 400, 0.8); shake(4);
-        const col = a.col === 'magic' ? '#bfe4ff' : '#ffe39a';
+        const col = a.col === 'magic' ? '#bfe4ff' : a.col && a.col.includes(',') ? `rgb(${a.col})` : '#ffe39a';
         for (let k = 0; k < 10; k++) addPart(a.x + rand(-a.r * 0.6, a.r * 0.6), a.y + rand(-a.r * 0.6, a.r * 0.6), 0, rand(-120, -60), 0.5, rand(2, 4), col, 'mote');
         aoes.splice(i, 1);
       }

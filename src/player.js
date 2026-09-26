@@ -595,9 +595,9 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
   if (label && kind !== 'spell' && kind !== 'arrow') { dmg *= (e.state === 'broken' ? 3.5 : 3) * (WEAPONS[S.equipped].crit || 1); crit = true; }
   if (e.T && e.T.shield && !crit && kind !== 'spell' && e.state !== 'atk' && e.state !== 'broken' && e.state !== 'stagger' &&
       Math.abs(angDiff(e.face, Math.atan2(fy - e.y, fx - e.x))) < 1.2) {
-    if (kind === 'heavy') { dmg *= 0.6; poise *= 1.5; }
+    if (kind === 'heavy') { dmg *= e.T.shieldMul ? 0.8 : 0.6; poise *= 1.5; }
     else {
-      dmg *= 0.15; poise *= 0.6; SFX.block();
+      dmg *= e.T.shieldMul || 0.15; poise *= 0.6; SFX.block();
       burst(e.x + Math.cos(e.face) * 14, e.y + Math.sin(e.face) * 14, 8, '#fff1c4', 200, 2, 'spark', 0.25);
       floatText(e.x, e.y - e.r - 28, 'CHẶN', '#c8c8c0');
       if (e.state === 'idle' || e.state === 'return') { e.state = 'chase'; e.t = 0; }

@@ -280,6 +280,9 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
   ctx.rotate(face);
   if (o.kneel) ctx.scale(0.86, 1.04);
   const wave = Math.sin((o.anim || 0) * 6) * 2 * s;
+  // boss có dáng riêng (bossart.js): áo choàng, thân, đầu và đồ ở tay trái được vẽ theo từng boss
+  const BF = L.bform && typeof BFORM !== 'undefined' ? BFORM[L.bform] : null;
+  if (BF && BF.back) BF.back(L, s, o, wave);
   if (L.wings) {
     // cánh đá có xương ngón: khép khi đứng, dang rộng khi bay vồ
     const spread = z > 4 ? 1.35 : 1 + Math.sin((o.anim || 0) * 2) * 0.05;
@@ -293,21 +296,26 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
       ctx.restore();
     }
   }
-  ctx.fillStyle = L.cloak;
-  ctx.beginPath(); ctx.moveTo(-1 * s, -10 * s);
-  ctx.quadraticCurveTo(-16 * s, -12 * s + wave, -22 * s, -4 * s + wave); ctx.lineTo(-18 * s, 0); ctx.lineTo(-23 * s, 5 * s - wave);
-  ctx.quadraticCurveTo(-15 * s, 12 * s - wave, -1 * s, 10 * s); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(10,8,6,.8)'; ctx.lineWidth = 1.6; ctx.stroke();
-  // nếp gấp áo choàng
-  ctx.strokeStyle = tint(L.cloak, 0.62); ctx.lineWidth = 1.3 * s;
-  ctx.beginPath(); ctx.moveTo(-6 * s, -6 * s); ctx.quadraticCurveTo(-13 * s, -5 * s + wave, -17 * s, -2 * s + wave);
-  ctx.moveTo(-6 * s, 6 * s); ctx.quadraticCurveTo(-13 * s, 7 * s - wave, -18 * s, 5 * s - wave); ctx.stroke();
+  if (!BF || !BF.noCloak) {
+    ctx.fillStyle = L.cloak;
+    ctx.beginPath(); ctx.moveTo(-1 * s, -10 * s);
+    ctx.quadraticCurveTo(-16 * s, -12 * s + wave, -22 * s, -4 * s + wave); ctx.lineTo(-18 * s, 0); ctx.lineTo(-23 * s, 5 * s - wave);
+    ctx.quadraticCurveTo(-15 * s, 12 * s - wave, -1 * s, 10 * s); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(10,8,6,.8)'; ctx.lineWidth = 1.6; ctx.stroke();
+    // nếp gấp áo choàng
+    ctx.strokeStyle = tint(L.cloak, 0.62); ctx.lineWidth = 1.3 * s;
+    ctx.beginPath(); ctx.moveTo(-6 * s, -6 * s); ctx.quadraticCurveTo(-13 * s, -5 * s + wave, -17 * s, -2 * s + wave);
+    ctx.moveTo(-6 * s, 6 * s); ctx.quadraticCurveTo(-13 * s, 7 * s - wave, -18 * s, 5 * s - wave); ctx.stroke();
+  }
+  if (BF && BF.offhand) BF.offhand(L, s, o, wave);
   if (o.trail) smear(3 * s, 8 * s, (L.wlen + 4) * s, o.trail[0], o.trail[1], (L.wlen * (o.hot ? 0.62 : 0.5) + 4) * s, o.trailCol || 'rgba(255,244,210,.35)', o.hot);
   drawWeapon(L, s, wAng, o);
   if (o.stab) {
     ctx.strokeStyle = 'rgba(255,244,210,.45)'; ctx.lineWidth = 4 * s; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo((L.wlen + 20) * s, 7 * s); ctx.lineTo((L.wlen + 52) * s, 3 * s); ctx.stroke(); ctx.lineCap = 'butt';
   }
+  if (BF && BF.body) BF.body(L, s, o, wave);
+  else {
   // thân: đổ sáng từ phía trước, viền tối rõ
   ctx.strokeStyle = 'rgba(10,8,6,.85)'; ctx.lineWidth = 1.8;
   ctx.fillStyle = litGrad(L.body, 3 * s, -3 * s, 13 * s); ctx.beginPath(); ctx.ellipse(0, 0, 9 * s, 12 * s, 0, 0, TAU); ctx.fill(); ctx.stroke();
@@ -338,6 +346,7 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
     ctx.fillStyle = litGrad(L.trim, 2.5 * s, sy * s - 1.5 * s, 5.5 * s); ctx.beginPath(); ctx.arc(1 * s, sy * s, 4.8 * s, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.fillStyle = 'rgba(255,248,225,.55)'; ctx.beginPath(); ctx.arc(2.4 * s, sy * s - 1.4 * s, 1.1 * s, 0, TAU); ctx.fill();
   }
+  }
   ctx.strokeStyle = 'rgba(10,8,6,.85)'; ctx.lineWidth = 1.6;
   if (o.twoHand && HAND2) {
     // cánh tay trái vươn qua ngực nắm vũ khí
@@ -358,6 +367,8 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
     }
     ctx.shadowBlur = 0; ctx.restore();
     ctx.strokeStyle = 'rgba(10,8,6,.75)'; ctx.lineWidth = 1.4;
+  } else if (BF && BF.offhand) {
+    // đồ tay trái đã vẽ riêng theo dáng boss
   } else if (o.shield === 3) {
     ctx.fillStyle = '#4a4f58'; ctx.strokeStyle = '#9aa0a8'; ctx.lineWidth = 1.6 * s;
     ctx.fillRect(9 * s, -12 * s, 5 * s, 22 * s); ctx.strokeRect(9 * s, -12 * s, 5 * s, 22 * s);
@@ -369,6 +380,7 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
     ctx.strokeStyle = 'rgba(10,8,6,.75)'; ctx.lineWidth = 1.4;
   }
   // đầu / mũ giáp
+  if (BF && BF.head) { BF.head(L, s, o, wave); if (BF.top) BF.top(L, s, o, wave); if (o.flash) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(0, 0, 12 * s, 14 * s, 0, 0, TAU); ctx.fill(); } ctx.restore(); return; }
   ctx.fillStyle = litGrad(L.head, 4 * s, -2.5 * s, 8 * s); ctx.beginPath(); ctx.arc(2 * s, 0, 6.4 * s, 0, TAU); ctx.fill(); ctx.stroke();
   if (L.hood) {
     ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(4.2 * s, 0, 4 * s, -1.25, 1.25); ctx.fill();
@@ -562,44 +574,7 @@ function drawFinal() {
     });
     return;
   }
-  const z = f.z || 0, t = f.anim;
-  shadow(f.x, f.y + 12, 74, 34, 0.35 * alpha);
-  ctx.save(); ctx.globalAlpha = alpha * (f.state === 'transform' ? Math.min(1, (f.t - 1.8) / 1.2) : 1); ctx.translate(f.x, f.y - z);
-  ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 22; ctx.strokeStyle = 'rgba(255,220,120,.75)'; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.arc(0, -6, 78 + Math.sin(t * 1.5) * 3, 0, TAU); ctx.stroke();
-  ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -6, 64, t * 0.4, t * 0.4 + TAU * 0.85); ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.rotate(f.face);
-  for (let i = 12; i >= 0; i--) {
-    const x = 26 - i * 13, y = Math.sin(t * 2 + i * 0.5) * (3 + i * 1.3), r = 24 - i * 1.4;
-    const gr = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 1, x, y, r);
-    gr.addColorStop(0, '#fffbe8'); gr.addColorStop(0.6, '#f0cf72'); gr.addColorStop(1, 'rgba(170,120,40,.85)');
-    ctx.fillStyle = gr; ctx.strokeStyle = 'rgba(110,70,15,.75)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
-    // vảy vàng và gai lưng
-    ctx.strokeStyle = 'rgba(150,100,30,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x - r * 0.2, y, r * 0.6, -1.1, 1.1); ctx.stroke();
-    if (i % 2 === 0) { ctx.fillStyle = '#fff1b8'; ctx.strokeStyle = 'rgba(110,70,15,.8)'; ctx.beginPath(); ctx.moveTo(x + r * 0.5, y); ctx.lineTo(x - r * 0.4, y - r * 0.22); ctx.lineTo(x - r * 0.4, y + r * 0.22); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  }
-  // vây ánh sáng: dải sáng có tia
-  for (const sd of [-1, 1]) {
-    const fl = 60 + Math.sin(t * 3) * 6, fg = ctx.createLinearGradient(0, sd * 18, 0, sd * fl);
-    fg.addColorStop(0, 'rgba(255,236,170,.75)'); fg.addColorStop(1, 'rgba(255,236,170,.1)');
-    ctx.fillStyle = fg; ctx.beginPath(); ctx.moveTo(14, sd * 18); ctx.quadraticCurveTo(-10, sd * fl, -40, sd * 26); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,248,215,.55)'; ctx.lineWidth = 1.2; ctx.beginPath();
-    for (let k = 1; k <= 5; k++) { const u = k / 6; ctx.moveTo(14 - u * 54, sd * (18 + u * 8)); ctx.lineTo(10 - u * 42, sd * (22 + (fl - 22) * Math.sin(u * Math.PI) * 0.9)); }
-    ctx.stroke();
-  }
-  // đầu: vương miện gai, hàm và gờ mắt
-  ctx.fillStyle = '#e8c060'; ctx.strokeStyle = 'rgba(110,70,15,.85)'; ctx.lineWidth = 1.4;
-  for (const [hx, hy] of [[30, -14], [26, 0], [30, 14]]) { ctx.beginPath(); ctx.moveTo(hx + 10, hy * 0.6); ctx.lineTo(hx - 12, hy * 1.25); ctx.lineTo(hx + 4, hy * 0.2 + (hy ? 0 : 4)); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  const hg = ctx.createRadialGradient(50, -5, 2, 44, 0, 24); hg.addColorStop(0, '#fffdf0'); hg.addColorStop(0.6, '#fff0c0'); hg.addColorStop(1, '#d8b060');
-  ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(44, 0, 22, 15, 0, 0, TAU); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(140,95,30,.7)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(50, -10); ctx.lineTo(58, -8); ctx.moveTo(50, 10); ctx.lineTo(58, 8); ctx.moveTo(60, -3); ctx.quadraticCurveTo(64, 0, 60, 3); ctx.stroke();
-  const glow = f.beaming ? 1 : f.charge;
-  if (glow > 0) { const gr = ctx.createRadialGradient(62, 0, 1, 62, 0, 30); gr.addColorStop(0, `rgba(255,250,220,${glow})`); gr.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(62, 0, 30, 0, TAU); ctx.fill(); }
-  ctx.fillStyle = '#6ad0ff'; ctx.shadowColor = '#6ad0ff'; ctx.shadowBlur = 10;
-  ctx.beginPath(); ctx.arc(52, -6, 2.4, 0, TAU); ctx.moveTo(54.4, 6); ctx.arc(52, 6, 2.4, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
-  if (f.hurtFlash > 0) { ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.beginPath(); ctx.ellipse(-30, 0, 80, 24, 0, 0, TAU); ctx.fill(); }
-  ctx.restore();
+  drawAurumBeast(f, alpha);
 }
 function drawDragon() {
   const d = dragon;
@@ -1147,6 +1122,8 @@ function drawEnemy(e) {
     else if (k === 'slam') wAng = t < A.wind ? lerp(0.6, 2.8, Math.min(1, t / A.wind)) : 0;
     else if (k === 'charge') wAng = -0.3;
     else if (k === 'blink') wAng = 1.2;
+    else if (A.spin) { wAng = -0.2; if (t >= A.wind && t < A.wind + A.act) trail = [2.6, -0.2]; }
+    else if (A.bash) wAng = 0.9;
     else if (A.thrust) { wAng = -0.12; thrust = t < A.wind ? -0.5 * t / A.wind : t < A.wind + A.act ? 1 : 1 - (t - A.wind - A.act) / A.rec; }
     else if (t < A.wind) wAng = weaponAngle('wind', t / A.wind, A.swing);
     else if (t < A.wind + A.act) { wAng = weaponAngle('act', (t - A.wind) / A.act, A.swing); trail = [1.8 * A.swing, wAng]; }
@@ -1159,8 +1136,9 @@ function drawEnemy(e) {
   const z = (e.z || 0) + (e.T.floats && !e.dead ? 10 + Math.sin(e.anim * 2) * 4 : 0);
   if (e.T.mount) { ctx.save(); if (alpha !== undefined) ctx.globalAlpha = Math.max(0, alpha); drawHorse(e.x, e.y, e.face, e.anim * 2, Object.assign({ moving: e.moving || e.state === 'atk' }, NIGHT_HORSE)); ctx.restore(); }
   if (e.state === 'phase') { const gr = ctx.createRadialGradient(e.x, e.y, 4, e.x, e.y, 90); gr.addColorStop(0, 'rgba(255,240,200,.35)'); gr.addColorStop(1, 'rgba(255,240,200,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(e.x, e.y, 90, 0, TAU); ctx.fill(); }
-  drawHumanoid(e.x + jitter, e.y, e.face, L, wAng, {
-    anim: e.anim, trail, thrust, z, aura: e.p2, trailCol: e.T.ghost ? 'rgba(200,240,255,.4)' : 'rgba(255,200,170,.3)', flash: e.hurtFlash > 0, charge, kneel: e.state === 'broken' || e.dead,
+  const spinA = e.state === 'atk' && e.atk && e.atk.spin ? (e.t < e.atk.wind ? -0.6 * e.t / e.atk.wind : e.t < e.atk.wind + e.atk.act ? -0.6 + (TAU + 0.6) * (e.t - e.atk.wind) / e.atk.act : 0) : 0;
+  drawHumanoid(e.x + jitter, e.y, e.face + spinA, L, wAng, {
+    anim: e.anim, guard: e.state === 'atk' && e.atk && e.atk.bash, trail, thrust, z, aura: e.p2, trailCol: e.T.ghost ? 'rgba(200,240,255,.4)' : 'rgba(255,200,170,.3)', flash: e.hurtFlash > 0, charge, kneel: e.state === 'broken' || e.dead,
     alpha, eyes: e.elite && !e.dead ? (e.T.ghost ? '#bff5ff' : '#ff7a4a') : null, shield: e.T.shield ? (e.state === 'atk' ? 1 : 3) : 0,
     twoHand: !e.T.shield && TWO_HAND.has(L.weapon),
   });
@@ -1853,7 +1831,7 @@ function drawDecals() {
       ctx.strokeStyle = `rgba(255,120,60,${0.3 + k * 0.5})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, TAU); ctx.stroke();
       ctx.fillStyle = `rgba(255,90,40,${0.08 + k * 0.14})`; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * k, 0, TAU); ctx.fill();
     } else if (a.kind === 'delayed') {
-      const k = a.t / a.delay, c = a.col === 'magic' ? '170,215,255' : a.friendly ? '255,236,170' : '255,214,110';
+      const k = a.t / a.delay, c = a.col === 'magic' ? '170,215,255' : a.col && a.col.includes(',') ? a.col : a.friendly ? '255,236,170' : '255,214,110';
       ctx.strokeStyle = `rgba(${c},${a.friendly ? 0.2 + k * 0.3 : 0.35 + k * 0.5})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, TAU); ctx.stroke();
       ctx.fillStyle = `rgba(${c},${0.1 + k * 0.2})`; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * k, 0, TAU); ctx.fill();
     }
@@ -1863,7 +1841,7 @@ function drawAoeFx() {
   for (const a of aoes) {
     if (a.kind === 'flash') {
       const k = a.t / a.dur;
-      ctx.fillStyle = a.col === 'fire' ? `rgba(255,140,60,${0.55 * (1 - k)})` : a.col === 'dust' ? `rgba(210,190,150,${0.45 * (1 - k)})` : a.col === 'magic' ? `rgba(170,215,255,${0.5 * (1 - k)})` : `rgba(255,226,150,${0.5 * (1 - k)})`; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * (0.7 + k * 0.4), 0, TAU); ctx.fill();
+      ctx.fillStyle = a.col && a.col.includes(',') ? `rgba(${a.col},${0.5 * (1 - k)})` : a.col === 'fire' ? `rgba(255,140,60,${0.55 * (1 - k)})` : a.col === 'dust' ? `rgba(210,190,150,${0.45 * (1 - k)})` : a.col === 'magic' ? `rgba(170,215,255,${0.5 * (1 - k)})` : `rgba(255,226,150,${0.5 * (1 - k)})`; ctx.beginPath(); ctx.arc(a.x, a.y, a.r * (0.7 + k * 0.4), 0, TAU); ctx.fill();
     } else if (a.kind === 'ring' || a.kind === 'pring') {
       const cur = lerp(a.r0, a.r1, a.t / a.dur);
       ctx.strokeStyle = a.kind === 'pring' ? `rgba(220,200,160,${0.7 * (1 - a.t / a.dur)})` : `rgba(255,222,140,${0.8 * (1 - a.t / a.dur)})`; ctx.lineWidth = 10;
@@ -1919,6 +1897,11 @@ function drawProjs() {
       ctx.beginPath(); ctx.moveTo(q.x, q.y);
       for (let i = 1; i <= 3; i++) ctx.lineTo(q.x - Math.cos(a) * i * 9 + rand(-4, 4), q.y - Math.sin(a) * i * 9 + rand(-4, 4));
       ctx.stroke(); ctx.shadowBlur = 0;
+      continue;
+    }
+    if (q.kind === 'anchor') {
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(G.clock * 14); WFORM.anchor({ wcol: '#6a7270' }, 1.1, 30); ctx.restore();
+      olLine(q.x, q.y, q.from ? q.from.x : q.x, q.from ? q.from.y : q.y, 1.4, 'rgba(120,120,110,.8)');
       continue;
     }
     if (q.kind === 'hwave' || q.kind === 'cwave') {
@@ -2245,7 +2228,7 @@ function collectLights() {
   for (const q of projs) if (PCOL[q.kind]) light(q.x, q.y, q.kind === 'fireball' || q.kind === 'comet' ? 130 : q.kind === 'gwave' || q.kind === 'hwave' ? 110 : q.kind === 'dagger' ? 50 : 80, 0.9, PCOL[q.kind]);
   for (const a of aoes) {
     if (a.kind === 'flash') light(a.x, a.y, a.r * 1.8, 1 - a.t / a.dur, a.col === 'fire' ? '255,140,60' : a.col === 'dust' ? null : a.col === 'magic' ? '170,215,255' : '255,220,140');
-    else if (a.kind === 'delayed') light(a.x, a.y, a.r * 1.5, 0.3 + 0.5 * a.t / a.delay, a.col === 'magic' ? '170,215,255' : '255,214,110');
+    else if (a.kind === 'delayed') light(a.x, a.y, a.r * 1.5, 0.3 + 0.5 * a.t / a.delay, a.col === 'magic' ? '170,215,255' : a.col && a.col.includes(',') ? a.col : '255,214,110');
     else if (a.kind === 'ring') light(a.x, a.y, lerp(a.r0, a.r1, a.t / a.dur) + 40, 0.45 * (1 - a.t / a.dur), '255,222,140');
     else if (a.kind === 'mark') light(a.x, a.y, a.r * 1.3, 0.25 + 0.3 * a.t / a.dur, '255,110,60');
     else if (a.kind === 'arc') light(a.x + Math.cos(a.face) * 60, a.y + Math.sin(a.face) * 60, 140, 1 - a.t / a.dur, '170,210,255');
