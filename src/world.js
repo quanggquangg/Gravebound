@@ -8,7 +8,7 @@ const K = 1.5;
 const D = { WX0: -2800, WY0: -1800, MAPW: 4400, H: 3600 }; // biên thế giới ở tọa độ thiết kế
 const WX0 = D.WX0 * K, WY0 = D.WY0 * K, MAPW = D.MAPW * K, H = D.H * K;
 // phía đông x > INST_X là các khu biệt lập (Cõi Aurum, Sảnh Hearthhold, hầm ngục), chỉ tới được bằng dịch chuyển
-const INST_X = 7400, W = 14600;
+const INST_X = 7400, W = 20600;
 const sk = v => v * K;
 // Độ khó chọn một lần khi bắt đầu hành trình. Khó và Chuyên gia chỉ mở sau khi đã phá đảo một lần.
 // hp/dmg: máu và sát thương quái thường · boss: máu boss lớn · elite: tỉ lệ quái tinh anh có thuộc tính
@@ -58,11 +58,26 @@ const ROADS = [ROAD,
   // phía Bắc
   [[1400, 380], [1400, -100], [1350, -500], [1400, -900], [1400, -1140]],
   [[1350, -100], [2000, -250], [2700, -250], [3300, -700], [3600, -1100], [3900, -1450]],
-  [[1350, -500], [600, -300], [250, -100]],
+  [[1390, -380], [600, -300], [250, -100]],
 ];
 const FORT = { x: 3200, y: 500, w: 800, h: 800 };
 const ACAD = { x: -2300, y: -900, w: 1500, h: 1300 };
 const CAPITAL = { x: 300, y: -1800, w: 2200, h: 900 };
+// Hạ Thành: khu phố nghèo bên ngoài tường thành, phía nam cổng lớn; vào được trước khi có đủ ba Đại Ấn
+const LOWTOWN = { x: 380, y: -928, w: 2040, h: 496 };
+// đồ trang trí phố thị (tọa độ thiết kế): đài phun nước, đèn đường thắp về đêm, sạp chợ, tượng, thùng hàng, giếng
+const DECOS = [
+  // Hạ Thành
+  ['fountain', 1180, -655, 32], ['statue', 1085, -540], ['well', 2320, -545],
+  ['stall', 1110, -858], ['stall', 1210, -862], ['stall', 1545, -585], ['stall', 780, -748], ['stall', 1950, -752],
+  ['lamp', 1300, -560], ['lamp', 1480, -560], ['lamp', 1295, -740], ['lamp', 1485, -740], ['lamp', 620, -652], ['lamp', 1010, -652],
+  ['lamp', 1790, -652], ['lamp', 2170, -652], ['lamp', 560, -765], ['lamp', 2230, -765],
+  ['crate', 455, -765], ['crate', 478, -752], ['crate', 2350, -770], ['crate', 1580, -875], ['crate', 1060, -480], ['crate', 2280, -480],
+  // Kinh Thành
+  ['fountain', 680, -1075, 30], ['fountain', 2130, -1150, 28], ['statue', 1310, -1090], ['statue', 1490, -1090],
+  ['stall', 1080, -1082], ['stall', 1720, -1082], ['lamp', 1250, -1000], ['lamp', 1550, -1000], ['lamp', 1120, -960], ['lamp', 1680, -960],
+  ['lamp', 700, -1560], ['lamp', 350, -1050], ['lamp', 2140, -1470], ['lamp', 2440, -1300], ['crate', 980, -1760], ['crate', 1800, -960],
+];
 const COLO = { x: 3600, y: 3230, rect: { x: 3200, y: 2950, w: 800, h: 560 } };
 const FOREST = { x: 2850, y: 1900, w: 1500, h: 900 };
 const BARRIER = { x: 3650, y: 2350, r: 150 };
@@ -81,7 +96,7 @@ const DUNGEONS = [
   { id: 'd3', name: 'Hang Emberdeep', ex: 4250, ey: 760, boss: 'golem', mul: 1.4, theme: 'fire', reward: { tal: 'shieldtal', items: { somber2: 1, stone2: 2 } } },
   { id: 'd4', name: 'Hầm Mộ Kingsrest', ex: 3900, ey: -1500, boss: 'royalchamp', mul: 1.8, theme: 'royal', reward: { weapon: 'royalsword', mem: 1, tal: 'gold' } },
 ];
-DUNGEONS.forEach((d, i) => { d.area = { x: 10200 + i * 1100, y: 0, w: 1000, h: 1600 }; d.grace = 30 + i; d.bossRoom = { x: d.area.x + 28, y: 28, w: 944, h: 544 }; });
+DUNGEONS.forEach((d, i) => { const L = DG_LAYOUT[d.id], [bx, by, bw, bh] = L.bossRoom; d.L = L; d.area = { x: 10200 + i * 2600, y: 0, w: DG_W, h: DG_H }; d.grace = 30 + i; d.bossRoom = { x: d.area.x + bx, y: by, w: bw, h: bh }; });
 const AREAS = [
   { id: 'realm', x: 8000, y: 0, w: 1000, h: 1000, name: 'Cõi Aurum' },
   Object.assign({ id: 'hub', name: 'Sảnh Hearthhold' }, HUB),
@@ -107,7 +122,7 @@ const MAP_FRAGS = [
   { id: 'm7', x: -200, y: 1990, name: 'Hồ Crystalmere', rects: [{ x: -2800, y: 400, w: 2800, h: 2200 }] },
   { id: 'm8', x: -220, y: 3120, name: 'Bờ Biển Saltreach', rects: [{ x: -2800, y: 2600, w: 2800, h: 1000 }] },
   { id: 'm9', x: -1700, y: 340, name: 'Học Viện Starhollow', rects: [ACAD] },
-  { id: 'm10', x: 1480, y: 250, name: 'Cao Nguyên Aurelia', rects: [{ x: 0, y: -900, w: 4400, h: 1300 }, { x: 2500, y: -1800, w: 1900, h: 900 }] },
+  { id: 'm10', x: 1480, y: 250, name: 'Cao Nguyên Aurelia', rects: [{ x: 0, y: -900, w: 4400, h: 1300 }, { x: 2500, y: -1800, w: 1900, h: 900 }, LOWTOWN] },
   { id: 'm11', x: 1250, y: -990, name: 'Kinh Thành Aurumhold', rects: [CAPITAL] },
 ];
 // sương mù bản đồ: mỗi ô 100×100 đơn vị, mở ra khi người chơi đi qua
@@ -129,7 +144,24 @@ function expDecode(str) {
 }
 // bản lưu từ trước khi thế giới được phóng to: dời rune rơi, dấu trên bản đồ và vùng đã khám phá sang tọa độ mới
 function migrateSave(s) {
-  if (s.worldV >= 2) return s;
+  if ((s.worldV || 1) < 2) migrateV2(s);
+  if (s.worldV < 3) {
+    // hầm ngục được dựng lại rộng hơn: rune rơi hay dấu trong hầm cũ dời về lối vào của hầm đó
+    const mv = p => { if (!p || typeof p.x !== 'number' || p.x < 10200) return; const d = DUNGEONS[Math.min(DUNGEONS.length - 1, Math.floor((p.x - 10200) / 1100))]; p.x = d.area.x + d.L.entry[0]; p.y = d.L.entry[1] - 60; };
+    mv(s.lost); mv(s.marker); s.worldV = 3;
+  }
+  if (s.worldV < 4) {
+    // Hạ Thành mọc lên phía nam cổng lớn và thế giới được rải thêm điểm đến: rune rơi trong khu phố dời về ân điển cổng thành,
+    // rương tàn tích và vật phẩm rải rác được sinh lại ở chỗ khác nên coi như chưa nhặt
+    if (s.lost && typeof s.lost.x === 'number' && inRect(s.lost.x, s.lost.y, LOWTOWN, 40)) { const g = GRACES.find(q => q.id === 18); s.lost.x = g.x; s.lost.y = g.y + 60; }
+    const fresh = id => !/^(c_ruin|x)\d+$/.test(id);
+    if (Array.isArray(s.chests)) s.chests = s.chests.filter(fresh);
+    if (Array.isArray(s.taken)) s.taken = s.taken.filter(fresh);
+    s.worldV = 4;
+  }
+  return s;
+}
+function migrateV2(s) {
   const mv = p => { if (!p || typeof p.x !== 'number') return; if (p.x < 4800) { p.x *= K; p.y *= K; } else p.x += 3000; };
   mv(s.lost); mv(s.marker);
   if (s.explored) {
@@ -201,13 +233,19 @@ const WALLS = [
   // Kinh Thành Aurumhold: tường thành, cổng lớn cần ba Đại Ấn, cửa hông mở bằng cần gạt bên trong
   { x: 300, y: -928, w: 1040, h: 28 }, { x: 1340, y: -928, w: 120, h: 28, gate: 'great' }, { x: 1460, y: -928, w: 1040, h: 28 },
   { x: 300, y: -1800, w: 28, h: 872 }, { x: 2472, y: -1800, w: 28, h: 680 }, { x: 2472, y: -1120, w: 28, h: 120, gate: 'lever', lever: 'cap_side' }, { x: 2472, y: -1000, w: 28, h: 72 },
+  // Hạ Thành: tường thấp có cổng vòm không cửa ở phía nam, hai bên tường sập thành lỗ hổng
+  { x: 380, y: -460, w: 880, h: 28 }, { x: 1540, y: -460, w: 880, h: 28 }, { x: 1260, y: -484, w: 40, h: 60 }, { x: 1500, y: -484, w: 40, h: 60 },
+  { x: 380, y: -928, w: 28, h: 208 }, { x: 380, y: -620, w: 28, h: 188 }, { x: 2392, y: -928, w: 28, h: 168 }, { x: 2392, y: -660, w: 28, h: 228 },
   // Sân Ngai Sunthrone (Varek trở lại) và lối lên Cây Aurum
   { x: 1022, y: -1800, w: 28, h: 688 }, { x: 1750, y: -1800, w: 28, h: 688 },
   { x: 1022, y: -1140, w: 328, h: 28 }, { x: 1350, y: -1140, w: 100, h: 28, gate: 'fog2' }, { x: 1450, y: -1140, w: 328, h: 28 },
   { x: 1050, y: -1588, w: 300, h: 28 }, { x: 1350, y: -1588, w: 100, h: 28, gate: 'north2' }, { x: 1450, y: -1588, w: 300, h: 28 },
   // nhà cửa trong Kinh Thành
   ...[[400, -1700, 250, 200], [750, -1700, 200, 300], [400, -1400, 200, 220], [700, -1300, 260, 150], [420, -1100, 180, 120], [760, -1080, 200, 90],
-    [1850, -1700, 250, 250], [2180, -1720, 220, 200], [1850, -1380, 200, 200], [2150, -1420, 250, 160], [1860, -1100, 220, 120], [2200, -1180, 180, 130]]
+    [1850, -1700, 250, 250], [2180, -1720, 220, 200], [1850, -1380, 200, 200], [2150, -1420, 250, 160], [1860, -1100, 220, 120], [2200, -1180, 180, 130],
+    // Hạ Thành: hai dãy nhà hai bên con phố ngang, chừa quảng trường quanh đường cái
+    [440, -890, 170, 118], [660, -890, 150, 108], [860, -890, 180, 120], [1640, -890, 170, 120], [1860, -890, 150, 110], [2060, -890, 200, 116],
+    [440, -625, 160, 115], [650, -635, 190, 125], [890, -620, 160, 110], [1600, -625, 170, 115], [1820, -640, 160, 130], [2040, -620, 210, 110]]
     .map(([x, y, w, h]) => ({ x, y, w, h, bld: true })),
   // Sảnh Hearthhold
   { x: HUB.x, y: 0, w: HUB.w, h: 28 }, { x: HUB.x, y: HUB.h - 28, w: HUB.w, h: 28 }, { x: HUB.x, y: 0, w: 28, h: HUB.h }, { x: HUB.x + HUB.w - 28, y: 0, w: 28, h: HUB.h },
@@ -215,21 +253,14 @@ const WALLS = [
 const LEVERS = [{ id: 'acad_sc', x: -1150, y: 40, name: 'Cửa tắt Học Viện' }, { id: 'cap_side', x: 2430, y: -1060, name: 'Cửa hông Kinh Thành' }];
 const TRAPS = [];
 const DOORS = [];
-// Mỗi hầm ngục dựng từ cùng một khung ba gian: sảnh vào, gian giữa và phòng boss (tọa độ cục bộ 1000×1600)
+// hầm ngục: tường tự dựng quanh các phòng trong DG_LAYOUT (xem dungeons.js), cổng, cần gạt, cửa ra vào và bẫy
 function buildDungeon(d) {
-  const ox = d.area.x, L = (x, y, w, h, o = {}) => WALLS.push(Object.assign({ x: ox + x, y, w, h, dgw: d.theme }, o));
-  L(0, 0, 1000, 28); L(0, 1572, 1000, 28); L(0, 0, 28, 1600); L(972, 0, 28, 1600);
-  L(28, 1072, 412, 28); L(560, 1072, 412, 28);
-  if (d.theme === 'crypt') L(440, 1072, 120, 28, { gate: 'lever', lever: 'd1_door' });
-  L(250, 1100, 28, 260); L(722, 1100, 28, 260);
-  L(28, 572, 422, 28); L(550, 572, 422, 28); L(450, 572, 100, 28, { gate: 'dg', dg: d.id });
-  if (d.theme === 'royal') L(28, 830, 442, 28); else L(180, 830, 290, 28);
-  if (d.theme === 'crystal') L(530, 830, 442, 28); else L(530, 830, 290, 28);
-  if (d.theme === 'crystal') L(820, 600, 28, 230, { illusory: 'w_d2' });
-  if (d.theme === 'royal') L(152, 600, 28, 230, { illusory: 'w_d4' });
-  DOORS.push({ kind: 'enter', dg: d, x: d.ex, y: d.ey }, { kind: 'exit', dg: d, x: ox + 500, y: 1545 });
-  if (d.theme === 'crypt') LEVERS.push({ id: 'd1_door', x: ox + 120, y: 1180, name: 'Cửa đá' });
-  if (d.theme === 'fire') [[150, 700], [350, 960], [650, 700], [850, 960], [500, 1000], [300, 680], [720, 940]].forEach(([x, y], i) => TRAPS.push({ x: ox + x, y, r: 58, period: 2.6, off: i * 0.37, dg: d.id }));
+  const L = d.L, ox = d.area.x;
+  carveDungeon(d, w => WALLS.push(w));
+  for (const g of L.gates || []) WALLS.push(Object.assign({}, g, { x: ox + g.x, dgw: d.theme }, g.gate === 'dg' ? { dg: d.id } : {}));
+  DOORS.push({ kind: 'enter', dg: d, x: d.ex, y: d.ey }, { kind: 'exit', dg: d, x: ox + L.exit[0], y: L.exit[1] });
+  for (const [id, x, y, name] of L.levers || []) LEVERS.push({ id, x: ox + x, y, name });
+  (L.traps || []).forEach(([x, y], i) => TRAPS.push({ x: ox + x, y, r: 58, period: 2.6, off: i * 0.37, dg: d.id }));
 }
 DUNGEONS.forEach(buildDungeon);
 // Học Viện cũng có phòng boss khép cửa sương như một hầm ngục
@@ -297,7 +328,7 @@ const GRACES = [
   { id: 20, x: 1400, y: -1060, name: 'Ân Điển Trước Ngai' },
   { id: 21, x: 1250, y: -1660, name: 'Ân Điển Cây Aurum' },
   { id: 22, x: HUB.x + 500, y: 450, name: 'Sảnh Hearthhold', hub: true },
-  ...DUNGEONS.map(d => ({ id: d.grace, x: d.area.x + 500, y: 1440, name: 'Ân Điển ' + d.name, dg: d.id })),
+  ...DUNGEONS.map(d => ({ id: d.grace, x: d.area.x + d.L.grace[0], y: d.L.grace[1], name: 'Ân Điển ' + d.name, dg: d.id })),
 ];
 // NPC ở Sảnh Hearthhold
 const NPCS = [
@@ -351,6 +382,8 @@ const CHESTS = [
   { id: 'c_lib2', x: -1780, y: -180, loot: { spell: 'shard', tear: 1 } },
   { id: 'c_wing', x: -2250, y: -300, loot: { armor: 'crystalset', items: { stone2: 2 } } },
   // Cao Nguyên Aurelia và Kinh Thành
+  { id: 'c_low1', x: 430, y: -482, loot: { items: { stone3: 1, somber2: 1 } } },
+  { id: 'c_low2', x: 2035, y: -845, loot: { runes: 1500, items: { firepot: 3, cure: 2 } } },
   { id: 'c_gold1', x: 300, y: -600, loot: { tal: 'feather', items: { stone3: 1 } } },
   { id: 'c_gold2', x: 2300, y: 150, loot: { seed: 1, items: { stone2: 2 } } },
   { id: 'c_high1', x: 4200, y: -1700, loot: { weapon: 'greataxe', items: { stone3: 1 } } },
@@ -360,12 +393,8 @@ const CHESTS = [
   { id: 'c_cap3', x: 2436, y: -1340, loot: { armor: 'royalset' } },
   { id: 'c_cap4', x: 850, y: -1350, loot: { items: { somber2: 1, stone3: 2 }, tear: 1 } },
 ];
-// rương trong hầm ngục (tọa độ cục bộ)
-[['d1', 860, 1200, { items: { stone1: 2, cure: 2 }, spirit: 'skeletons' }], ['d1', 100, 690, { ash: 'unsheathe' }],
-  ['d2', 130, 1200, { items: { stone1: 3 } }], ['d2', 910, 700, { items: { stone2: 2, somber1: 1 } }],
-  ['d3', 130, 1200, { items: { firepot: 4, stone2: 1 } }], ['d3', 880, 690, { items: { stone2: 2 }, tal: 'green' }],
-  ['d4', 860, 1200, { items: { grune2: 1, stone3: 1 } }], ['d4', 90, 700, { items: { stone3: 2, somber2: 1 } }]]
-  .forEach(([id, x, y, loot], i) => { const d = DUNGEONS.find(q => q.id === id); CHESTS.push({ id: 'c_' + id + '_' + i, x: d.area.x + x, y, loot }); });
+// rương trong hầm ngục (tọa độ cục bộ trong DG_LAYOUT)
+for (const d of DUNGEONS) for (const [id, x, y, loot] of d.L.chests) CHESTS.push({ id, x: d.area.x + x, y, loot });
 const NOTES = [
   { x: 1400, y: 3130, text: 'Lưỡi gươm đang chờ phía trước. Hãy lăn mình (Space) đúng khoảnh khắc thép vung xuống.' },
   { x: 1470, y: 2300, text: 'Kẻ thù nào rồi cũng lảo đảo. Đòn nặng tay bẻ gãy thế đứng nhanh hơn cả.' },
@@ -390,13 +419,12 @@ const NOTES = [
   { x: -700, y: 1060, text: 'Mai cua pha lê cứng như khiên. Hãy vòng ra sau lưng, hoặc dùng đòn mạnh mà phá.' },
   { x: 2330, y: 1330, text: 'Lũ cóc thè lưỡi xa hơn ngươi nghĩ. Khi cổ chúng phồng tím, hãy né sang ngang.' },
   { x: -1080, y: 330, text: 'Góc sân này... có tiếng gió luồn qua một bức tường lẽ ra phải kín.' },
+  { x: 560, y: -700, text: 'Khi cổng lớn khép lại, Hạ Thành bị bỏ ngoài tường. Kẻ ở lại giờ chỉ còn canh giữ những con phố trống.' },
   { x: 1400, y: -860, text: 'Cổng Kinh Thành Aurumhold. Ba Đại Ấn nằm trong tay vệ binh Greystone phương đông, con rồng Ashmire, và nữ hoàng Starhollow phương tây.' },
   { x: 1480, y: -1000, text: 'Kẻ gác cổng năm xưa chưa hề chết... Hắn đang chờ ở Sân Ngai Sunthrone.' },
   { x: 150, y: 3050, text: 'Lối xuống bờ biển Saltreach. Sóng đã gặm mòn một hầm mộ cổ bên mép nước.' },
-  { x: DUNGEONS[0].area.x + 500, y: 1250, text: 'Cánh cửa đá im lìm. Hẳn phải có cơ quan ẩn đâu đó trong gian mộ.' },
-  { x: DUNGEONS[1].area.x + 780, y: 950, text: 'Vách pha lê phía đông mỏng như lớp băng đầu đông...' },
-  { x: DUNGEONS[2].area.x + 500, y: 1130, text: 'Nền đá nóng rực. Lửa ngầm phun theo nhịp; hãy đếm hơi thở của hang mà đi.' },
 ];
+for (const d of DUNGEONS) for (const [x, y, text] of d.L.notes || []) NOTES.push({ x: d.area.x + x, y, text });
 const SPAWNS = [
   ['soldier', 1320, 2880], ['soldier', 1480, 2840],
   ['soldier', 1580, 2480], ['soldier', 1260, 2420], ['mage', 1080, 2620],
@@ -433,11 +461,14 @@ const SPAWNS = [
   ['sorcerer', -1700, -340], ['sorcerer', -1300, -180], ['crystal', -1000, -340], ['sorcerer', -1000, -20], ['bat', -1500, -40],
   ['selvara', -1550, -740],
   // Cao Nguyên Aurelia
-  ['royal', 1500, -100], ['garcher', 1000, 100], ['lion', 900, -500], ['priest', 700, -150], ['royal', 2200, -500], ['garcher', 1800, -300],
-  ['priest', 2600, 0], ['lion', 3200, -300], ['royal', 3800, 100], ['garcher', 4000, -200], ['soldier', 1200, -600], ['soldier', 1600, -650],
+  ['royal', 1500, -100], ['garcher', 1000, 100], ['lion', 900, -250], ['priest', 700, -150], ['royal', 2200, -300], ['garcher', 1800, -300],
+  ['priest', 2600, 0], ['lion', 3200, -300], ['royal', 3800, 100], ['garcher', 4000, -200],
   ['garcher', 400, 100], ['troll', 3000, 200],
   // Sườn Núi Goldspire
   ['lion', 3300, -1500], ['royal', 3800, -1250], ['garcher', 4100, -1000], ['priest', 3100, -1100], ['troll', 2900, -1650], ['garcher', 4200, -1450],
+  // Hạ Thành: lính gác đường phố, cung thủ ở đầu phố, hiệp sĩ canh rương ở ngõ sau
+  ['soldier', 1230, -560], ['soldier', 1560, -700], ['soldier', 560, -700], ['soldier', 600, -725], ['lion', 900, -700], ['royal', 2250, -700],
+  ['royal', 1900, -700], ['garcher', 2330, -620], ['garcher', 1450, -870], ['knight', 600, -485], ['gargoyle', 1720, -470], ['priest', 1000, -760],
   // Kinh Thành Aurumhold
   ['royal', 680, -1600], ['priest', 500, -1450], ['garcher', 850, -1370], ['lion', 650, -1340], ['garcher', 360, -1250],
   ['royal', 2000, -1420], ['priest', 2280, -1480], ['garcher', 2100, -1250], ['royal', 2300, -1220], ['garcher', 1810, -1500], ['knight', 2140, -1050],
@@ -455,19 +486,13 @@ const SPAWNS = [
   ['grimoire', -1400, -60], ['grimoire', -1820, -200], ['grimoire', -1200, 140], ['grimoire', -1960, -600], ['grimoire', -1060, -600],
   ['eagle', 1200, 200], ['eagle', 2600, -200], ['eagle', 3500, 0], ['eagle', 300, -300],
   ['ram', 3000, -1300], ['ram', 3600, -1600], ['ram', 3880, -1100], ['ram', 3270, -1760],
-  ['crabking', -1620, 2150], ['admiral', -1540, 3550], ['ramking', 3500, -1890],
-  ['gargoyle', 1000, -1500], ['gargoyle', 1800, -1200], ['gargoyle', 1300, -1080], ['gargoyle', 700, -1100],
+  ['crabking', -1620, 2150], ['admiral', -1540, 3550], ['ramking', 3500, -1690],
+  ['gargoyle', 1000, -1500], ['gargoyle', 1800, -1200], ['gargoyle', 1300, -1030], ['gargoyle', 650, -1210],
 ];
-// quái trong hầm ngục (tọa độ cục bộ)
-const DG_SPAWNS = {
-  d1: [['ghoul', 150, 1450], ['ghoul', 850, 1450], ['soldier', 130, 1260], ['ghoul', 860, 1280], ['soldier', 300, 950], ['ghost', 700, 950], ['bat', 500, 700], ['bat', 540, 720], ['ghoul', 800, 700], ['skeleton', 500, 1300], ['skeleton', 200, 1140], ['skeleton', 780, 1150]],
-  d2: [['crystal', 300, 1300], ['crystal', 700, 1300], ['sorcerer', 500, 950], ['crystal', 250, 700], ['bat', 750, 700], ['lakehound', 150, 960], ['lakehound', 850, 960], ['crab', 500, 1200], ['grimoire', 300, 890]],
-  d3: [['bomber', 200, 1300], ['soldier', 800, 1300], ['spider', 300, 950], ['spider', 700, 950], ['troll', 500, 720], ['bomber', 850, 700], ['salamander', 500, 1150], ['salamander', 150, 850]],
-  d4: [['royal', 300, 1300], ['garcher', 800, 1250], ['ghost', 500, 950], ['priest', 250, 700], ['royal', 750, 700], ['garcher', 520, 650], ['gargoyle', 500, 1150]],
-};
+// quái trong hầm ngục (tọa độ cục bộ trong DG_LAYOUT) và boss ở phòng cuối
 for (const d of DUNGEONS) {
-  for (const [t, x, y] of DG_SPAWNS[d.id]) SPAWNS.push([t, d.area.x + x, y]);
-  SPAWNS.push([d.boss, d.area.x + 500, 280]);
+  for (const [t, x, y] of d.L.spawns) SPAWNS.push([t, d.area.x + x, y]);
+  SPAWNS.push([d.boss, d.area.x + d.L.boss[0], d.L.boss[1]]);
 }
 const REGIONS = [
   { name: 'Cõi Aurum', test: x => x > INST_X && x < 9050 },
@@ -476,6 +501,7 @@ const REGIONS = [
   { name: 'Cây Aurum', test: (x, y) => y < ARENA2.y && x > sk(1000) && x < sk(1800) },
   { name: 'Sân Ngai Sunthrone', test: (x, y) => inRect(x, y, ARENA2) },
   { name: 'Kinh Thành Aurumhold', test: (x, y) => inRect(x, y, CAPITAL) },
+  { name: 'Hạ Thành Aurumhold', test: (x, y) => inRect(x, y, LOWTOWN) },
   { name: 'Sườn Núi Goldspire', test: (x, y) => y < sk(-900) && x > sk(2500) },
   { name: 'Học Viện Starhollow', test: (x, y) => inRect(x, y, ACAD) },
   { name: 'Cao Nguyên Aurelia', test: (x, y) => x >= 0 && y < sk(390) },
@@ -494,7 +520,7 @@ const REGIONS = [
 const regionAt = (x, y) => REGIONS.find(r => r.test(x, y)).name;
 // hệ số sức mạnh của quái theo vùng đất (như Elden Ring: mạnh theo vùng, không theo cấp người chơi)
 const REGION_MUL = {
-  'Cõi Aurum': 2.0, 'Sảnh Hearthhold': 1, 'Cây Aurum': 1.9, 'Sân Ngai Sunthrone': 1.9, 'Kinh Thành Aurumhold': 1.85, 'Sườn Núi Goldspire': 1.8,
+  'Cõi Aurum': 2.0, 'Sảnh Hearthhold': 1, 'Cây Aurum': 1.9, 'Sân Ngai Sunthrone': 1.9, 'Kinh Thành Aurumhold': 1.85, 'Hạ Thành Aurumhold': 1.75, 'Sườn Núi Goldspire': 1.8,
   'Học Viện Starhollow': 1.55, 'Cao Nguyên Aurelia': 1.7, 'Bờ Biển Saltreach': 1.2, 'Hồ Crystalmere': 1.4, 'Cổng Gác Thornwall': 1.2,
   'Đầm Lầy Ashmire': 1.25, 'Tàn Tích Hollowmere': 1.1, 'Nhà Nguyện Dawnrest': 1, 'Pháo Đài Greystone': 1.45, 'Đấu Trường Bloodsand': 1.5,
   'Rừng Wraithwood': 1.4, 'Cao Nguyên Cinderreach': 1.35, 'Đồng Cỏ Mistveil': 1,
@@ -517,7 +543,7 @@ function spotBlocked(x, y, pad) {
   if (x > sk(930) && x < sk(1870) && y > sk(380) && y < sk(1200)) return true;
   if (x > sk(370) && x < sk(1030) && y > sk(1600) && y < sk(2210)) return true;
   if (x > sk(1210) && x < sk(1590) && y > sk(3150)) return true;
-  if (inRect(x, y, CAPITAL, 20) || inRect(x, y, ACAD, 20)) return true;
+  if (inRect(x, y, CAPITAL, 20) || inRect(x, y, LOWTOWN, 30) || inRect(x, y, ACAD, 20)) return true;
   if (dist(x, y, TREE_POS.x, TREE_POS.y) < sk(340)) return true;
   if (nearRoad(x, y) < sk(58) + pad) return true;
   if (dist(x, y, LAIR.x, LAIR.y) < sk(360)) return true;
@@ -540,7 +566,11 @@ function spotBlocked(x, y, pad) {
   return false;
 }
 const KEEP = new Map(), KEEP_CELL = 140;
-function keepOut(x, y, rr) { const key = Math.floor(x / KEEP_CELL) * 100000 + Math.floor(y / KEEP_CELL); if (!KEEP.has(key)) KEEP.set(key, []); KEEP.get(key).push([x, y, rr]); }
+function keepOut(x, y, rr) {
+  // vùng lớn hơn một ô được ghi vào mọi ô nó phủ, vì lúc tra chỉ xét các ô kề nhau
+  const e = [x, y, rr], n = Math.max(0, Math.ceil(rr / KEEP_CELL) - 1), cx = Math.floor(x / KEEP_CELL), cy = Math.floor(y / KEEP_CELL);
+  for (let gx = cx - n; gx <= cx + n; gx++) for (let gy = cy - n; gy <= cy + n; gy++) { const key = gx * 100000 + gy; if (!KEEP.has(key)) KEEP.set(key, []); KEEP.get(key).push(e); }
+}
 function genObstacles() {
   const r = mulberry32(20250311);
   for (const g of GRACES) keepOut(g.x, g.y, 130);
@@ -549,6 +579,7 @@ function genObstacles() {
   for (const sp of SPAWNS) keepOut(sp[1], sp[2], 55);
   for (const d of DOORS) keepOut(d.x, d.y, 110);
   for (const l of LEVERS) keepOut(l.x, l.y, 60);
+  for (const q of POIS) keepOut(q.x, q.y, q.type === 'stones' ? 160 : 210);
   for (const c of CHESTS) if (!c.noObst) addObst({ kind: 'chest', x: c.x, y: c.y, r: 14, chest: c });
   for (const b of BRAZIERS) addObst({ kind: 'brazier', x: b.x, y: b.y, r: 14 });
   for (const st of STATUES) addObst({ kind: 'statue', x: st.x, y: st.y, r: 16 });
@@ -557,13 +588,17 @@ function genObstacles() {
   for (const n of NPCS) addObst({ kind: 'npc', x: n.x, y: n.y, r: 16, npc: n });
   addObst({ kind: 'flag', x: FLAG.x, y: FLAG.y, r: 8 });
   addObst({ kind: 'bigtree', x: TREE_POS.x, y: TREE_POS.y, r: 58 });
+  const DR = { fountain: 32, lamp: 6, stall: 20, statue: 15, crate: 10, well: 16 };
+  const deco = o => { o.kind = 'deco'; addObst(o); DECO_OBJ.push(o); };
+  for (const [d, x, y, rr] of DECOS) deco({ d, x: sk(x), y: sk(y), r: sk(rr || DR[d]), seed: (x * 13 + y * 7) & 1023 });
+  for (const q of POIS) q.deco.forEach(deco);
   // cột đổ trong tàn tích, Học Viện, Sân Ngai Sunthrone và các hầm ngục
   const pillar = (x, y, rr) => addObst({ kind: 'rock', x, y, r: rr, seed: (x * 7 + y) | 0, pillar: true });
   const wpillar = (x, y, rr) => pillar(sk(x), sk(y), rr);
   [[560, 1760, 16], [820, 1800, 18], [520, 2040, 15], [880, 2080, 14], [760, 1720, 12]].forEach(p => wpillar(...p));
   [[-2000, -760, 20], [-1100, -760, 20], [-2000, -620, 18], [-1100, -620, 18], [-1800, 250, 16], [-1300, 180, 16]].forEach(p => wpillar(...p));
   [[1150, -1480, 18], [1650, -1480, 18], [1150, -1220, 18], [1650, -1220, 18]].forEach(p => wpillar(...p));
-  for (const d of DUNGEONS) [[250, 250], [750, 250], [250, 430], [750, 430], [380, 1250], [620, 1250]].forEach(([x, y]) => pillar(d.area.x + x, y, 18));
+  for (const d of DUNGEONS) for (const [x, y, rr, cr] of d.L.pillars || []) { if (cr) addObst({ kind: 'rock', x: d.area.x + x, y, r: rr, seed: (x * 7 + y) | 0, crystal: true }); else pillar(d.area.x + x, y, rr); }
   ruinPillars(pillar);
   // cây và đá theo từng vùng
   const zones = [
@@ -772,6 +807,16 @@ function buildGround() {
   // Kinh Thành Aurumhold: đá lát màu cát vàng, Sân Ngai Sunthrone và gốc Cây Aurum
   floor(CAPITAL.x, CAPITAL.y, CAPITAL.w, CAPITAL.h, 50, 0.01, 96, [22, 14, -4]);
   floor(ARENA2.x, ARENA2.y, ARENA2.w, ARENA2.h, 50, 0.02, 80, [18, 10, -6]);
+  // đại lộ từ cổng lớn tới Sân Ngai: đá sáng hơn, viền vàng
+  floor(1330, -1112, 140, 184, 30, 0, 112, [26, 16, -2]);
+  g.strokeStyle = 'rgba(230,190,90,.55)'; g.lineWidth = 5; g.strokeRect(1330, -1112, 140, 184);
+  // Hạ Thành: đá lát cũ sẫm màu, sứt mẻ, đất bùn lộ ra; con phố ngang và đường cái lát đá mới hơn
+  floor(LOWTOWN.x, LOWTOWN.y, LOWTOWN.w, LOWTOWN.h, 40, 0.12, 64, [10, 6, -6]);
+  blobs(g, r, 60, LOWTOWN.x, LOWTOWN.y, LOWTOWN.w, LOWTOWN.h, ['#4a3f2c', '#3e3526', '#54472f'], 0.35, 0.2, 14, 50);
+  floor(408, -772, 1984, 138, 34, 0.03, 82, [16, 10, -4]);
+  floor(1320, -900, 160, 440, 34, 0.02, 88, [18, 12, -2]);
+  g.strokeStyle = 'rgba(214,178,94,.25)'; g.lineWidth = 3;
+  for (const rr of [70, 110]) { g.beginPath(); g.arc(1180, -655, rr, 0, TAU); g.stroke(); }
   g.strokeStyle = 'rgba(255,214,120,.3)'; g.lineWidth = 4;
   for (const rr of [100, 180]) { g.beginPath(); g.arc(1400, -1350, rr, 0, TAU); g.stroke(); }
   const tg = g.createRadialGradient(TREE_POS.x, TREE_POS.y, 30, TREE_POS.x, TREE_POS.y, 420);
@@ -794,10 +839,10 @@ function buildGround() {
   return c;
 }
 // nền cho các khu biệt lập (Cõi Aurum, Sảnh Hearthhold, hầm ngục)
-const IX0 = 8000, IH = 1600;
+const IX0 = 8000, IH = DG_H, GS2 = 0.4;
 const GROUND2 = (function buildInstanceGround() {
-  const GW = W - IX0, c = makeCanvas(GW / 2, IH / 2), g = c.getContext('2d'), r = mulberry32(99);
-  g.scale(0.5, 0.5); g.translate(-IX0, 0);
+  const GW = W - IX0, c = makeCanvas(Math.ceil(GW * GS2), Math.ceil(IH * GS2)), g = c.getContext('2d'), r = mulberry32(99);
+  g.scale(GS2, GS2); g.translate(-IX0, 0);
   g.fillStyle = '#07060b'; g.fillRect(IX0, 0, GW, IH);
   for (let i = 0; i < 700; i++) { g.globalAlpha = 0.3 + r() * 0.7; g.fillStyle = r() < 0.8 ? '#fff6dc' : '#ffd98a'; g.beginPath(); g.arc(IX0 + r() * 1000, r() * 1000, 0.6 + r() * 1.6, 0, TAU); g.fill(); }
   g.globalAlpha = 1;
@@ -819,15 +864,22 @@ const GROUND2 = (function buildInstanceGround() {
   for (let y = 70; y < HUB.h - 50; y += 60) if (y < 390 || y > 510) diamond(HUB.x + 500, y, 10);
   for (let x = HUB.x + 70; x < HUB.x + HUB.w - 50; x += 60) if (x < HUB.x + 430 || x > HUB.x + 570) diamond(x, 450, 10);
   g.strokeStyle = 'rgba(214,178,94,.4)'; g.lineWidth = 3; g.beginPath(); g.arc(HUB.x + 500, 450, 110, 0, TAU); g.stroke();
-  // hầm ngục
+  // hầm ngục: sàn đá theo chủ đề ở từng phòng, vũng nước, thảm đỏ, mạch dung nham, pha lê mọc trên sàn
   const THEME = { crypt: [52, [6, 4, 0]], crystal: [46, [0, 10, 24]], fire: [50, [18, 4, -4]], royal: [70, [18, 12, -2]] };
   for (const d of DUNGEONS) {
-    const [base, tint] = THEME[d.theme], A = d.area;
-    paintFloor(g, r, A.x, 0, A.w, A.h, 40, 0.04, base, tint);
-    if (d.theme === 'crystal') for (let i = 0; i < 70; i++) { g.fillStyle = r() < 0.5 ? 'rgba(160,220,255,.5)' : 'rgba(210,240,255,.6)'; const x = A.x + r() * A.w, y = r() * A.h, s = 4 + r() * 8; g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s * 0.5, y); g.lineTo(x, y + s * 0.6); g.lineTo(x - s * 0.5, y); g.closePath(); g.fill(); }
-    if (d.theme === 'fire') for (const t of TRAPS) if (t.dg === d.id) { const tg2 = g.createRadialGradient(t.x, t.y, 4, t.x, t.y, t.r); tg2.addColorStop(0, 'rgba(60,20,10,.9)'); tg2.addColorStop(1, 'rgba(90,40,20,0)'); g.fillStyle = tg2; g.beginPath(); g.arc(t.x, t.y, t.r, 0, TAU); g.fill(); }
+    const [base, tint] = THEME[d.theme], ox = d.area.x, L = d.L;
+    for (const [x, y, w, h] of L.rooms) paintFloor(g, r, ox + x, y, w, h, 40, d.theme === 'crystal' ? 0.08 : 0.04, base, tint);
+    for (const [x, y, rr] of L.puddles || []) { const pg = g.createRadialGradient(ox + x, y, 4, ox + x, y, rr); pg.addColorStop(0, 'rgba(40,70,90,.75)'); pg.addColorStop(1, 'rgba(40,70,90,0)'); g.fillStyle = pg; g.beginPath(); g.ellipse(ox + x, y, rr, rr * 0.7, 0, 0, TAU); g.fill(); }
+    for (const [x, y, w, h] of L.carpet || []) { g.fillStyle = 'rgba(110,30,26,.75)'; g.fillRect(ox + x + 10, y, w - 20, h); g.strokeStyle = 'rgba(214,178,94,.55)'; g.lineWidth = 3; g.strokeRect(ox + x + 16, y + 4, w - 32, h - 8); }
+    if (d.theme === 'crystal') for (const [x, y, w, h] of L.rooms) for (let i = 0; i < w * h / 16000; i++) { g.fillStyle = r() < 0.5 ? 'rgba(160,220,255,.5)' : 'rgba(210,240,255,.6)'; const px = ox + x + r() * w, py = y + r() * h, s = 4 + r() * 8; g.beginPath(); g.moveTo(px, py - s); g.lineTo(px + s * 0.4, py); g.lineTo(px, py + s * 0.3); g.lineTo(px - s * 0.4, py); g.closePath(); g.fill(); }
+    if (d.theme === 'fire') {
+      for (const t of TRAPS) if (t.dg === d.id) { const tg2 = g.createRadialGradient(t.x, t.y, 4, t.x, t.y, t.r); tg2.addColorStop(0, 'rgba(60,20,10,.9)'); tg2.addColorStop(1, 'rgba(60,20,10,0)'); g.fillStyle = tg2; g.beginPath(); g.arc(t.x, t.y, t.r, 0, TAU); g.fill(); }
+      g.strokeStyle = 'rgba(255,120,40,.35)'; g.lineWidth = 3;
+      for (const [x, y, w, h] of L.rooms) for (let i = 0; i < w * h / 60000; i++) { let px = ox + x + r() * w, py = y + r() * h; g.beginPath(); g.moveTo(px, py); for (let k = 0; k < 4; k++) { px += (r() - 0.5) * 60; py += (r() - 0.5) * 60; g.lineTo(Math.min(ox + x + w, Math.max(ox + x, px)), Math.min(y + h, Math.max(y, py))); } g.stroke(); }
+    }
+    const [bx, by, bw, bh] = L.bossRoom;
     g.strokeStyle = d.theme === 'royal' ? 'rgba(255,214,120,.3)' : d.theme === 'crystal' ? 'rgba(170,220,255,.28)' : 'rgba(200,180,150,.2)'; g.lineWidth = 4;
-    g.beginPath(); g.arc(A.x + 500, 290, 160, 0, TAU); g.stroke();
+    g.beginPath(); g.arc(ox + bx + bw / 2, by + bh / 2, Math.min(bw, bh) * 0.4, 0, TAU); g.stroke();
   }
   return c;
 })();
@@ -906,7 +958,7 @@ function scaleWorld() {
   const pt = o => { if (!o || done.has(o)) return; done.add(o); o.x *= K; o.y *= K; };
   const rect = o => { if (!o || done.has(o)) return; done.add(o); o.x *= K; o.y *= K; o.w *= K; o.h *= K; };
   const ell = a => { a[0] *= K; a[1] *= K; a[2] *= K; a[3] *= K; };
-  [ARENA, ARENA2, SWAMP, FORT, ACAD, CAPITAL, FOREST, ACAD_BOSS.bossRoom, COLO.rect].forEach(rect);
+  [ARENA, ARENA2, SWAMP, FORT, ACAD, CAPITAL, LOWTOWN, FOREST, ACAD_BOSS.bossRoom, COLO.rect].forEach(rect);
   [TREE_POS, LAIR, COLO, FLAG, ...BRAZIERS, ...STATUES].forEach(pt);
   BARRIER.x *= K; BARRIER.y *= K; BARRIER.r *= K;
   POOLS.forEach(ell); LAKE.forEach(ell); ISLES.forEach(ell);
@@ -923,6 +975,8 @@ function scaleWorld() {
 // thêm vài nhóm quái, vật phẩm rơi và tàn tích nhỏ có rương vào những vùng đồng trống giữa các địa danh,
 // sinh bằng seed cố định nên mỗi lần chơi đều giống nhau (id ổn định cho file lưu)
 const RUINS = [];
+// điểm đến nhỏ: trại lính quanh đống lửa, nghĩa địa, tháp canh đổ nát, vòng đá cổ (mỗi nơi có quái canh và phần thưởng)
+const POIS = [], DECO_OBJ = [];
 const FILL_REGIONS = ['Đồng Cỏ Mistveil', 'Hồ Crystalmere', 'Bờ Biển Saltreach', 'Cao Nguyên Cinderreach', 'Cao Nguyên Aurelia', 'Sườn Núi Goldspire', 'Rừng Wraithwood', 'Đầm Lầy Ashmire'];
 const BOSSY = new Set(['warden', 'wraith', 'selvara', 'crabking', 'admiral', 'ramking', 'graveknight', 'minerg', 'golem', 'royalchamp']);
 const PACK = { wolf: 3, bat: 2, lakehound: 2, boar: 2, ghoul: 2, crab: 2, soldier: 2, toad: 2, wisp: 2, drowned: 2, garcher: 2, ram: 2 };
@@ -930,7 +984,7 @@ function openSpot(x, y, clear) {
   if (x < WX0 + 120 || x > MAPW - 120 || y < WY0 + 120 || y > H - 120) return false;
   if (isVoid(x, y) || inWater(x, y, 20) || inPool(x, y)) return false;
   for (const w of wallsNear(x, y, clear)) if (inRect(x, y, w, clear)) return false;
-  for (const r of [ARENA, ARENA2, FORT, ACAD, CAPITAL, COLO.rect]) if (inRect(x, y, r, 120)) return false;
+  for (const r of [ARENA, ARENA2, FORT, ACAD, CAPITAL, LOWTOWN, COLO.rect]) if (inRect(x, y, r, 120)) return false;
   if (dist(x, y, LAIR.x, LAIR.y) < sk(560) || dist(x, y, BARRIER.x, BARRIER.y) < BARRIER.r + 120 || dist(x, y, TREE_POS.x, TREE_POS.y) < sk(420)) return false;
   for (const g of GRACES) if (dist(x, y, g.x, g.y) < 340) return false;
   for (const d of DOORS) if (dist(x, y, d.x, d.y) < 220) return false;
@@ -970,6 +1024,44 @@ function fillWorld() {
     const mul = REGION_MUL[n] || 1, pick = r();
     ITEMS.push({ id: 'x' + (i++), x, y, loot: pick < 0.35 ? { runes: Math.round(150 * mul * mul / 50) * 50 } : pick < 0.7 ? tier(n) : { items: pick < 0.85 ? { cure: 2 } : { firepot: 2 } } });
   }
+  fillPois(r, tier);
+}
+function fillPois(r, tier) {
+  const want = [['camp', 7], ['grave', 5], ['tower', 5], ['stones', 4]], cnt = {};
+  const dry = (x, y) => !isVoid(x, y) && !inWater(x, y, 16) && !inPool(x, y) && !wallsNear(x, y, 40).some(w => inRect(x, y, w, 30));
+  const far = (x, y) => !RUINS.some(q => dist(x, y, q.x, q.y) < 700) && !POIS.some(q => dist(x, y, q.x, q.y) < 900);
+  for (const [type, n0] of want) for (let tries = 0; (cnt[type] || 0) < n0 && tries < 9000; tries++) {
+    const x = WX0 + r() * (MAPW - WX0), y = WY0 + r() * (H - WY0), n = regionAt(x, y);
+    if (!FILL_REGIONS.includes(n) || POIS.filter(q => q.n === n).length >= 3 || !openSpot(x, y, 200) || nearRoad(x, y) < 220 || !far(x, y)) continue;
+    if (SPAWNS.some(s => dist(x, y, s[1], s[2]) < 240) || CHESTS.some(c => dist(x, y, c.x, c.y) < 400) || ITEMS.some(it => dist(x, y, it.x, it.y) < 300)) continue;
+    let ok = true; for (let a = 0; a < TAU && ok; a += TAU / 8) ok = dry(x + Math.cos(a) * 150, y + Math.sin(a) * 150);
+    if (!ok) continue;
+    const k = cnt[type] = (cnt[type] || 0) + 1, mul = REGION_MUL[n] || 1, lv = mul < 1.3 ? 0 : mul < 1.6 ? 1 : 2, a0 = r() * TAU;
+    const q = { type, x, y, n, a0, deco: [] }, add = (d, dx, dy, rr, extra) => { if (dry(x + dx, y + dy)) q.deco.push(Object.assign({ d, x: x + dx, y: y + dy, r: rr, seed: (r() * 1024) | 0 }, extra)); };
+    const guard = (t, d, a) => SPAWNS.push([t, x + Math.cos(a) * d, y + Math.sin(a) * d]);
+    const runes = Math.round(250 * mul * mul / 50) * 50;
+    if (type === 'camp') {
+      add('campfire', 0, 0, 14);
+      for (let i = 0; i < 3; i++) { const a = a0 + i * TAU / 3; add('tent', Math.cos(a) * 120, Math.sin(a) * 120, 30, { rot: a + Math.PI }); }
+      for (let i = 0; i < 3; i++) { const a = a0 + (i + 0.5) * TAU / 3; add('crate', Math.cos(a) * 150, Math.sin(a) * 150, 14); }
+      [['soldier', 'soldier', 'archer'], ['soldier', 'shield', 'archer'], ['royal', 'garcher', 'knight']][lv].forEach((t, i) => guard(t, 62, a0 + (i + 0.5) * TAU / 3));
+      const a = a0 + TAU / 6; CHESTS.push({ id: 'c_camp' + k, x: x + Math.cos(a) * 190, y: y + Math.sin(a) * 190, loot: Object.assign({ runes }, tier(n)) });
+    } else if (type === 'grave') {
+      for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) if (r() < 0.85) add('tomb', (col - 1.5) * 62 + (r() - 0.5) * 12, (row - 1) * 70 + (r() - 0.5) * 10, 14, { broken: r() < 0.3 });
+      ['skeleton', 'skeleton', lv ? 'ghoul' : 'skeleton'].forEach((t, i) => guard(t, 90 + i * 20, a0 + i * 2.1));
+      ITEMS.push({ id: 'xg' + k, x: x + 124, y: y + 4, loot: lv ? { items: { somber1: 1 }, runes } : { items: { cure: 2, stone1: 2 } } });
+    } else if (type === 'tower') {
+      add('tower', 0, 0, 66);
+      for (let i = 0; i < 5; i++) { const a = a0 + 1.2 + i * 0.35, d = 84 + r() * 30; add('rubble', Math.cos(a) * d, Math.sin(a) * d, 10 + r() * 8); }
+      [['archer', 'archer', 'soldier'], ['archer', 'bomber', 'shield'], ['garcher', 'garcher', 'knight']][lv].forEach((t, i) => guard(t, 96, a0 - 0.8 + i * 1.3));
+      const a = a0 + Math.PI; CHESTS.push({ id: 'c_tower' + k, x: x + Math.cos(a) * 100, y: y + Math.sin(a) * 100, loot: Object.assign({ runes: runes * 2 }, tier(n)) });
+    } else {
+      for (let i = 0; i < 7; i++) { const a = a0 + i * TAU / 7; add('menhir', Math.cos(a) * 118, Math.sin(a) * 96, 13, { rot: a }); }
+      (lv ? ['wisp', 'wisp'] : ['ghost']).forEach((t, i) => guard(t, 160, a0 + 0.4 + i * 2.6));
+      ITEMS.push({ id: 'xs' + k, x, y, loot: { runes: runes * 2, items: lv > 1 ? { stone3: 1 } : lv ? { stone2: 2 } : { stone1: 3 } } });
+    }
+    POIS.push(q);
+  }
 }
 // Ân Điển là chốn an toàn: đẩy quái thường ra xa (ngoài thế giới 480, trong hầm ngục 380); không chỗ đứng thì bỏ hẳn
 const GRACE_CLEAR = 480, GRACE_CLEAR_DG = 380;
@@ -1007,6 +1099,30 @@ function paintRuins() {
     rg.addColorStop(0, 'rgba(40,36,28,.5)'); rg.addColorStop(1, 'rgba(40,36,28,0)');
     g.fillStyle = rg; g.beginPath(); g.arc(q.x, q.y, 170, 0, TAU); g.fill();
     paintFloor(g, r, q.x - 110, q.y - 90, 220, 180, 44, 0.35, 66);
+  }
+  for (const q of POIS) {
+    const patch = (rad, col, a) => { const rg = g.createRadialGradient(q.x, q.y, rad * 0.3, q.x, q.y, rad); rg.addColorStop(0, `rgba(${col},${a})`); rg.addColorStop(1, `rgba(${col},0)`); g.fillStyle = rg; g.beginPath(); g.arc(q.x, q.y, rad, 0, TAU); g.fill(); };
+    if (q.type === 'camp') {
+      // đất bị giẫm trơ, vệt tro quanh đống lửa
+      patch(220, '74,58,38', 0.75);
+      blobs(g, r, 18, q.x - 160, q.y - 160, 320, 320, ['#5a4630', '#4a3a28', '#63503a'], 0.25, 0.25, 12, 40);
+      patch(46, '30,26,22', 0.8);
+    } else if (q.type === 'grave') {
+      // đất nghĩa địa sẫm, hàng rào gỗ thấp quanh các mộ
+      g.fillStyle = 'rgba(38,34,28,.6)'; g.fillRect(q.x - 150, q.y - 125, 300, 250);
+      blobs(g, r, 14, q.x - 140, q.y - 115, 280, 230, ['#2c2a22', '#34302a', '#3a3a2a'], 0.3, 0.3, 10, 30);
+      g.strokeStyle = 'rgba(92,70,44,.9)'; g.lineWidth = 3; g.setLineDash([16, 10]); g.strokeRect(q.x - 150, q.y - 125, 300, 250); g.setLineDash([]);
+      g.fillStyle = '#5c462c'; for (let t = 0; t < 4; t++) for (let k = 0; k <= 10; k++) { const u = k / 10, px = t < 2 ? q.x - 150 + u * 300 : q.x + (t === 2 ? -150 : 150), py = t < 2 ? q.y + (t ? 125 : -125) : q.y - 125 + u * 250; g.fillRect(px - 3, py - 3, 6, 6); }
+    } else if (q.type === 'tower') {
+      patch(190, '58,54,46', 0.6);
+      paintFloor(g, r, q.x - 70, q.y - 70, 140, 140, 28, 0.4, 60);
+    } else {
+      // vòng đá cổ: cỏ nhạt thành vòng, rãnh khắc phát sáng mờ
+      patch(170, '120,130,90', 0.35);
+      g.strokeStyle = 'rgba(170,210,255,.28)'; g.lineWidth = 3;
+      g.beginPath(); g.ellipse(q.x, q.y, 70, 56, 0, 0, TAU); g.stroke();
+      for (let i = 0; i < 7; i++) { const a = q.a0 + i * TAU / 7; g.beginPath(); g.moveTo(q.x + Math.cos(a) * 30, q.y + Math.sin(a) * 24); g.lineTo(q.x + Math.cos(a) * 70, q.y + Math.sin(a) * 56); g.stroke(); }
+    }
   }
   g.setTransform(1, 0, 0, 1, 0, 0);
 }

@@ -43,7 +43,7 @@ And **Varek**, the masked gatekeeper, swore that no Gravebound would ever touch 
 - **Build your character.** 5 origins, 7 stats, swords, katanas, spears, axes, greatswords, hammers, scythes and bows, sorceries and incantations, armor, over 30 talismans and weapon upgrades.
 - **Every creature drops something of its own.** Each enemy type has a rare drop: a talisman with a unique effect, a weapon, a shield or armor.
 - **Bosses.** Varek, the dragon Ignarth, Dornach, Selvara, the Wraith Queen Seluna, Karkos the Crystal Crab King, Veyl the Drowned Admiral, Aurion the Goldhorn Patriarch, the Hidden King, and the final battle in the Aurum Realm.
-- **Side content.** 4 dungeons with puzzles and traps, the Bloodsand Arena, illusory walls, and Hearthhold Hall with a smith, a merchant, a scholar and a sister of faith.
+- **Side content.** 4 dungeons with puzzles and traps (multi-room layouts with lever shortcuts, locked gates, hidden walls and side vaults), the Bloodsand Arena, illusory walls, and Hearthhold Hall with a smith, a merchant, a scholar and a sister of faith.
 - **A map that fills in as you go.** Read the glowing blue Map Steles to sketch each region, place markers, and fast travel between Sites of Grace.
 - **4 difficulties.** Easy and Normal are open from the start. **Hard** and **Expert** unlock after your first clear:
   - Elite enemies with strange traits.
@@ -53,7 +53,7 @@ And **Varek**, the masked gatekeeper, swore that no Gravebound would ever touch 
 - **28 achievements**, a **shared leaderboard** per difficulty, and **3 save slots**.
 - **Bestiary:** every species you defeat gets a page with a portrait, where it lives, weaknesses, rare drops and a tip. The death screen tells you what killed you and how to beat it next time.
 - **Settings:** music and effects volume, screen shake, text size, and fully rebindable keys (on-screen hints follow your keys).
-- **A wide world:** about 66 million square units of walkable land, 1.5× wider in every direction than earlier versions, with small ruins hiding chests, scattered treasures and roaming packs between the landmarks. Crossing it on horseback takes about half a minute.
+- **A wide world:** about 66 million square units of walkable land, 1.5× wider in every direction than earlier versions, with small ruins hiding chests, soldier camps around campfires, graveyards, ruined watchtowers and ancient stone circles between the landmarks. The capital has an outer district, Lowtown, with streets, a market, fountains and street lamps that light up at night. Crossing the world on horseback takes about half a minute.
 - **Day and night:** a 14-minute cycle with cool moonlit nights, fireflies and warm dusks. Rest at a Site of Grace to wait until nightfall or morning.
 - **Night Rider:** a mounted field boss that patrols the Mistveil high road only at night and drops the Nightrider Glaive.
 - **Spirit Ashes:** a witch who appears at a Site of Grace at night gives you the Spirit Calling Bell. Ring it in combat to summon spectral allies: Lone Wolves, Skeletal Militia, a Swamp Jellyfish or a Banished Knight. Enemies fight back against them.
@@ -142,7 +142,7 @@ Và **Varek**, kẻ gác cổng đeo mặt nạ, đã thề không một Gravebo
 - **Tự xây nhân vật.** 5 xuất thân, 7 chỉ số, kiếm, katana, giáo, rìu, đại kiếm, búa, lưỡi hái, cung, phép Trí Tuệ và Đức Tin, giáp, hơn 30 loại bùa hộ mệnh và cường hóa vũ khí.
 - **Mỗi loại quái rơi đồ riêng.** Mỗi loại kẻ địch có một món đồ hiếm của riêng nó: bùa có hiệu ứng riêng, vũ khí, khiên hoặc giáp.
 - **Boss.** Varek, rồng Ignarth, Dornach, Selvara, Nữ Vương Hồn Ma Seluna, Vua Cua Pha Lê Karkos, Đô Đốc Chết Đuối Veyl, Dê Chúa Sừng Vàng Aurion, Vua Ẩn Mặt và trận cuối trong Cõi Aurum.
-- **Nội dung phụ.** 4 hầm ngục có câu đố và bẫy, Đấu Trường Bloodsand, tường ảo giấu bí mật, và Sảnh Hearthhold có thợ rèn, lái buôn, học giả, nữ tu.
+- **Nội dung phụ.** 4 hầm ngục có câu đố và bẫy (nhiều phòng, có cần gạt mở lối tắt, cổng khóa, tường ảo và gian bí mật), Đấu Trường Bloodsand, tường ảo giấu bí mật, và Sảnh Hearthhold có thợ rèn, lái buôn, học giả, nữ tu.
 - **Bản đồ mở dần.** Tìm Bia Bản Đồ phát sáng xanh để vẽ từng vùng. Đặt dấu trên bản đồ, dịch chuyển nhanh giữa các Ân Điển.
 - **4 độ khó.** Dễ và Thường chọn được ngay. **Khó** và **Chuyên gia** mở sau lần phá đảo đầu tiên, gồm:
   - Quái tinh anh mang thuộc tính.
@@ -152,7 +152,7 @@ Và **Varek**, kẻ gác cổng đeo mặt nạ, đã thề không một Gravebo
 - **28 thành tựu**, **bảng xếp hạng chung** chia theo độ khó và **3 ô lưu**.
 - **Sổ tay quái vật:** mỗi loài đã hạ có một trang riêng với chân dung, nơi sống, điểm yếu, đồ hiếm và mẹo đánh. Màn hình chết cho biết ai đã hạ ngươi và cách thắng lần sau.
 - **Cài đặt:** âm lượng nhạc và hiệu ứng, rung màn hình, cỡ chữ, đổi được mọi phím bấm (chữ hướng dẫn hiện đúng phím đã gán).
-- **Thế giới rộng:** khoảng 66 triệu đơn vị² đất đi lại được, rộng gấp 1,5 lần mỗi chiều so với bản trước, giữa các địa danh có tàn tích nhỏ giấu rương, vật phẩm và các nhóm quái lang thang. Phi ngựa băng ngang mất khoảng nửa phút.
+- **Thế giới rộng:** khoảng 66 triệu đơn vị² đất đi lại được, rộng gấp 1,5 lần mỗi chiều so với bản trước, giữa các địa danh có tàn tích nhỏ giấu rương, trại lính quanh đống lửa, nghĩa địa, tháp canh đổ nát và vòng đá cổ. Kinh Thành có thêm khu Hạ Thành bên ngoài tường với phố xá, chợ, đài phun nước và đèn đường sáng về đêm. Phi ngựa băng ngang thế giới mất khoảng nửa phút.
 - **Ngày và đêm:** một vòng 14 phút, đêm xanh ánh trăng có đom đóm, hoàng hôn ấm. Nghỉ ở Ân Điển để chờ đến đêm hoặc sáng.
 - **Kỵ Sĩ Đêm:** boss cưỡi ngựa chỉ tuần tra đường cái Đồng Cỏ Mistveil lúc đêm, rơi Nightrider Glaive.
 - **Tro Triệu Hồi:** phù thủy hiện ra bên Ân Điển lúc đêm trao Chuông Gọi Hồn. Rung chuông khi giao chiến để gọi hồn đồng minh: Sói Cô Độc, Dân Quân Xương, Sứa Đầm Lầy hoặc Hiệp Sĩ Lưu Đày. Quái cũng sẽ quay sang đánh chúng.

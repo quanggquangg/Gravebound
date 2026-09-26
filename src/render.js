@@ -1316,6 +1316,149 @@ function drawPuzzles() {
     ctx.fillStyle = 'rgba(240,220,200,.8)'; ctx.beginPath(); ctx.arc(FLAG.x + 11, FLAG.y - 32 + wv2 * 0.5, 3, 0, TAU); ctx.fill(); ctx.fillStyle = '#5a1a16'; ctx.fillRect(FLAG.x + 9.5, FLAG.y - 32.5 + wv2 * 0.5, 1.2, 1.2); ctx.fillRect(FLAG.x + 11.5, FLAG.y - 32.5 + wv2 * 0.5, 1.2, 1.2);
   }
 }
+// ── đồ trang trí: phố thị (đài phun nước, đèn đường, sạp chợ, tượng, thùng, giếng) và các điểm đến ngoài thế giới ──
+function drawDecos() {
+  const t = G.clock, nk = cam.x > INST_X ? 0 : nightK();
+  for (const o of DECO_OBJ) if (inView(o.x, o.y, o.r + 60)) drawDeco(o, t, nk);
+}
+function drawDeco(o, t, nk) {
+  const { x, y, r } = o;
+  switch (o.d) {
+    case 'fountain': {
+      shadow(x + 3, y + 6, r * 1.02, r * 0.8, 0.3);
+      // bồn đá hai tầng, nước gợn sóng, trụ giữa phun thành vòng tia
+      ctx.fillStyle = '#8a7a5c'; ctx.strokeStyle = OL; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#a8966e'; ctx.beginPath(); ctx.arc(x, y - 1, r - 3, 0, TAU); ctx.fill();
+      const wg = ctx.createRadialGradient(x, y, 4, x, y, r - 7); wg.addColorStop(0, '#6ab0c8'); wg.addColorStop(1, '#2e6680');
+      ctx.fillStyle = wg; ctx.beginPath(); ctx.arc(x, y, r - 7, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(210,240,255,.45)'; ctx.lineWidth = 1.2;
+      for (let i = 0; i < 3; i++) { const k = ((t * 0.5 + i / 3) % 1), rr = 10 + k * (r - 18); ctx.globalAlpha = 1 - k; ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#9a8864'; ctx.strokeStyle = OL; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#c8b486'; ctx.beginPath(); ctx.arc(x, y - 6, 5, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,235,255,.8)'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + t * 0.3, ex = x + Math.cos(a) * 16, ey = y + Math.sin(a) * 12; ctx.beginPath(); ctx.moveTo(x, y - 10); ctx.quadraticCurveTo((x + ex) / 2, y - 22, ex, ey); ctx.stroke(); }
+      return;
+    }
+    case 'lamp': {
+      shadow(x + 2, y + 3, 7, 3, 0.35);
+      const on = nk > 0.25, hy = y - 34;
+      if (on) { const gl = ctx.createRadialGradient(x, hy, 1, x, hy, 26); gl.addColorStop(0, `rgba(255,210,120,${0.55 * nk})`); gl.addColorStop(1, 'rgba(255,210,120,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, hy, 26, 0, TAU); ctx.fill(); }
+      ctx.fillStyle = '#2e2a26'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.fillRect(x - 4, y - 3, 8, 6); ctx.strokeRect(x - 4, y - 3, 8, 6);
+      olLine(x, y - 2, x, hy + 5, 2.6, '#3a3530');
+      ctx.fillStyle = on ? '#ffe2a0' : '#6a6458'; ctx.strokeStyle = OL; ctx.beginPath(); ctx.moveTo(x - 5, hy - 4); ctx.lineTo(x + 5, hy - 4); ctx.lineTo(x + 4, hy + 5); ctx.lineTo(x - 4, hy + 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2e2a26'; ctx.beginPath(); ctx.moveTo(x - 7, hy - 4); ctx.lineTo(x, hy - 10); ctx.lineTo(x + 7, hy - 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      return;
+    }
+    case 'stall': {
+      shadow(x + 3, y + 8, r * 1.2, r * 0.6, 0.3);
+      // quầy gỗ, hàng hóa bày phía trước, mái bạt sọc che phía sau
+      ctx.fillStyle = '#6a4a2c'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.fillRect(x - r, y - 2, r * 2, 12); ctx.strokeRect(x - r, y - 2, r * 2, 12);
+      const goods = ['#d86a3a', '#e8c24a', '#7ab04a', '#b04a4a', '#d8d0b0'];
+      for (let i = 0; i < 6; i++) { ctx.fillStyle = goods[(o.seed + i) % 5]; ctx.beginPath(); ctx.arc(x - r + 5 + i * (r * 2 - 10) / 5, y + 2, 3.2, 0, TAU); ctx.fill(); }
+      const cols = o.seed % 2 ? ['#a83a32', '#e8dcc0'] : ['#3a6a9a', '#e8dcc0'];
+      for (let i = 0; i < 6; i++) { ctx.fillStyle = cols[i % 2]; ctx.fillRect(x - r - 2 + i * (r * 2 + 4) / 6, y - 20, (r * 2 + 4) / 6 + 0.5, 16); }
+      ctx.strokeStyle = OL; ctx.strokeRect(x - r - 2, y - 20, r * 2 + 4, 16);
+      ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(x - r - 2, y - 8, r * 2 + 4, 4);
+      return;
+    }
+    case 'statue': {
+      shadow(x + 3, y + 6, r * 1.1, r * 0.6, 0.35);
+      // bệ đá vuông, hiệp sĩ đá chống kiếm
+      ctx.fillStyle = '#7a7466'; ctx.strokeStyle = OL; ctx.lineWidth = 1.4; ctx.fillRect(x - r, y - r * 0.6, r * 2, r * 1.3); ctx.strokeRect(x - r, y - r * 0.6, r * 2, r * 1.3);
+      ctx.fillStyle = '#948d7c'; ctx.fillRect(x - r, y - r * 0.6, r * 2, 3);
+      ctx.fillStyle = '#a8a08a'; ctx.beginPath(); ctx.ellipse(x, y - r * 0.9, r * 0.55, r * 0.75, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y - r * 1.75, r * 0.35, 0, TAU); ctx.fill(); ctx.stroke();
+      olLine(x, y - r * 0.3, x, y - r * 1.9, 2.4, '#bdb49a'); olLine(x - 5, y - r * 0.55, x + 5, y - r * 0.55, 2, '#bdb49a');
+      return;
+    }
+    case 'crate': case 'rubble': {
+      if (o.d === 'rubble') { drawRock({ x, y, r, seed: o.seed + 1 }); return; }
+      shadow(x + 2, y + 4, r, r * 0.6, 0.3);
+      if (o.seed % 3 === 0) {
+        // thùng tô nô
+        ctx.fillStyle = '#7a5434'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, r * 0.85, 0, TAU); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#3a3028'; ctx.lineWidth = 1.6; for (const k of [0.45, 0.72]) { ctx.beginPath(); ctx.arc(x, y, r * k, 0, TAU); ctx.stroke(); }
+        return;
+      }
+      ctx.fillStyle = '#8a6440'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.fillRect(x - r * 0.8, y - r * 0.8, r * 1.6, r * 1.6); ctx.strokeRect(x - r * 0.8, y - r * 0.8, r * 1.6, r * 1.6);
+      ctx.strokeStyle = 'rgba(40,26,14,.8)'; ctx.beginPath(); ctx.moveTo(x - r * 0.8, y - r * 0.8); ctx.lineTo(x + r * 0.8, y + r * 0.8); ctx.moveTo(x + r * 0.8, y - r * 0.8); ctx.lineTo(x - r * 0.8, y + r * 0.8); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,230,180,.18)'; ctx.fillRect(x - r * 0.8, y - r * 0.8, r * 1.6, 2);
+      return;
+    }
+    case 'well': {
+      shadow(x + 3, y + 5, r * 1.05, r * 0.75, 0.3);
+      ctx.fillStyle = '#7a7466'; ctx.strokeStyle = OL; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#0e1418'; ctx.beginPath(); ctx.arc(x, y, r - 5, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(90,140,170,.35)'; ctx.beginPath(); ctx.arc(x - 2, y - 2, r - 9, 0, TAU); ctx.fill();
+      olLine(x - r - 2, y - 4, x + r + 2, y - 4, 3, '#6a4a2c'); olLine(x, y - 4, x + 3, y + 4, 1, '#bdb49a');
+      ctx.fillStyle = '#6a4a2c'; ctx.fillRect(x, y + 3, 7, 6); ctx.strokeStyle = OL; ctx.strokeRect(x, y + 3, 7, 6);
+      return;
+    }
+    case 'tent': {
+      shadow(x + 4, y + 7, r * 1.1, r * 0.8, 0.3);
+      // lều vải nhìn từ trên: hai mái lệch sáng tối, sống lều, cửa lều quay vào đống lửa
+      ctx.save(); ctx.translate(x, y); ctx.rotate(o.rot || 0);
+      const L = r * 1.15, Wd = r * 0.95, cols = o.seed % 2 ? ['#9a8a6a', '#7a6c52'] : ['#8a6a4a', '#6c523a'];
+      ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.moveTo(-L, -Wd); ctx.lineTo(L, -Wd); ctx.lineTo(L, 0); ctx.lineTo(-L, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(-L, Wd); ctx.lineTo(L, Wd); ctx.lineTo(L, 0); ctx.lineTo(-L, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = OL; ctx.lineWidth = 1.4; ctx.strokeRect(-L, -Wd, L * 2, Wd * 2);
+      olLine(-L - 3, 0, L + 3, 0, 2.2, '#4a3a28');
+      ctx.fillStyle = '#1a140e'; ctx.beginPath(); ctx.moveTo(L, -Wd * 0.55); ctx.lineTo(L + 7, 0); ctx.lineTo(L, Wd * 0.55); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(30,20,10,.35)'; ctx.lineWidth = 1; for (let k = -L + 8; k < L; k += 9) { ctx.beginPath(); ctx.moveTo(k, -Wd); ctx.lineTo(k, Wd); ctx.stroke(); }
+      ctx.restore();
+      return;
+    }
+    case 'campfire': {
+      // vòng đá, củi chéo, lửa bập bùng (luôn cháy, là nguồn sáng của trại)
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; ctx.fillStyle = i % 2 ? '#6a6458' : '#7a7466'; ctx.strokeStyle = OL; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.8, 4, 0, TAU); ctx.fill(); ctx.stroke(); }
+      olLine(x - 8, y - 5, x + 8, y + 5, 3, '#4a3020'); olLine(x - 8, y + 5, x + 8, y - 5, 3, '#4a3020');
+      const gl = ctx.createRadialGradient(x, y, 2, x, y, 40); gl.addColorStop(0, 'rgba(255,170,80,.5)'); gl.addColorStop(1, 'rgba(255,170,80,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, 40, 0, TAU); ctx.fill();
+      for (let i = 0; i < 5; i++) {
+        const ph = t * 7 + i * 1.7 + o.seed, h = 12 + Math.sin(ph) * 4 + (i % 2) * 4, dx = (i - 2) * 3;
+        ctx.fillStyle = i % 2 ? 'rgba(255,120,40,.85)' : 'rgba(255,200,90,.9)';
+        ctx.beginPath(); ctx.moveTo(x + dx - 4, y); ctx.quadraticCurveTo(x + dx + Math.sin(ph * 1.3) * 3, y - h * 0.6, x + dx + Math.sin(ph) * 2, y - h); ctx.quadraticCurveTo(x + dx + 3, y - h * 0.4, x + dx + 4, y); ctx.closePath(); ctx.fill();
+      }
+      if (Math.random() < 0.08) addPart(x + rand(-4, 4), y - 8, rand(-8, 8), rand(-40, -20), rand(1.5, 2.5), rand(0.6, 1.2), '#ffb060', 'cinder');
+      return;
+    }
+    case 'tomb': {
+      shadow(x + 2, y + 5, r, r * 0.45, 0.3);
+      // bia mộ đá: mặt trước bo tròn, khắc chữ thập; một số bị nứt đổ nghiêng
+      ctx.save(); ctx.translate(x, y); if (o.broken) ctx.rotate(0.35 - (o.seed % 7) * 0.1);
+      ctx.fillStyle = '#5a564c'; ctx.fillRect(-r * 0.9, 2, r * 1.8, 6);
+      ctx.fillStyle = o.broken ? '#6a665a' : '#7a766a'; ctx.strokeStyle = OL; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(-r * 0.7, 4); ctx.lineTo(-r * 0.7, -r * 0.9); ctx.arc(0, -r * 0.9, r * 0.7, Math.PI, 0); ctx.lineTo(r * 0.7, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      olLine(0, -r * 1.2, 0, -r * 0.2, 1.2, '#4a463c'); olLine(-r * 0.3, -r * 0.85, r * 0.3, -r * 0.85, 1.2, '#4a463c');
+      if (o.broken) { ctx.strokeStyle = 'rgba(20,18,14,.7)'; ctx.beginPath(); ctx.moveTo(-r * 0.6, -r * 0.5); ctx.lineTo(0, -r * 0.3); ctx.lineTo(r * 0.5, -r * 0.7); ctx.stroke(); }
+      ctx.restore();
+      return;
+    }
+    case 'tower': {
+      shadow(x + 6, y + 10, r * 1.05, r * 0.9, 0.35);
+      // tháp canh tròn đổ một phần: tường dày có lỗ châu mai, sàn gỗ mục bên trong, khe đổ lấp đá vụn
+      const gap0 = (o.seed % 6) * 1.05, gap1 = gap0 + 0.9;
+      ctx.fillStyle = '#3a342c'; ctx.beginPath(); ctx.arc(x, y, r - 10, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(110,80,50,.8)'; ctx.lineWidth = 3; for (let k = -r + 16; k < r - 12; k += 9) { const hw = Math.sqrt(Math.max(0, (r - 12) ** 2 - k * k)); ctx.beginPath(); ctx.moveTo(x - hw, y + k); ctx.lineTo(x + hw * (k % 2 ? 0.4 : 1), y + k); ctx.stroke(); }
+      ctx.strokeStyle = '#6f6a5b'; ctx.lineWidth = 12; ctx.beginPath(); ctx.arc(x, y, r - 5, gap1, gap0 + TAU); ctx.stroke();
+      ctx.strokeStyle = OL; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r + 1, gap1, gap0 + TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(x, y, r - 11, gap1, gap0 + TAU); ctx.stroke();
+      for (let a = gap1 + 0.1; a < gap0 + TAU - 0.1; a += 0.28) { ctx.fillStyle = '#8c8672'; ctx.save(); ctx.translate(x + Math.cos(a) * (r - 5), y + Math.sin(a) * (r - 5)); ctx.rotate(a); ctx.fillRect(-5, -4, 10, 8); ctx.strokeStyle = OL; ctx.lineWidth = 1; ctx.strokeRect(-5, -4, 10, 8); ctx.restore(); }
+      const rr = mulberry32(o.seed + 9); for (let i = 0; i < 6; i++) { const a = gap0 + rr() * 0.9, d = r - 14 + rr() * 22; ctx.fillStyle = rr() < 0.5 ? '#7a7466' : '#5e5a4e'; ctx.strokeStyle = OL; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 3 + rr() * 5, 0, TAU); ctx.fill(); ctx.stroke(); }
+      return;
+    }
+    case 'menhir': {
+      shadow(x + 3, y + 6, r * 0.9, r * 0.5, 0.35);
+      // cột đá dựng đứng, rêu phủ, rune khắc phát sáng về đêm
+      ctx.fillStyle = '#6e6a60'; ctx.strokeStyle = OL; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(x - r * 0.7, y + 4); ctx.lineTo(x - r * 0.55, y - r * 2.2); ctx.lineTo(x + r * 0.1, y - r * 2.6); ctx.lineTo(x + r * 0.65, y - r * 2.1); ctx.lineTo(x + r * 0.7, y + 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#86827a'; ctx.beginPath(); ctx.moveTo(x - r * 0.55, y - r * 2.2); ctx.lineTo(x + r * 0.1, y - r * 2.6); ctx.lineTo(x + r * 0.1, y + 4); ctx.lineTo(x - r * 0.7, y + 4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(96,120,58,.6)'; ctx.beginPath(); ctx.ellipse(x - r * 0.2, y - r * 0.3, r * 0.5, r * 0.3, 0, 0, TAU); ctx.fill();
+      const gl = 0.35 + nk * 0.55 + Math.sin(t * 2 + o.seed) * 0.1;
+      ctx.strokeStyle = `rgba(170,215,255,${gl})`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x, y - r * 1.9); ctx.lineTo(x, y - r * 0.9); ctx.moveTo(x - 3, y - r * 1.6); ctx.lineTo(x + 3, y - r * 1.3); ctx.stroke();
+      return;
+    }
+  }
+}
 function drawObjects() {
   const t = G.clock;
   for (const l of LEVERS) {
@@ -1975,7 +2118,7 @@ function render() {
   const inst = cam.x > INST_X && G.mode !== 'title';
   const [GC, ox, oy, ow, oh] = inst ? [GROUND2, IX0, 0, W - IX0, IH] : [GROUND, WX0, WY0, MAPW - WX0, H - WY0];
   const gx0 = clamp(Math.floor(x0), ox, ox + ow), gy0 = clamp(Math.floor(y0), oy, oy + oh), gx1 = clamp(Math.ceil(x0 + vw), ox, ox + ow), gy1 = clamp(Math.ceil(y0 + vh), oy, oy + oh);
-  const gs = inst ? 0.5 : GS;
+  const gs = inst ? GS2 : GS;
   if (gx1 > gx0 && gy1 > gy0) ctx.drawImage(GC, (gx0 - ox) * gs, (gy0 - oy) * gs, (gx1 - gx0) * gs, (gy1 - gy0) * gs, gx0, gy0, gx1 - gx0, gy1 - gy0);
   drawGroundDetail();
   drawDecals();
@@ -1987,7 +2130,7 @@ function render() {
   drawPuzzles();
   for (const o of OBST) if (o.kind === 'tree' && inView(o.x, o.y, 30)) drawTrunk(o);
   for (const w of WALLS) if (inView(w.x + w.w / 2, w.y + w.h / 2, Math.max(w.w, w.h))) drawWall(w);
-  drawGates(); drawGates2(); drawObjects();
+  drawGates(); drawGates2(); drawDecos(); drawObjects();
   const list = enemies.filter(e => inView(e.x, e.y, 80));
   if (boss) list.push(boss);
   if (dragon && (dragon.z || 0) <= 40) list.push(dragon);
@@ -2061,6 +2204,7 @@ const AMB = {
   'Cao Nguyên Aurelia': [0.04, 30, 22, 8, 255, 215, 120, 0.1],
   'Sườn Núi Goldspire': [0.08, 26, 20, 12, 255, 210, 130, 0.1],
   'Kinh Thành Aurumhold': [0.08, 30, 22, 8, 255, 210, 110, 0.12],
+  'Hạ Thành Aurumhold': [0.14, 24, 18, 10, 240, 200, 120, 0.12],
   'Sân Ngai Sunthrone': [0.16, 30, 20, 6, 255, 200, 100, 0.14],
   'Cây Aurum': [0.02, 30, 20, 8, 255, 210, 110, 0.08],
   'Cõi Aurum': [0.5, 10, 6, 2, 255, 200, 110, 0.16],
@@ -2089,6 +2233,14 @@ function collectLights() {
   light(TREE_POS.x, TREE_POS.y, 820, 1, null); // cây đã tự phát sáng, chỉ cần xua bóng tối
   if (A && A.id === 'realm') light(RC.x, RC.y, 460, 0.45, '255,210,110');
   if (A && A.id === 'hub') { for (const [x, y] of [[180, 120], [820, 120], [180, 780], [820, 780], [500, 450]]) light(HUB.x + x, y, 230 + Math.sin(t * 9 + x) * 10, 0.9, '255,170,90'); light(HUB.x + 220 + 30, 262, 110, 0.8, '255,130,50'); }
+  if (!inst) {
+    const nk = nightK();
+    for (const o of DECO_OBJ) {
+      if (o.d === 'campfire') light(o.x, o.y - 6, 230 + Math.sin(t * 11 + o.seed) * 14, 1, '255,150,60');
+      else if (o.d === 'lamp' && nk > 0.25) light(o.x, o.y - 30, 170, nk, '255,205,120');
+      else if (o.d === 'menhir' && nk > 0.25 && o.seed % 2) light(o.x, o.y - 20, 70, 0.6 * nk, '160,210,255');
+    }
+  }
   for (const b of BRAZIERS) if (S.fortOpen || G.braziers.includes(b.id)) light(b.x, b.y, 200 + Math.sin(t * 13 + b.x) * 12, 1, '255,150,60');
   for (const q of projs) if (PCOL[q.kind]) light(q.x, q.y, q.kind === 'fireball' || q.kind === 'comet' ? 130 : q.kind === 'gwave' || q.kind === 'hwave' ? 110 : q.kind === 'dagger' ? 50 : 80, 0.9, PCOL[q.kind]);
   for (const a of aoes) {
@@ -2114,14 +2266,14 @@ function collectLights() {
   for (const st of STATUES) if (S.statues.includes(st.id)) light(st.x, st.y, 160, 0.9, '150,250,235');
   for (const f of MAP_FRAGS) if (!S.frags.includes(f.id)) light(f.x, f.y - 16, 110, 0.7, '190,215,255');
   if (!S.glade) light(BARRIER.x, BARRIER.y, 240, 0.7, '150,240,230');
-  if (!S.acadOpen) light(-1550, 400, 150, 0.8, '170,220,255');
+  if (!S.acadOpen) light(sk(-1550), sk(400), 150, 0.8, '170,220,255');
   for (const [px, py, rx, ry] of POOLS) light(px, py, Math.max(rx, ry) * 1.2, 0.3, '170,110,200');
   for (const q of puddles) light(q.x, q.y, 70, 0.35 * Math.min(1, (q.life - q.t) / 1.2), '150,220,90');
   if (!inst && (G.region === 'Hồ Crystalmere' || G.region === 'Học Viện Starhollow')) for (const o of OBST) if (o.crystal) light(o.x, o.y, 80, 0.5, '160,220,255');
   if (A && A.dg && A.dg.theme === 'crystal') for (let i = 0; i < 6; i++) light(A.x + 150 + (i % 3) * 350, 300 + Math.floor(i / 3) * 800, 200, 0.7, '140,200,255');
   if (A && A.dg && A.dg.theme === 'fire') for (const tr of TRAPS) if (tr.ph !== undefined) light(tr.x, tr.y, 120, 0.3 + (tr.ph < 0.4 ? 0.7 : 0), '255,120,50');
   if (A && A.dg) for (const y of [300, 800, 1300]) { light(A.x + 60, y, 180, 0.8, '255,170,90'); light(A.x + A.w - 60, y, 180, 0.8, '255,170,90'); }
-  if (inRect(P.x, P.y, ACAD, 200)) for (const [x, y] of [[-2200, 200], [-900, 200], [-1700, -200], [-1100, -150], [-2100, -300], [-1550, -700]]) light(x, y, 240, 0.85, '160,190,255');
+  if (inRect(P.x, P.y, ACAD, 200)) for (const [x, y] of [[-2200, 200], [-900, 200], [-1700, -200], [-1100, -150], [-2100, -300], [-1550, -700]]) light(sk(x), sk(y), 240, 0.85, '160,190,255');
   for (const e of enemies) {
     if (e.dead || !inView(e.x, e.y, 200)) continue;
     if (e.T.ghost) light(e.x, e.y, e.T.miniboss ? 170 : 90, 0.6, '170,220,255');
@@ -2199,13 +2351,13 @@ function weather(dt, x0, y0, vw, vh) {
   if (['Cao Nguyên Cinderreach', 'Pháo Đài Greystone', 'Đấu Trường Bloodsand', 'Cổng Gác Thornwall', 'Hang Emberdeep'].includes(reg) && Math.random() < dt * (FX_LOW ? 8 : 22))
     addPart(x0 + Math.random() * vw, y0 - 10, rand(5, 20), rand(18, 36), 7, rand(1, 2), Math.random() < 0.8 ? '#b8b0a4' : '#e09060', 'ash');
   const nk = G.mode === 'title' || cam.x > INST_X ? 0 : nightK();
-  if (nk > 0.5 && ff < 30 && Math.random() < dt * 5 * nk && !['Kinh Thành Aurumhold', 'Sân Ngai Sunthrone'].includes(reg))
+  if (nk > 0.5 && ff < 30 && Math.random() < dt * 5 * nk && !['Kinh Thành Aurumhold', 'Hạ Thành Aurumhold', 'Sân Ngai Sunthrone'].includes(reg))
     addPart(x0 + Math.random() * vw, y0 + Math.random() * vh, rand(-10, 10), rand(-10, 10), rand(4, 7), rand(1.3, 2), '#e8f08a', 'firefly', { seed: rand(0, 10) });
   if ((reg === 'Rừng Wraithwood' || reg === 'Đầm Lầy Ashmire') && ff < 40 && Math.random() < dt * (reg === 'Rừng Wraithwood' ? 10 : 4))
     addPart(x0 + Math.random() * vw, y0 + Math.random() * vh, rand(-10, 10), rand(-10, 10), rand(4, 7), rand(1.4, 2.2), reg === 'Rừng Wraithwood' ? '#9ff5e6' : '#d4f07a', 'firefly', { seed: rand(0, 10) });
   if ((reg === 'Hồ Crystalmere' || reg === 'Học Viện Starhollow' || reg === 'Mỏ Shardvein') && Math.random() < dt * 6)
     addPart(x0 + Math.random() * vw, y0 + Math.random() * vh, rand(-4, 4), rand(-14, -4), rand(3, 5), rand(1, 1.8), '#cfeaff', 'mote');
-  if (['Cao Nguyên Aurelia', 'Sườn Núi Goldspire', 'Kinh Thành Aurumhold', 'Sân Ngai Sunthrone', 'Cây Aurum', 'Cõi Aurum'].includes(reg) && Math.random() < dt * 7)
+  if (['Cao Nguyên Aurelia', 'Sườn Núi Goldspire', 'Kinh Thành Aurumhold', 'Hạ Thành Aurumhold', 'Sân Ngai Sunthrone', 'Cây Aurum', 'Cõi Aurum'].includes(reg) && Math.random() < dt * 7)
     addPart(x0 + Math.random() * vw, y0 - 10, 0, rand(22, 38), rand(8, 12), 3, Math.random() < 0.5 ? '#f0cf72' : '#ffe39a', 'leaf', { seed: rand(0, 10) });
 }
 // cỏ lay theo gió, rẽ sang khi nhân vật đi qua
@@ -2216,7 +2368,8 @@ const GRASS_PAL = {
 };
 function grassAt(x, y) {
   if (x > MAPW - 20 || y > H - 20 || x < WX0 + 20 || y < WY0 + 20) return null;
-  if (isVoid(x, y) || inRect(x, y, CAPITAL, 20) || inRect(x, y, ACAD, 20) || inWater(x, y, 10)) return null;
+  if (isVoid(x, y) || inRect(x, y, CAPITAL, 20) || inRect(x, y, LOWTOWN, 20) || inRect(x, y, ACAD, 20) || inWater(x, y, 10)) return null;
+  if (POIS.some(q => (q.type === 'camp' || q.type === 'tower') && dist(x, y, q.x, q.y) < 170)) return null;
   if (y < sk(380) && x >= 0) return y > sk(360) ? null : GRASS_PAL.gold;
   if (x < 0) { if (nearRoad(x, y) < sk(44) || x < sk(-2440)) return null; return y >= sk(2600) ? GRASS_PAL.coast : GRASS_PAL.lake; }
   if (y < sk(440) || inArena(x, y) || inRect(x, y, FORT, 20) || inRect(x, y, COLO.rect, 20) || (x > sk(370) && x < sk(1030) && y > sk(1600) && y < sk(2210)) || (x > sk(1220) && x < sk(1580) && y > sk(3170))) return null;
@@ -2240,7 +2393,7 @@ const DETAIL = (() => {
   return c;
 })();
 let DETAIL_PAT = null;
-const PAVED = new Set(['Kinh Thành Aurumhold', 'Sân Ngai Sunthrone', 'Pháo Đài Greystone', 'Học Viện Starhollow', 'Đấu Trường Bloodsand', 'Cổng Gác Thornwall']);
+const PAVED = new Set(['Kinh Thành Aurumhold', 'Hạ Thành Aurumhold', 'Sân Ngai Sunthrone', 'Pháo Đài Greystone', 'Học Viện Starhollow', 'Đấu Trường Bloodsand', 'Cổng Gác Thornwall']);
 function drawGroundDetail() {
   // chỉ phủ cỏ sỏi ngoài trời, không phủ lên sàn đá lát của các công trình và khu biệt lập
   if (FX_LOW || cam.x > INST_X || PAVED.has(G.region)) return;

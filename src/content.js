@@ -56,7 +56,7 @@ function pullLever(l) {
 function useDoor(door) {
   const d = door.dg;
   if (door.kind === 'enter') {
-    P.x = d.area.x + 500; P.y = 1480;
+    P.x = d.area.x + d.L.entry[0]; P.y = d.L.entry[1];
     if (!S.discovered.includes(d.grace)) { S.discovered.push(d.grace); later(0.8, () => banner('grace', 'ĐÃ TÌM THẤY ÂN ĐIỂN', GRACES.find(g => g.id === d.grace).name)); }
   } else { P.x = d.ex; P.y = d.ey + 70; }
   P.vx = P.vy = 0; P.mounted = false; P.lock = null; projs.length = 0; aoes.length = 0;

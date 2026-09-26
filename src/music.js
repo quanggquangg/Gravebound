@@ -26,7 +26,7 @@ const REGION_THEME = {
   'Đồng Cỏ Mistveil': 'meadow', 'Nhà Nguyện Dawnrest': 'meadow', 'Tàn Tích Hollowmere': 'meadow', 'Cổng Gác Thornwall': 'meadow',
   'Đầm Lầy Ashmire': 'swamp', 'Cao Nguyên Cinderreach': 'ash', 'Pháo Đài Greystone': 'ash', 'Đấu Trường Bloodsand': 'ash',
   'Rừng Wraithwood': 'wraith', 'Hồ Crystalmere': 'crystal', 'Học Viện Starhollow': 'crystal', 'Bờ Biển Saltreach': 'coast',
-  'Cao Nguyên Aurelia': 'gold', 'Kinh Thành Aurumhold': 'gold', 'Sườn Núi Goldspire': 'gold', 'Cây Aurum': 'gold', 'Sân Ngai Sunthrone': 'gold',
+  'Cao Nguyên Aurelia': 'gold', 'Kinh Thành Aurumhold': 'gold', 'Hạ Thành Aurumhold': 'gold', 'Sườn Núi Goldspire': 'gold', 'Cây Aurum': 'gold', 'Sân Ngai Sunthrone': 'gold',
   'Sảnh Hearthhold': 'hub', 'Cõi Aurum': 'gold',
 };
 // ── nhạc cụ ──
