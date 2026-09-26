@@ -103,9 +103,13 @@ const DG_LAYOUT = {
 };
 // dựng tường quanh các phòng: ô trống cách sàn không quá 2 ô thành tường, gộp thành các khối chữ nhật lớn
 function carveDungeon(d, push) {
-  const L = DG_LAYOUT[d.id], ox = d.area.x, C = DG_CELL, cols = DG_W / C, rows = DG_H / C;
-  const floor = new Uint8Array(cols * rows);
-  for (const [x, y, w, h] of L.rooms) for (let cy = Math.floor(y / C); cy < Math.ceil((y + h) / C); cy++) for (let cx = Math.floor(x / C); cx < Math.ceil((x + w) / C); cx++) if (cx >= 0 && cy >= 0 && cx < cols && cy < rows) floor[cy * cols + cx] = 1;
+  carveRooms(DG_LAYOUT[d.id].rooms, d.area.x, 0, DG_W, DG_H, DG_CELL, r => push(Object.assign(r, { dgw: d.theme })));
+}
+// dựng tường quanh các phòng trên lưới ô vuông: ô không phải sàn mà cách sàn ≤ 2 ô là tường, rồi gộp thành hình chữ nhật.
+// Phòng thò ra ngoài khung (x0, y0, w, h) thì chỗ đó để hở, thành lối ra vào; tọa độ phòng tính từ góc khung.
+function carveRooms(rooms, x0, y0, W0, H0, C, push) {
+  const cols = Math.ceil(W0 / C), rows = Math.ceil(H0 / C), floor = new Uint8Array(cols * rows);
+  for (const [x, y, w, h] of rooms) for (let cy = Math.floor(y / C); cy < Math.ceil((y + h) / C); cy++) for (let cx = Math.floor(x / C); cx < Math.ceil((x + w) / C); cx++) if (cx >= 0 && cy >= 0 && cx < cols && cy < rows) floor[cy * cols + cx] = 1;
   const wall = new Uint8Array(cols * rows);
   for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) {
     if (floor[cy * cols + cx]) continue;
@@ -115,7 +119,7 @@ function carveDungeon(d, push) {
   }
   // gộp: dải ngang theo từng hàng, rồi nối các dải giống hệt nhau ở các hàng liên tiếp
   const open = new Map();
-  const flush = keep => { for (const [k, r] of open) if (!keep.has(k)) { push(Object.assign({ x: ox + r.x * C, y: r.y * C, w: r.w * C, h: r.h * C, dgw: d.theme })); open.delete(k); } };
+  const flush = keep => { for (const [k, r] of open) if (!keep.has(k)) { push({ x: x0 + r.x * C, y: y0 + r.y * C, w: r.w * C, h: r.h * C }); open.delete(k); } };
   for (let cy = 0; cy <= rows; cy++) {
     const runs = new Set();
     if (cy < rows) for (let cx = 0; cx < cols;) {

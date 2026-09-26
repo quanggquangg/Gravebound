@@ -1674,6 +1674,21 @@ function drawWall(w) {
     ctx.strokeStyle = 'rgba(12,10,8,.85)'; ctx.lineWidth = 1.6; ctx.strokeRect(x0 + 0.5, y0 + 0.5, w.w - 1, w.h - 1);
     return;
   }
+  if (w.bramble) {
+    // bụi gai: cụm cành gai đen sẫm đan nhau, gai nhọn chĩa ra, vài quả mọng đỏ
+    const r0 = mulberry32(w.seed + 7), cx = w.x + w.w / 2, cy = w.y + w.h / 2;
+    for (let i = 0; i < 5; i++) {
+      const bx = cx + (r0() - 0.5) * w.w * 0.8, by = cy + (r0() - 0.5) * w.h * 0.8, br = w.w * (0.28 + r0() * 0.14);
+      ctx.fillStyle = i % 2 ? '#2a2620' : '#35302a'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.beginPath();
+      for (let k = 0; k < 14; k++) { const a = k / 14 * TAU, rr = br * (k % 2 ? 0.72 : 1.08); ctx.lineTo(bx + Math.cos(a) * rr, by + Math.sin(a) * rr); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.strokeStyle = '#4a4034'; ctx.lineWidth = 1.4; ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const a = r0() * TAU, l = w.w * (0.3 + r0() * 0.3); ctx.moveTo(cx, cy); ctx.quadraticCurveTo(cx + Math.cos(a + 0.6) * l * 0.5, cy + Math.sin(a + 0.6) * l * 0.5, cx + Math.cos(a) * l, cy + Math.sin(a) * l); }
+    ctx.stroke();
+    if (w.seed % 3 === 0) { ctx.fillStyle = '#9a2a2a'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx + (r0() - 0.5) * w.w * 0.6, cy + (r0() - 0.5) * w.h * 0.6, 2.2, 0, TAU); ctx.fill(); } }
+    return;
+  }
   if (w.shelf) {
     ctx.fillStyle = '#4a3220'; ctx.fillRect(w.x, w.y, w.w, w.h);
     const cols = ['#6a2a2a', '#2a4a6a', '#5a5a2a', '#3a2a5a', '#7a5a3a'];
@@ -1722,29 +1737,29 @@ function drawGatesD() {
       ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, 60, 22, 0, 0, TAU); ctx.fill();
     }
   }
-  if (!S.bossDead && inViewD(1400, 1114, 120)) {
+  if (!S.bossDead && inViewD(1400, 848, 120)) {
     const a = G.bossFight ? 0.55 : 0.34;
     for (let i = 0; i < 7; i++) {
-      const x = 1400 + Math.sin(t * 1.3 + i * 1.7) * 26, y = 1114 + Math.cos(t * 0.9 + i) * 7;
+      const x = 1400 + Math.sin(t * 1.3 + i * 1.7) * 32, y = 848 + Math.cos(t * 0.9 + i) * 7;
       const gr = ctx.createRadialGradient(x, y, 2, x, y, 46);
       gr.addColorStop(0, `rgba(235,238,242,${a})`); gr.addColorStop(1, 'rgba(235,238,242,0)');
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, 52, 22, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, 58, 20, 0, 0, TAU); ctx.fill();
     }
   }
-  if (inViewD(1400, 406, 120)) {
+  if (inViewD(1400, 395, 120)) {
     if (!S.bossDead) {
       // cổng gỗ bọc đồng phía bắc: ván gỗ, nẹp sắt, ấn vàng niêm phong ở giữa
-      ctx.fillStyle = '#3b362d'; ctx.fillRect(1360, 392, 80, 28);
-      ctx.strokeStyle = 'rgba(20,16,10,.6)'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 1370; x < 1440; x += 10) { ctx.moveTo(x, 392); ctx.lineTo(x, 420); } ctx.stroke();
-      for (const y of [397, 415]) olLine(1361, y, 1439, y, 2.4, '#5c5448');
-      ctx.strokeStyle = OL; ctx.lineWidth = 1.6; ctx.strokeRect(1360, 392, 80, 28);
-      ctx.strokeStyle = 'rgba(214,178,94,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(1400, 406, 10, 0, TAU); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(1400, 392); ctx.lineTo(1400, 420); ctx.stroke();
-      ctx.fillStyle = 'rgba(255,214,110,.8)'; ctx.beginPath(); ctx.arc(1400, 406, 3, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3b362d'; ctx.fillRect(1345, 380, 110, 30);
+      ctx.strokeStyle = 'rgba(20,16,10,.6)'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 1355; x < 1455; x += 10) { ctx.moveTo(x, 380); ctx.lineTo(x, 410); } ctx.stroke();
+      for (const y of [385, 405]) olLine(1346, y, 1454, y, 2.4, '#5c5448');
+      ctx.strokeStyle = OL; ctx.lineWidth = 1.6; ctx.strokeRect(1345, 380, 110, 30);
+      ctx.strokeStyle = 'rgba(214,178,94,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(1400, 395, 10, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(1400, 380); ctx.lineTo(1400, 410); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,214,110,.8)'; ctx.beginPath(); ctx.arc(1400, 395, 3, 0, TAU); ctx.fill();
     } else {
-      const gr = ctx.createRadialGradient(1400, 406, 4, 1400, 406, 70);
+      const gr = ctx.createRadialGradient(1400, 395, 4, 1400, 395, 70);
       gr.addColorStop(0, 'rgba(255,220,130,.45)'); gr.addColorStop(1, 'rgba(255,220,130,0)');
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(1400, 406, 70, 0, TAU); ctx.fill();
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(1400, 395, 70, 0, TAU); ctx.fill();
     }
   }
 }
@@ -2355,7 +2370,7 @@ function grassAt(x, y) {
   if (POIS.some(q => (q.type === 'camp' || q.type === 'tower') && dist(x, y, q.x, q.y) < 170)) return null;
   if (y < sk(380) && x >= 0) return y > sk(360) ? null : GRASS_PAL.gold;
   if (x < 0) { if (nearRoad(x, y) < sk(44) || x < sk(-2440)) return null; return y >= sk(2600) ? GRASS_PAL.coast : GRASS_PAL.lake; }
-  if (y < sk(440) || inArena(x, y) || inRect(x, y, FORT, 20) || inRect(x, y, COLO.rect, 20) || (x > sk(370) && x < sk(1030) && y > sk(1600) && y < sk(2210)) || (x > sk(1220) && x < sk(1580) && y > sk(3170))) return null;
+  if (y < sk(440) || inRect(x, y, THORN_R, 10) || inRect(x, y, FORT, 20) || inRect(x, y, COLO.rect, 20) || (x > sk(370) && x < sk(1030) && y > sk(1600) && y < sk(2210)) || (x > sk(1220) && x < sk(1580) && y > sk(3170))) return null;
   if (nearRoad(x, y) < sk(44) || inPool(x, y) || dist(x, y, LAIR.x, LAIR.y) < sk(260)) return null;
   if (inRect(x, y, FOREST)) return GRASS_PAL.forest;
   if (x > SWAMP.x && x < sk(2800) && y > SWAMP.y && y < SWAMP.y + SWAMP.h) return GRASS_PAL.swamp;

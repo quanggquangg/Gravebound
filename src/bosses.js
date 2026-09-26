@@ -351,7 +351,7 @@ function updateDragon(dt) {
       if (d.t > 1.7) { d.state = 'chase'; d.t = 0; d.cd = 0.4; }
       break;
     case 'chase': {
-      if (!alive || pLair > sk(950)) { d.state = 'return'; d.t = 0; G.dragonFight = false; break; }
+      if (!alive || pLair > sk(520)) { d.state = 'return'; d.t = 0; G.dragonFight = false; break; }
       d.face = turn(d.face, ang, (enraged() ? 2.6 : 2.1) * dt);
       const rel = Math.abs(angDiff(d.face, ang)), spd = enraged() ? 120 : 96;
       if (dd > 150 && rel < 1.3) { d.x += Math.cos(d.face) * spd * dt; d.y += Math.sin(d.face) * spd * dt; }
@@ -361,7 +361,7 @@ function updateDragon(dt) {
     case 'return': {
       const hd = dist(d.x, d.y, LAIR.x, LAIR.y), ha = Math.atan2(LAIR.y - d.y, LAIR.x - d.x);
       d.hp = Math.min(d.maxHp, d.hp + d.maxHp * 0.25 * dt);
-      if (alive && dd < 260 && pLair < sk(700)) { wakeDragon(); break; }
+      if (alive && dd < 260 && pLair < sk(360)) { wakeDragon(); break; }
       if (hd > 16) { d.face = turn(d.face, ha, 3 * dt); d.x += Math.cos(ha) * 150 * dt; d.y += Math.sin(ha) * 150 * dt; }
       else { d.state = 'sleep'; d.t = 0; d.hp = d.maxHp; d.bleed = 0; d.poiseAcc = 0; }
       break;
@@ -371,7 +371,7 @@ function updateDragon(dt) {
     case 'broken': if (d.t > 2.8) { d.state = 'chase'; d.t = 0; d.cd = 0.3; d.poiseAcc = 0; } break;
   }
   if (d.state !== 'atk') { d.breathing = false; d.charge = 0; d.spin = 0; d.flying = false; if (d.z > 0) d.z = Math.max(0, d.z - 300 * dt); }
-  [d.x, d.y] = clampLair(d.x, d.y, sk(600));
+  [d.x, d.y] = clampLair(d.x, d.y, sk(285));
   if (d.z < 5 && P.state !== 'dead') {
     const dx = P.x - d.x, dy = P.y - d.y, rr = d.r + P.r, d2 = dx * dx + dy * dy;
     if (d2 < rr * rr && d2 > 1e-6) { const l = Math.sqrt(d2); P.x = d.x + dx / l * rr; P.y = d.y + dy / l * rr; collide(P, false); }

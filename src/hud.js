@@ -394,7 +394,7 @@ function mapMask() {
   return maskCanvas;
 }
 const MAP_LABELS = [['Pháo Đài Greystone', 3600, 900], ['Rừng Wraithwood', 3650, 2180], ['Đấu Trường Bloodsand', 3600, 3230], ['Cao Nguyên Cinderreach', 3700, 1580], ['Đồng Cỏ Mistveil', 1400, 2620],
-  ['Tàn Tích Hollowmere', 700, 1900], ['Đầm Lầy Ashmire', 2420, 1520], ['Cổng Gác Thornwall', 1400, 760], ['Nhà Nguyện Dawnrest', 1400, 3480], ['Hồ Crystalmere', -1400, 1500], ['Bờ Biển Saltreach', -1300, 3300],
+  ['Tàn Tích Hollowmere', 700, 1900], ['Đầm Lầy Ashmire', 2420, 1520], ['Cổng Gác Thornwall', 1400, 1060], ['Nhà Nguyện Dawnrest', 1400, 3480], ['Hồ Crystalmere', -1400, 1500], ['Bờ Biển Saltreach', -1300, 3300],
   ['Học Viện Starhollow', -1550, -300], ['Cao Nguyên Aurelia', 2200, -100], ['Sườn Núi Goldspire', 3500, -1400], ['Kinh Thành Aurumhold', 1400, -1300], ['Hạ Thành Aurumhold', 760, -700], ['Cây Aurum', 1400, -1720]].map(([n, x, y]) => [n, sk(x), sk(y)]);
 // ── biểu tượng trên bản đồ ──
 function mapGrace(x, y, s = 1) {

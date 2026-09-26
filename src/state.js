@@ -16,7 +16,7 @@ function defaultSave() {
     ashes: [], ash: {}, inv: {}, quick: 0, arrows: 0, arrowMax: 40, dragonDead: false, finalDead: false, chests: [],
     fortOpen: false, statues: [], glade: false, illusory: [], coloDone: false, mb: {}, explored: '', frags: [],
     gr: [], greatOpen: false, acadOpen: false, levers: [], dg: {}, bought: [], name: '', submitted: false, runId: null, marker: null,
-    readN: [], tips: {}, diff: 'normal', inv: {}, parries: 0, kills: {}, tod: 0.12, bell: false, spirits: [], spiritSel: 'wolves', worldV: 4, horse: false, newGear: [],
+    readN: [], tips: {}, diff: 'normal', inv: {}, parries: 0, kills: {}, tod: 0.12, bell: false, spirits: [], spiritSel: 'wolves', worldV: 5, horse: false, newGear: [],
   };
 }
 let S = defaultSave();
@@ -151,7 +151,7 @@ function spawnEnemies() {
 }
 function makeBoss(v = 1) {
   const A = v === 1 ? ARENA : ARENA2, hp = Math.round((v === 1 ? 1300 : 5400) * DIFF.boss);
-  return { isBoss: true, v, A, name: v === 1 ? 'Varek, Kẻ Gác Cổng Bội Thề' : 'Varek, Vua Ẩn Mặt', x: A.x + A.w / 2, y: v === 1 ? sk(640) : A.y + sk(130), r: v === 1 ? 28 : 30,
+  return { isBoss: true, v, A, name: v === 1 ? 'Varek, Kẻ Gác Cổng Bội Thề' : 'Varek, Vua Ẩn Mặt', x: A.x + A.w / 2, y: v === 1 ? A.y + A.h * 0.42 : A.y + sk(130), r: v === 1 ? 28 : 30,
     hp, maxHp: hp, ghost: hp, face: Math.PI / 2, state: 'dormant', t: 0, cd: 1, vx: 0, vy: 0, poise: v === 1 ? 170 : 240, poiseAcc: 0, lastHit: 9, hurtFlash: 0,
     phase: 1, atk: null, dead: false, z: 0, elite: true, invuln: 0, anim: 0, stagDur: 0.8, lastMove: '', bleedMax: v === 1 ? 180 : 300, res: { holy: 0.8 },
     look: v === 1 ? { body: '#4d4234', trim: '#c9a34a', head: '#2c2721', cloak: '#2a241b', weapon: 'greatsword', form: 'varek', bform: 'varek', wlen: 42, wcol: '#dcc06a', scale: 1.9, glow: true }
