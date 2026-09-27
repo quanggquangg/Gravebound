@@ -348,6 +348,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 .inv2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
 @media (max-width:780px){.inv2{grid-template-columns:1fr}}
 .slots{display:flex;flex-wrap:wrap;gap:6px}
+.hubcall{margin:10px 0 0;padding:10px 14px;border:1px solid rgba(214,178,94,.45);border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(214,178,94,.14),rgba(214,178,94,.03));font:400 14px/1.5 var(--ui);color:var(--parch)} .hubcall b{color:var(--gold-hi);font-weight:600} .hubcall em{font-style:normal;color:var(--gold-hi)}
 .grip{display:flex;align-items:center;gap:10px;margin:10px 0 0;flex-wrap:wrap} .grip span{font:400 13px/1.4 var(--ui);color:var(--muted)} .grip .mini.on{border-color:var(--gold);background:rgba(214,178,94,.22)}
 .slot{appearance:none;position:relative;display:grid;justify-items:center;gap:2px;width:92px;padding:7px 4px 6px;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.2);color:var(--muted);cursor:pointer;font:500 11px/1.2 var(--ui)}
 .slot img,.slot .empty{width:44px;height:44px;display:block}
@@ -600,6 +601,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <button id="btnSound" class="pbtn">Âm thanh: bật</button>
         <button id="btnFx" class="pbtn">Đồ họa: cao</button>
         <button id="btnInv" class="pbtn">Hành trang</button>
+        <button id="btnPauseHub" class="pbtn">Về Sảnh Hearthhold</button>
         <button id="btnPauseLore" class="pbtn">Truyền thuyết</button>
         <button id="btnPauseFull" class="pbtn" hidden>Toàn màn hình</button>
         <button id="btnRot" class="pbtn" hidden>Xoay ngang: bật</button>
@@ -655,6 +657,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   <section id="grace" class="overlay" hidden>
     <div class="panel wide inv">
       <header><p class="eyebrow" id="graceEyebrow">Ân Điển</p><h2 id="graceTitle">Nghỉ ngơi</h2></header>
+      <p class="hubcall" id="hubCall" hidden><b>Melyra thì thầm:</b> “Kẻ Gravebound, ngươi cần một chốn nương thân. Ở Sảnh Hearthhold có thợ rèn cường hóa vũ khí, lái buôn, học giả bán phép và nữ tu. Bất cứ khi nào không giao chiến, hãy bấm <em>Về Sảnh Hearthhold</em> ở dưới, trong Hành trang hay menu tạm dừng.”</p>
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" id="tabLevel" aria-selected="true">Lên cấp</button>
         <button class="tab" role="tab" id="tabGear" aria-selected="false">Trang bị</button>
@@ -687,7 +690,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <p class="note" id="travelNote"></p>
         <ul class="travel" id="travelList"></ul>
       </div>
-      <div class="row"><span id="lvConfirm" class="row"><button id="btnLvOk" class="pbtn">Xác nhận</button><button id="btnLvCancel" class="pbtn ghost">Đặt lại</button></span><button id="btnWait" class="pbtn ghost" hidden>Chờ đến đêm</button><button id="btnLeave" class="pbtn">Rời đi</button></div>
+      <div class="row"><span id="lvConfirm" class="row"><button id="btnLvOk" class="pbtn">Xác nhận</button><button id="btnLvCancel" class="pbtn ghost">Đặt lại</button></span><button id="btnHub" class="pbtn ghost">Về Sảnh Hearthhold</button><button id="btnWait" class="pbtn ghost" hidden>Chờ đến đêm</button><button id="btnLeave" class="pbtn">Rời đi</button></div>
     </div>
   </section>
 

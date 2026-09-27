@@ -82,7 +82,7 @@ const WEAPONS = {
     heavy: S_('overhead', 0.5, 0.13, 0.46, 1.89, 76, 1.2, 230, 66, { off: 56, r: 64, shake: 6 }),
   },
   goldhorn: {
-    cls: 'hammer', name: "Goldhorn Maul", desc: 'Hai tay. Sừng vàng của Dê Chúa: nện xuống bằng sức mạnh thánh, không bị ngắt đòn', type: 'melee', dt: 'holy', base: 30, sc: { str: 'B', fai: 'C' }, req: { str: 22, fai: 14 }, wt: 14, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'horncharge',
+    cls: 'hammer', name: "Goldhorn Maul", desc: 'Vũ khí lớn, nên cầm hai tay. Sừng vàng của Dê Chúa: nện xuống bằng sức mạnh thánh, không bị ngắt đòn', type: 'melee', dt: 'holy', base: 30, sc: { str: 'B', fai: 'C' }, req: { str: 22, fai: 14 }, wt: 14, somber: true, unique: true, big: true, hyper: true, ash: 'horncharge',
     look: { form: 'horn', weapon: 'club', wlen: 46, wcol: '#e2c26c', glow: '#ffd76a' }, cost: [24, 40],
     light: [S_('overhead', 0.3, 0.13, 0.48, 1.15, 86, 1.2, 180, 52, { off: 62, r: 64, shake: 6 }), S_('slash', 0.3, 0.14, 0.52, 1.21, 86, 2.3, 180, 52, { swing: -1 })],
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 94, 1.2, 220, 125, { off: 55, r: 120, shake: 14, quake: true }),
@@ -106,31 +106,31 @@ const WEAPONS = {
     heavy: S_('overhead', 0.48, 0.13, 0.46, 1.84, 86, 1.2, 240, 56, { off: 64, r: 66, shake: 6, wave: true }),
   },
   varek: {
-    cls: 'greatsword', name: "Varek's Goldbrand", desc: 'Hai tay. Đòn mạnh phóng ra sóng ánh vàng', type: 'melee', dt: 'phys', base: 30, sc: { str: 'C', dex: 'D' }, req: { str: 16, dex: 10 }, wt: 10, somber: true, unique: true, twoHanded: true, ash: 'wave',
+    cls: 'greatsword', name: "Varek's Goldbrand", desc: 'Vũ khí lớn, nên cầm hai tay. Đòn mạnh phóng ra sóng ánh vàng', type: 'melee', dt: 'phys', base: 30, sc: { str: 'C', dex: 'D' }, req: { str: 16, dex: 10 }, wt: 10, somber: true, unique: true, big: true, ash: 'wave',
     look: { form: 'varek', weapon: 'greatsword', wlen: 44, wcol: '#e0c068', glow: true }, cost: [14, 28],
     light: [S_('slash', 0.15, 0.11, 0.3, 1.05, 76, 2.2, 190, 20, { swing: 1 }), S_('slash', 0.13, 0.11, 0.3, 1.09, 76, 2.2, 190, 20, { swing: -1 }), S_('overhead', 0.2, 0.13, 0.42, 1.34, 82, 1.2, 240, 30, { off: 70, r: 66, shake: 5 })],
     heavy: S_('overhead', 0.55, 0.15, 0.5, 1.84, 88, 1.2, 260, 60, { off: 72, r: 78, wave: true, shake: 8 }),
   },
   greatsword: {
-    cls: 'colossal', name: "Dragonfang Greatsword", desc: 'Hai tay. Chậm, cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 32, sc: { str: 'B' }, req: { str: 22 }, wt: 16, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'leap',
+    cls: 'colossal', name: "Dragonfang Greatsword", desc: 'Vũ khí lớn, nên cầm hai tay. Chậm, cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 32, sc: { str: 'B' }, req: { str: 22 }, wt: 16, somber: true, unique: true, big: true, hyper: true, ash: 'leap',
     look: { form: 'slab', weapon: 'greatsword', wlen: 52, wcol: '#c9b48a' }, cost: [26, 42],
     light: [S_('slash', 0.3, 0.14, 0.45, 1.15, 94, 2.6, 200, 38, { swing: 1 }), S_('slash', 0.28, 0.14, 0.5, 1.21, 94, 2.6, 200, 38, { swing: -1 }), S_('overhead', 0.36, 0.15, 0.55, 1.39, 96, 1.2, 220, 55, { off: 78, r: 80, shake: 8 })],
     heavy: S_('spin', 0.6, 0.36, 0.6, 1.75, 104, TAU, 100, 90, { turns: 1 }),
   },
   greataxe: {
-    cls: 'greataxe', name: "Goldspire Greataxe", desc: 'Hai tay. Bổ xuống làm rung chuyển mặt đất', type: 'melee', dt: 'phys', base: 34, sc: { str: 'A' }, req: { str: 26 }, wt: 15, twoHanded: true, hyper: true, ash: 'wildspin',
+    cls: 'greataxe', name: "Goldspire Greataxe", desc: 'Vũ khí lớn, nên cầm hai tay. Bổ xuống làm rung chuyển mặt đất', type: 'melee', dt: 'phys', base: 34, sc: { str: 'A' }, req: { str: 26 }, wt: 15, big: true, hyper: true, ash: 'wildspin',
     look: { form: 'greataxe', weapon: 'axe', wlen: 48, wcol: '#a8a298' }, cost: [26, 42],
     light: [S_('slash', 0.32, 0.14, 0.48, 1.15, 92, 2.5, 200, 44, { swing: 1 }), S_('overhead', 0.34, 0.14, 0.52, 1.27, 92, 1.2, 200, 56, { off: 74, r: 76, shake: 8 })],
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 96, 1.2, 220, 110, { off: 60, r: 116, shake: 14, quake: true }),
   },
   hammer: {
-    cls: 'hammer', name: "Warden's Maul", desc: 'Hai tay. Phá thế cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 30, sc: { str: 'A' }, req: { str: 20 }, wt: 14, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'quake',
+    cls: 'hammer', name: "Warden's Maul", desc: 'Vũ khí lớn, nên cầm hai tay. Phá thế cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 30, sc: { str: 'A' }, req: { str: 20 }, wt: 14, somber: true, unique: true, big: true, hyper: true, ash: 'quake',
     look: { form: 'warhammer', weapon: 'club', wlen: 44, wcol: '#8f8a80' }, cost: [24, 40],
     light: [S_('overhead', 0.3, 0.13, 0.48, 1.15, 84, 1.2, 180, 50, { off: 62, r: 62, shake: 6 }), S_('slash', 0.3, 0.14, 0.52, 1.21, 84, 2.3, 180, 50, { swing: -1 })],
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 92, 1.2, 220, 120, { off: 55, r: 118, shake: 14, quake: true }),
   },
   scythe: {
-    cls: 'reaper', name: "Wraithreaper Scythe", desc: 'Hai tay. Quét rộng, gây chảy máu', type: 'melee', dt: 'phys', base: 25, sc: { str: 'D', dex: 'C' }, req: { str: 12, dex: 14 }, wt: 8, somber: true, unique: true, twoHanded: true, bleed: [12, 22], ash: 'whirl',
+    cls: 'reaper', name: "Wraithreaper Scythe", desc: 'Vũ khí lớn, nên cầm hai tay. Quét rộng, gây chảy máu', type: 'melee', dt: 'phys', base: 25, sc: { str: 'D', dex: 'C' }, req: { str: 12, dex: 14 }, wt: 8, somber: true, unique: true, big: true, bleed: [12, 22], ash: 'whirl',
     look: { weapon: 'scythe', wlen: 50, wcol: '#cfefff' }, cost: [13, 26],
     light: [S_('slash', 0.16, 0.13, 0.3, 1.0, 92, 3.0, 150, 16, { swing: 1 }), S_('slash', 0.14, 0.13, 0.3, 1.05, 92, 3.0, 150, 16, { swing: -1 }), S_('spin', 0.18, 0.24, 0.36, 1.3, 96, TAU, 120, 24, { turns: 1 })],
     heavy: S_('spin', 0.5, 0.42, 0.5, 1.75, 98, TAU, 60, 40, { turns: 2 }),
@@ -366,6 +366,8 @@ const GREAT_RUNES = {
 // ───────────────────────── kẻ địch ─────────────────────────
 const LOOK_BASE = { body: '#474b52', trim: '#8d9199', head: '#5b5f67', cloak: '#5e1f1c', scale: 1 };
 const ETYPES = {
+  // hình nộm ở Sân Tập của Sảnh Hearthhold: không đánh trả, không chết, không cho rune
+  dummy: { name: 'Hình Nộm Tập', hp: 3000, r: 15, speed: 0, aggro: 0, runes: 0, poise: 70, atkRange: 0, cd: [99, 99], track: 0, dummy: true, attacks: [], noBook: true },
   soldier: {
     name: 'Lính Tàn Binh', hp: 70, r: 15, speed: 88, aggro: 290, runes: 28, poise: 28, atkRange: 50, cd: [0.8, 1.8], track: 3.4,
     look: { body: '#6b604b', trim: '#9a8759', head: '#857b68', cloak: '#4b3a28', weapon: 'sword', wlen: 32, wcol: '#b9b6aa', scale: 1 },

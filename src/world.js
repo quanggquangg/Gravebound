@@ -103,7 +103,43 @@ const FLAG = { x: 3600, y: 3230 };
 
 // ───────────────────────── khu biệt lập ─────────────────────────
 const RC = { x: 10500, y: 500, r: 420 }; // đấu trường trận cuối trong Cõi Aurum
-const HUB = { x: 11100, y: 0, w: 1000, h: 900 };
+const HUB = { x: 11100, y: 0, w: 1000, h: 1440 };
+// Sảnh Hearthhold: chốn nương thân như Bàn Tròn trong Elden Ring. Bảy gian nối nhau:
+// Đại Sảnh bàn tròn (Ân Điển) ở giữa, Nhà Nguyện phía bắc, Lò Rèn và Thư Viện hai bên,
+// Sân Tập có hình nộm, Phòng Chiến Công và Chợ ở phía nam. Tọa độ tính từ góc trên trái của sảnh.
+const HUB_ROOMS = {
+  chapel: [300, 24, 400, 356], hall: [252, 440, 496, 560], forge: [24, 440, 204, 380], library: [772, 440, 204, 380],
+  yard: [24, 844, 204, 572], gallery: [772, 844, 204, 572], market: [252, 1024, 496, 392],
+};
+const HUB_WALLS = [
+  [0, 0, 1000, 24], [0, 1416, 1000, 24], [0, 0, 24, 1440], [976, 0, 24, 1440], [0, 0, 300, 440], [700, 0, 300, 440],
+  [300, 380, 160, 60], [540, 380, 160, 60],
+  [228, 440, 24, 160], [228, 680, 24, 500], [228, 1260, 24, 180], [748, 440, 24, 160], [748, 680, 24, 500], [748, 1260, 24, 180],
+  [0, 820, 90, 24], [150, 820, 90, 24], [760, 820, 90, 24], [910, 820, 90, 24],
+  [252, 1000, 188, 24], [560, 1000, 188, 24],
+].map(([x, y, w, h]) => ({ x: HUB.x + x, y, w, h, dgw: 'royal' })).concat([
+  // đồ gỗ đặt sát tường: ghế dài nhà nguyện, giá vũ khí, kệ sách, bàn đọc, máng tôi thép, quầy hàng
+  ['pew', 360, 250, 110, 18], ['pew', 530, 250, 110, 18], ['pew', 360, 312, 110, 18], ['pew', 530, 312, 110, 18],
+  ['rack', 36, 452, 150, 16], ['rack', 36, 540, 16, 120], ['trough', 150, 770, 64, 26],
+  ['shelf', 784, 452, 180, 20], ['shelf', 952, 476, 16, 200], ['shelf', 784, 476, 16, 110], ['desk', 800, 716, 76, 34],
+  ['rack', 36, 880, 16, 150], ['counter', 262, 1060, 22, 110],
+].map(([f, x, y, w, h]) => f === 'shelf' ? { x: HUB.x + x, y, w, h, shelf: true } : { x: HUB.x + x, y, w, h, furn: f }));
+// đồ trang trí có va chạm (r > 0) hoặc chỉ để nhìn (r = 0): [loại, x, y, r, tham số]
+const HUB_DECO = [
+  ['altar', 500, 70, 26], ['candles', 420, 66, 8], ['candles', 580, 66, 8], ['statue', 336, 64, 15], ['statue', 664, 64, 15], ['brazier2', 330, 200, 11], ['brazier2', 670, 200, 11],
+  ['rtable', 500, 690, 70], ...[...Array(8)].map((_, i) => ['chair', 500 + Math.cos(i / 8 * TAU + 0.39) * 98, 690 + Math.sin(i / 8 * TAU + 0.39) * 98, 9, i / 8 * TAU + 0.39]),
+  ['brazier2', 300, 540, 11], ['brazier2', 700, 540, 11], ['brazier2', 300, 850, 11], ['brazier2', 700, 850, 11],
+  ['banner', 330, 452, 0, 0], ['banner', 420, 452, 0, 1], ['banner', 580, 452, 0, 2], ['banner', 670, 452, 0, 3],
+  ['barrel', 44, 790, 12], ['barrel', 70, 800, 12], ['barrel', 40, 1395, 12], ['barrel', 690, 1390, 12], ['barrel', 716, 1382, 12],
+  ['globe', 930, 770, 16], ['candles', 830, 700, 0], ['candles', 900, 520, 0],
+  ['maptable', 872, 1010, 32], ['statue', 872, 1260, 15],
+  ...[...Array(10)].map((_, i) => ['plaque', 952, 880 + i * 52, 0, i]),
+  ['stall', 380, 1196, 20], ['fountain', 560, 1236, 30], ['crate', 290, 1300, 10], ['crate', 306, 1322, 10], ['crate', 460, 1380, 10], ['bigdoor', 500, 1420, 0],
+];
+// hình nộm ở Sân Tập: đánh thoải mái để thử vũ khí, song kiếm, đâm lưng; không chết, không rơi rune
+const HUB_DUMMIES = [[80, 1010], [176, 1130], [90, 1290]];
+const HUB_DOOR = { x: HUB.x + 500, y: 1392 }, HUB_MAP = { x: HUB.x + 872, y: 1010 };
+
 // Hầm ngục phụ: mỗi hầm có cửa vào ngoài thế giới, ân điển ở lối vào và một boss ở phòng cuối
 const DUNGEONS = [
   { id: 'd1', name: 'Hầm Mộ Tidewrack', ex: -1600, ey: 3380, boss: 'graveknight', mul: 1.2, theme: 'crypt', reward: { tal: 'vital', pouch: 1, items: { somber1: 1 } } },
@@ -302,7 +338,7 @@ const WALLS = [
     [440, -625, 160, 115], [650, -635, 190, 125], [890, -620, 160, 110], [1600, -625, 170, 115], [1820, -640, 160, 130], [2040, -620, 210, 110]]
     .map(([x, y, w, h]) => ({ x, y, w, h, bld: true })),
   // Sảnh Hearthhold
-  { x: HUB.x, y: 0, w: HUB.w, h: 28 }, { x: HUB.x, y: HUB.h - 28, w: HUB.w, h: 28 }, { x: HUB.x, y: 0, w: 28, h: HUB.h }, { x: HUB.x + HUB.w - 28, y: 0, w: 28, h: HUB.h },
+  ...HUB_WALLS,
 ];
 // Đầm Lầy Ashmire: bụi gai mọc thành vòng quanh hang rồng, chỉ chừa một lối ở phía đông bắc
 for (let a = 0; a < TAU; a += 0.075) {
@@ -389,15 +425,16 @@ const GRACES = [
   { id: 19, x: 660, y: -960, name: 'Ân Điển Phố Vàng' },
   { id: 20, x: 1400, y: -1060, name: 'Ân Điển Trước Ngai' },
   { id: 21, x: 1250, y: -1660, name: 'Ân Điển Cây Aurum' },
-  { id: 22, x: HUB.x + 500, y: 450, name: 'Sảnh Hearthhold', hub: true },
+  { id: 22, x: HUB.x + 500, y: 905, name: 'Sảnh Hearthhold', hub: true },
   ...DUNGEONS.map(d => ({ id: d.grace, x: d.area.x + d.L.grace[0], y: d.L.grace[1], name: 'Ân Điển ' + d.name, dg: d.id })),
 ];
 // NPC ở Sảnh Hearthhold
 const NPCS = [
-  { id: 'smith', x: HUB.x + 220, y: 250, name: 'Thợ Rèn Hewen', col: '#8a5a3a' },
-  { id: 'merchant', x: HUB.x + 780, y: 250, name: 'Lái Buôn Kale', col: '#6a5a3a' },
-  { id: 'scholar', x: HUB.x + 220, y: 660, name: 'Học Giả Lyra', col: '#3a4a8a' },
-  { id: 'priestess', x: HUB.x + 780, y: 660, name: 'Nữ Tu Seraphine', col: '#b8952f' },
+  { id: 'smith', x: HUB.x + 118, y: 628, name: 'Thợ Rèn Hewen', col: '#8a5a3a' },
+  { id: 'merchant', x: HUB.x + 380, y: 1262, name: 'Lái Buôn Kale', col: '#6a5a3a' },
+  { id: 'scholar', x: HUB.x + 872, y: 618, name: 'Học Giả Lyra', col: '#3a4a8a' },
+  { id: 'priestess', x: HUB.x + 500, y: 196, name: 'Nữ Tu Seraphine', col: '#b8952f' },
+  { id: 'guide', x: HUB.x + 648, y: 868, name: 'Melyra', col: '#5a4a6a' },
 ];
 const ITEMS = [
   { id: 'seed1', x: 470, y: 1710, loot: { seed: 1 } },
@@ -567,6 +604,7 @@ const SPAWNS = [
   ['crabking', -1620, 2150], ['admiral', -1540, 3550], ['ramking', 3500, -1690],
   ['gargoyle', 1000, -1500], ['gargoyle', 1800, -1200], ['gargoyle', 1300, -1030], ['gargoyle', 650, -1210],
 ];
+for (const [x, y] of HUB_DUMMIES) SPAWNS.push(['dummy', HUB.x + x, y]);
 // quái trong hầm ngục (tọa độ cục bộ trong DG_LAYOUT) và boss ở phòng cuối
 for (const d of DUNGEONS) {
   for (const [t, x, y] of d.L.spawns) SPAWNS.push([t, d.area.x + x, y]);
@@ -670,6 +708,7 @@ function genObstacles() {
   const deco = o => { o.kind = 'deco'; addObst(o); DECO_OBJ.push(o); };
   for (const [d, x, y, rr] of DECOS) deco({ d, x: sk(x), y: sk(y), r: sk(rr || DR[d]), seed: (x * 13 + y * 7) & 1023 });
   for (const q of POIS) q.deco.forEach(deco);
+  for (const [d, x, y, r, a] of HUB_DECO) { const o = { d, x: HUB.x + x, y, r, a, seed: (x * 13 + y * 7) & 1023, hub: true }; if (r > 0) deco(o); else DECO_OBJ.push(o); }
   // cột đổ trong tàn tích, Học Viện, Sân Ngai Sunthrone và các hầm ngục
   const pillar = (x, y, rr) => addObst({ kind: 'rock', x, y, r: rr, seed: (x * 7 + y) | 0, pillar: true });
   const wpillar = (x, y, rr) => pillar(sk(x), sk(y), rr);
@@ -938,17 +977,41 @@ const GROUND2 = (function buildInstanceGround() {
   for (const rr of [RC.r - 10, RC.r * 0.62, RC.r * 0.3]) { g.beginPath(); g.arc(RC.x, RC.y, rr, 0, TAU); g.stroke(); }
   g.lineWidth = 2;
   for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; g.beginPath(); g.moveTo(RC.x + Math.cos(a) * RC.r * 0.3, RC.y + Math.sin(a) * RC.r * 0.3); g.lineTo(RC.x + Math.cos(a) * (RC.r - 10), RC.y + Math.sin(a) * (RC.r - 10)); g.stroke(); }
-  // Sảnh Hearthhold: sàn đá ấm, thảm đỏ, bàn tròn
-  paintFloor(g, r, HUB.x, 0, HUB.w, HUB.h, 50, 0, 62, [14, 8, 0]);
-  g.fillStyle = 'rgba(110,30,26,.75)'; g.fillRect(HUB.x + 440, 28, 120, HUB.h - 56); g.fillRect(HUB.x + 28, 400, HUB.w - 56, 100);
-  // viền thảm vàng và hoa văn hình thoi
-  g.strokeStyle = 'rgba(214,178,94,.6)'; g.lineWidth = 3;
-  g.strokeRect(HUB.x + 448, 36, 104, HUB.h - 72); g.strokeRect(HUB.x + 36, 408, HUB.w - 72, 84);
-  g.fillStyle = 'rgba(214,178,94,.35)';
-  const diamond = (x, y, k) => { g.beginPath(); g.moveTo(x, y - k); g.lineTo(x + k, y); g.lineTo(x, y + k); g.lineTo(x - k, y); g.closePath(); g.fill(); };
-  for (let y = 70; y < HUB.h - 50; y += 60) if (y < 390 || y > 510) diamond(HUB.x + 500, y, 10);
-  for (let x = HUB.x + 70; x < HUB.x + HUB.w - 50; x += 60) if (x < HUB.x + 430 || x > HUB.x + 570) diamond(x, 450, 10);
-  g.strokeStyle = 'rgba(214,178,94,.4)'; g.lineWidth = 3; g.beginPath(); g.arc(HUB.x + 500, 450, 110, 0, TAU); g.stroke();
+  // Sảnh Hearthhold: mỗi gian một kiểu sàn; thảm đỏ viền vàng nối các cửa, thảm tròn dưới bàn, ánh kính màu trong nhà nguyện
+  {
+    const H0 = HUB.x, RM = HUB_ROOMS, rm = (k, ts, base, tint, holes = 0) => { const [x, y, w, h] = RM[k]; paintFloor(g, r, H0 + x, y, w, h, ts, holes, base, tint); };
+    paintFloor(g, r, H0, 0, HUB.w, HUB.h, 48, 0, 56, [14, 8, 0]);
+    rm('hall', 56, 60, [16, 9, 0]); rm('chapel', 40, 88, [8, 7, 4]); rm('forge', 34, 36, [8, 4, 0]); rm('gallery', 64, 84, [6, 6, 10]); rm('market', 26, 62, [12, 8, 0]);
+    // thư viện: sàn gỗ ván dài
+    { const [x, y, w, h] = RM.library; g.fillStyle = '#3e2a1a'; g.fillRect(H0 + x, y, w, h);
+      for (let yy = y; yy < y + h; yy += 14) { let xx = H0 + x - r() * 80; while (xx < H0 + x + w) { const l = 60 + r() * 70, v = 58 + ((r() * 14) | 0); g.fillStyle = `rgb(${v + 12},${v - 6},${v - 26})`; g.fillRect(Math.max(H0 + x, xx), yy + 1, Math.min(l, H0 + x + w - xx) - 1, 12); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(xx + l - 2, yy + 1, 1.5, 12); xx += l; } } }
+    // sân tập: nền cát nện có vòng đấu vẽ vôi
+    { const [x, y, w, h] = RM.yard; g.fillStyle = '#6e5c3e'; g.fillRect(H0 + x, y, w, h);
+      for (let k = 0; k < 900; k++) { g.fillStyle = r() < 0.5 ? 'rgba(40,30,18,.25)' : 'rgba(170,150,110,.22)'; g.fillRect(H0 + x + r() * w, y + r() * h, 2 + r() * 3, 2 + r() * 2); }
+      g.strokeStyle = 'rgba(230,220,190,.35)'; g.lineWidth = 3; g.beginPath(); g.arc(H0 + 126, 1150, 90, 0, TAU); g.stroke(); g.beginPath(); g.arc(H0 + 126, 1150, 8, 0, TAU); g.stroke(); }
+    // lò rèn: vệt muội và ánh than dưới lò
+    for (let k = 0; k < 14; k++) { const sg = g.createRadialGradient(H0 + 40 + r() * 170, 460 + r() * 340, 2, H0 + 40 + r() * 170, 460 + r() * 340, 30); sg.addColorStop(0, 'rgba(10,8,6,.35)'); sg.addColorStop(1, 'rgba(10,8,6,0)'); g.fillStyle = sg; g.fillRect(H0 + 24, 440, 204, 380); }
+    const carpet = (x, y, w, h) => { g.fillStyle = 'rgba(112,30,26,.82)'; g.fillRect(H0 + x, y, w, h); g.strokeStyle = 'rgba(214,178,94,.62)'; g.lineWidth = 3; g.strokeRect(H0 + x + 6, y + 6, w - 12, h - 12);
+      g.fillStyle = 'rgba(214,178,94,.32)'; const vert = h > w; for (let k = 30; k < (vert ? h : w) - 20; k += 52) { const cx = H0 + x + (vert ? w / 2 : k), cy = y + (vert ? k : h / 2); g.beginPath(); g.moveTo(cx, cy - 8); g.lineTo(cx + 8, cy); g.lineTo(cx, cy + 8); g.lineTo(cx - 8, cy); g.closePath(); g.fill(); } };
+    carpet(466, 96, 68, 470); carpet(466, 800, 68, 420); carpet(60, 610, 168, 60); carpet(772, 610, 168, 60);
+    // thảm tròn dưới bàn tròn: vòng chữ cổ và tia ánh vàng
+    const cx = H0 + 500, cy = 690;
+    g.fillStyle = 'rgba(96,26,22,.9)'; g.beginPath(); g.arc(cx, cy, 158, 0, TAU); g.fill();
+    g.strokeStyle = 'rgba(214,178,94,.7)'; g.lineWidth = 4; g.beginPath(); g.arc(cx, cy, 150, 0, TAU); g.stroke(); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 132, 0, TAU); g.stroke();
+    g.fillStyle = 'rgba(214,178,94,.45)'; for (let k = 0; k < 36; k++) { const a = k / 36 * TAU; g.fillRect(cx + Math.cos(a) * 141 - 2, cy + Math.sin(a) * 141 - 2, 4, 4); }
+    g.strokeStyle = 'rgba(214,178,94,.25)'; for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; g.beginPath(); g.moveTo(cx + Math.cos(a) * 80, cy + Math.sin(a) * 80); g.lineTo(cx + Math.cos(a) * 130, cy + Math.sin(a) * 130); g.stroke(); }
+    // vòng đá khắc quanh Ân Điển
+    g.strokeStyle = 'rgba(255,220,140,.4)'; g.lineWidth = 3; g.beginPath(); g.arc(H0 + 500, 905, 54, 0, TAU); g.stroke(); g.lineWidth = 1.5; g.beginPath(); g.arc(H0 + 500, 905, 44, 0, TAU); g.stroke();
+    // ánh kính màu rọi xuống sàn nhà nguyện
+    for (const [x, y, col] of [[380, 130, '255,190,120'], [500, 150, '170,200,255'], [620, 130, '255,150,150'], [440, 250, '200,255,200'], [560, 250, '255,220,140']]) {
+      const lg = g.createRadialGradient(H0 + x, y, 4, H0 + x, y, 70); lg.addColorStop(0, `rgba(${col},.18)`); lg.addColorStop(1, `rgba(${col},0)`); g.fillStyle = lg; g.fillRect(H0 + x - 70, y - 70, 140, 140);
+    }
+    // phòng chiến công: ngôi sao vàng khảm sàn
+    g.strokeStyle = 'rgba(214,178,94,.45)'; g.lineWidth = 3; g.beginPath();
+    for (let k = 0; k <= 10; k++) { const a = -Math.PI / 2 + k / 10 * TAU, rr = k % 2 ? 26 : 64; const x = H0 + 872 + Math.cos(a) * rr, y = 1140 + Math.sin(a) * rr; if (k) g.lineTo(x, y); else g.moveTo(x, y); } g.stroke();
+    // chợ: vòng đá khảm quanh đài phun
+    g.strokeStyle = 'rgba(200,180,140,.35)'; g.lineWidth = 6; g.beginPath(); g.arc(H0 + 560, 1236, 60, 0, TAU); g.stroke();
+  }
   // hầm ngục: sàn đá theo chủ đề ở từng phòng, vũng nước, thảm đỏ, mạch dung nham, pha lê mọc trên sàn
   const THEME = { crypt: [52, [6, 4, 0]], crystal: [46, [0, 10, 24]], fire: [50, [18, 4, -4]], royal: [70, [18, 12, -2]] };
   for (const d of DUNGEONS) {
@@ -1161,7 +1224,7 @@ function clearGraces() {
   };
   for (const s of SPAWNS) {
     const [t] = s;
-    if (BOSSY.has(t)) { keep.push(s); continue; }
+    if (BOSSY.has(t) || t === 'dummy') { keep.push(s); continue; }
     const A = s[1] >= INST_X ? AREAS.find(a => s[1] >= a.x && s[1] <= a.x + a.w) : null, R = A ? GRACE_CLEAR_DG : GRACE_CLEAR;
     const g = GRACES.find(q => (q.x >= INST_X) === !!A && dist(q.x, q.y, s[1], s[2]) < R);
     if (!g) { keep.push(s); continue; }

@@ -304,8 +304,8 @@ function drawHUD() {
   } else if (lw) drawWeaponIcon(S.off, ox + os / 2, fy + fs - os / 2, os);
   else drawOffIcon(off, ox + os / 2, fy + fs - os / 2, os);
   hudTip(ox, fy + fs - os, os, os, () => pairedW() ? ['Vũ khí đôi · luôn song kiếm', 'Nút Đỡ (' + keyOf('guard') + '): chuỗi đòn bằng cả hai lưỡi']
-    : gripTwo() ? ['Đang cầm hai tay', 'Sức Mạnh ×1.5 · đỡ đòn bằng thân vũ khí', 'Cầm lại một tay: ' + keyOf('twohand')]
-    : Wp.twoHanded ? ['Tay trái bị khóa', 'Vũ khí tay phải cần cả hai tay']
+    : gripTwo() ? ['Đang cầm hai tay' + (S.twoL ? ' vũ khí trái' : ''), 'Sức Mạnh ×1.5 · đỡ đòn bằng thân vũ khí', 'Cầm lại một tay: ' + keyOf(S.twoL ? 'twohandl' : 'twohand')]
+    : Wp.twoHanded ? ['Cung cầm bằng hai tay', 'Tay trái cất sau lưng']
     : lw ? [lw.name + (upLv(S.off) ? ' +' + upLv(S.off) : '') + (powerStance() ? ' · song kiếm' : ''), 'Nút Đỡ (' + keyOf('guard') + '): ' + (powerStance() ? 'chuỗi đòn song kiếm' : 'đòn tay trái'), 'Cầm hai tay vũ khí phải: ' + keyOf('twohand')]
     : [off.name, off.type === 'shield' ? 'Giữ ' + keyOf('guard') + ' để đỡ; giơ đúng lúc để phản đòn' : 'Chất xúc tác để niệm phép', 'Cầm hai tay vũ khí phải: ' + keyOf('twohand')]);
   const tx = ox + os + 8;
@@ -319,7 +319,7 @@ function drawHUD() {
   ctx.fillStyle = line2c; ctx.fillText(line2, tx, fy + 28);
   let l3 = '';
   if (Wp.type === 'bow') l3 = 'Tên ' + S.arrows + '/' + S.arrowMax;
-  else if (gripTwo()) l3 = 'Cầm hai tay';
+  else if (gripTwo()) l3 = S.twoL ? 'Cầm hai tay vũ khí trái' : 'Cầm hai tay';
   else if (powerStance()) l3 = 'Tư thế song kiếm';
   const bf = [];
   if (P.buffs.flame > 0) bf.push('Lửa ' + Math.ceil(P.buffs.flame) + 's');
@@ -653,15 +653,19 @@ function openGrace(g) {
   currentGrace = g; menuAt = 'grace'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = g.name; $('graceTitle').textContent = 'Nghỉ ngơi'; $('btnLeave').textContent = 'Rời đi';
   $('btnWait').hidden = g.x > INST_X; $('btnWait').textContent = isNight() ? 'Chờ đến sáng' : 'Chờ đến đêm';
-  selectTab('level'); renderGrace(); UI.grace.hidden = false; SFX.uiOpen();
+  selectTab('level'); renderGrace(); UI.grace.hidden = false; SFX.uiOpen(); hubButtons();
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
+// nút Về Sảnh Hearthhold và lời nhắn của Melyra cho người chưa từng tới
+function hubButtons() { const h = inHub(); $('btnHub').hidden = h; $('hubCall').hidden = h || !!S.hubSeen || menuAt !== 'grace'; }
+$('btnHub').onclick = () => goHub();
+$('btnPauseHub').onclick = () => goHub();
 function openInventory(tab = 'gear') {
   if (G.mode !== 'play' && G.mode !== 'pause') return;
   UI.pause.hidden = true;
   currentGrace = null; menuAt = 'field'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = regionAt(P.x, P.y); $('graceTitle').textContent = 'Hành trang'; $('btnLeave').textContent = 'Đóng'; $('btnWait').hidden = true;
-  selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.uiOpen();
+  selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.uiOpen(); hubButtons();
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
 function closeGrace() { SFX.uiClose(); seenTab(graceTab); if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }
@@ -727,10 +731,8 @@ function commitLevels() {
   $('btnLeave').focus({ preventScroll: true });
 }
 // ── nhật ký mục tiêu ──
-function renderJournal() {
-  // chỉ hiện những mục tiêu người chơi đã nghe nói tới; phần còn lại lộ dần theo hành trình
-  const runesKnown = S.bossDead || S.gr.length > 0;
-  const main = [
+function mainGoals() {
+  return [
     [S.bossDead, 'Hạ Varek, Kẻ Canh Cổng', 'Pháo Đài Thornwall ở cuối con đường phía bắc Nhà Nguyện Dawnrest. Cổng chính bị chặn: tìm cửa sau phía tây hoặc bức tường sập phía đông.'],
     [hasGR('east'), 'Đại Ấn Greystone', 'Dornach trong Pháo Đài Greystone (phía đông). Thắp ba lò lửa theo đường đi của mặt trời để mở cổng.'],
     [hasGR('swamp'), 'Đại Ấn Rồng Tro', 'Rồng Ignarth ngủ giữa Đầm Lầy Ashmire, trong vòng bụi gai; lối vào ở phía đông bắc. Cưỡi ngựa để băng qua ao độc.'],
@@ -740,6 +742,11 @@ function renderJournal() {
     [S.boss2Dead, 'Hạ Vua Ẩn Mặt', 'Sân Ngai Sunthrone trong Kinh Thành.'],
     [S.finalDead, 'Chạm tới Cây Aurum', 'Ở tận cùng phía bắc Kinh Thành.'],
   ];
+}
+function renderJournal() {
+  // chỉ hiện những mục tiêu người chơi đã nghe nói tới; phần còn lại lộ dần theo hành trình
+  const runesKnown = S.bossDead || S.gr.length > 0;
+  const main = mainGoals();
   const known = [true, runesKnown, runesKnown, runesKnown || S.acadOpen || invN('crystalkey') > 0, runesKnown, runesKnown, S.greatOpen, S.boss2Dead];
   const nextI = main.findIndex(m => !m[0]);
   const dg = DUNGEONS.filter(d => S.dg[d.id]).length;
@@ -833,14 +840,30 @@ $('btnWait').onclick = () => { passTime(); $('btnWait').textContent = isNight() 
 // ───────────────────────── cửa hàng và lò rèn ─────────────────────────
 let currentShop = null;
 function openShop(id) {
+  if (id === 'guide') guideTopic = 'next';
   currentShop = id; setMode('menu'); P.lock = null;
   renderShop(); UI.shop.hidden = false; SFX.glint();
   setTimeout(() => $('btnShopLeave').focus({ preventScroll: true }), 30);
 }
 function closeShop() { UI.shop.hidden = true; currentShop = null; G.respecArm = false; setMode('play'); }
+// Melyra ở Sảnh Hearthhold: hỏi chuyện theo từng chủ đề như hội thoại Elden Ring
+const GUIDE_TOPICS = [
+  ['next', 'Ta nên đi đâu tiếp?', () => { const g = mainGoals().find(m => !m[0]); return g ? '“' + g[1] + '. ' + g[2] + '”' : '“Ngươi đã làm được điều không ai làm nổi. Nghỉ ngơi đi, kẻ Gravebound.”'; }],
+  ['hub', 'Sảnh Hearthhold là nơi nào?', () => '“Chốn nương thân cuối cùng của những kẻ Gravebound. Hewen rèn vũ khí ở gian tây, Lyra bán phép ở gian đông, Seraphine giữ nhà nguyện phía bắc, Kale buôn bán ở chợ phía nam. Ngươi có thể về đây bất cứ lúc nào không giao chiến: mở Hành trang hoặc menu tạm dừng rồi chọn Về Sảnh Hearthhold.”'],
+  ['grip', 'Cầm hai tay và song kiếm', () => '“Nắm vũ khí bằng cả hai tay thì Sức Mạnh tính gấp rưỡi, nhưng khiên phải đeo sau lưng. Cầm một vũ khí ở tay trái thì nút Đỡ thành đòn tay trái; hai vũ khí cùng loại sẽ vào tư thế song kiếm. Kale bán vài thanh kiếm cong, thử đi.”'],
+  ['yard', 'Sân tập', () => '“Gian tây nam có ba hình nộm rơm. Đánh chúng thỏa thích để thử vũ khí, đòn đâm lưng hay chuỗi song kiếm; chúng đếm cả sát thương mỗi giây cho ngươi. Phòng phía đông nam giữ bia chiến công và bàn bản đồ.”'],
+  ['grace', 'Ân Điển và lên cấp', () => '“Nghỉ ở Ân Điển để hồi máu, nạp bình và đổi rune lấy sức mạnh. Quái sẽ sống lại khi ngươi nghỉ. Chết thì rune rơi lại; quay về nhặt trước khi chết lần nữa.”'],
+];
+let guideTopic = 'next';
 function renderShop() {
   const id = currentShop;
   $('shopRunes').textContent = S.runes.toLocaleString(numLoc());
+  if (id === 'guide') {
+    $('shopName').textContent = 'Melyra';
+    $('shopLine').textContent = GUIDE_TOPICS.find(q => q[0] === guideTopic)[2]();
+    $('shopList').innerHTML = GUIDE_TOPICS.map(([k, label]) => `<li><button data-talk="${k}" class="${k === guideTopic ? 'hub' : ''}"><span>${label}</span><small>Hỏi</small></button></li>`).join('');
+    return;
+  }
   if (id === 'smith') {
     $('shopName').textContent = 'Thợ Rèn Hewen';
     $('shopLine').textContent = '“Đưa đá rèn đây. Lưỡi nào cùn, ta mài; lưỡi nào yếu, ta rèn lại.”';
@@ -872,6 +895,7 @@ function renderShop() {
 $('shopList').addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
+  if (b.dataset.talk) { guideTopic = b.dataset.talk; SFX.glint(); renderShop(); return; }
   if (b.dataset.up) { if (doUpgrade(b.dataset.up)) { toast('Cường hóa thành công: ' + WEAPONS[b.dataset.up].name + ' +' + upLv(b.dataset.up)); shake(4); } }
   else if (b.dataset.buy !== undefined) buyRow(currentShop, +b.dataset.buy);
   else if (b.dataset.respec) { if (G.respecArm) { G.respecArm = false; doRespec(); } else { G.respecArm = true; SFX.glint(); } }
@@ -939,7 +963,8 @@ const HINTS = [
   ['sprint', () => S.tips.fight && P.state === 'idle' && Math.hypot(P.mvx || 0, P.mvy || 0) > 20 && S.time > 90, 'Chạy nhanh',
     'Giữ <kbd data-k="roll">Space</kbd> khi di chuyển để chạy nhanh (tốn thể lực)', 'Giữ nút Lăn khi di chuyển để chạy nhanh'],
   ['horse', () => !!S.horse && !P.mounted, 'Có ngựa', 'Nhấn <kbd data-k="mount">F</kbd> để gọi ngựa. Ngựa chạy nhanh và băng qua ao độc an toàn', 'Chạm nút Ngựa để gọi ngựa'],
-  ['swap', () => S.weapons.filter(w => !WEAPONS[w].hand).length >= 2, 'Đổi vũ khí nhanh', 'Nhấn <kbd data-k="eqprev">←</kbd> <kbd data-k="eqnext">→</kbd> để đổi vũ khí đang cầm mà không cần mở hành trang', 'Chạm nút Vũ khí để đổi vũ khí đang cầm'],
+  ['hub', () => !S.hubSeen && S.time > 150 && !inCombat(), 'Sảnh Hearthhold', 'Chốn nương thân có thợ rèn, lái buôn, học giả và nữ tu. Nhấn <kbd data-k="inv">I</kbd> hoặc <kbd>Esc</kbd> rồi chọn “Về Sảnh Hearthhold” để về bất cứ lúc nào không giao chiến', 'Chốn nương thân có thợ rèn, lái buôn, học giả và nữ tu. Mở Túi hoặc menu tạm dừng rồi chọn “Về Sảnh Hearthhold”'],
+  ['swap', () => S.weapons.filter(w => WEAPONS[w].hand !== 'off').length >= 2, 'Đổi vũ khí nhanh', 'Nhấn <kbd data-k="eqprev">←</kbd> <kbd data-k="eqnext">→</kbd> để đổi vũ khí đang cầm mà không cần mở hành trang', 'Chạm nút Vũ khí để đổi vũ khí đang cầm'],
   ['note', () => NOTES.some(n => dist(n.x, n.y, P.x, P.y) < 90), 'Lời nhắn', 'Những dấu cam trên mặt đất là lời nhắn của kẻ đi trước. Nhấn <kbd data-k="interact">E</kbd> để đọc', 'Chạm nút Dùng để đọc lời nhắn trên mặt đất'],
   ['heal', () => P.hp < P.maxHp * 0.5 && P.flasks > 0, 'Máu còn một nửa', 'Nhấn <kbd data-k="item">R</kbd> để uống Bình Máu', 'Chạm nút Dùng đồ để uống Bình Máu'],
   ['stamina', () => P.st < P.maxSt * 0.2, 'Sắp hết thể lực', 'Hết thể lực thì không lăn hay đánh được. Lùi lại một nhịp cho thể lực hồi', 'Hết thể lực thì không lăn hay đánh được. Lùi lại một nhịp cho thể lực hồi'],

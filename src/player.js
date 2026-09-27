@@ -84,7 +84,7 @@ const DUAL = {
     S_('overhead', 0.24, 0.14, 0.46, 1.5, 0, 1.4, 200, 60, { off: 56, r: 64, shake: 7 }),
   ],
 };
-const DUAL_OF = { straight: 'blade', curved: 'blade', katana: 'blade', paired: 'blade', dagger: 'stab', thrust: 'stab', spear: 'pole', halberd: 'pole', axe: 'heavy', club: 'heavy' };
+const DUAL_OF = { straight: 'blade', curved: 'blade', katana: 'blade', paired: 'blade', greatsword: 'blade', colossal: 'blade', reaper: 'blade', dagger: 'stab', thrust: 'stab', spear: 'pole', halberd: 'pole', axe: 'heavy', club: 'heavy', greataxe: 'heavy', hammer: 'heavy' };
 function makeOffAtk(combo) {
   const R = WEAPONS[S.equipped], tw = hasTal('twinblade') ? 1.15 : 1, bm = hasTal('blade') ? 1.12 : 1;
   if (powerStance()) {
@@ -108,16 +108,31 @@ function startOff(combo, moving, mx, my) {
   spendSt(P.atk.cost, ST_DELAY);
   P.state = 'attack'; P.t = 0;
 }
-// đổi cách cầm: một tay / hai tay (như giữ △ + R1 trong Elden Ring)
-function toggleTwoHand() {
-  const W = WEAPONS[S.equipped];
+// đổi cách cầm như Elden Ring: △ + R1 cầm hai tay vũ khí phải, △ + L1 cầm hai tay vũ khí trái; bấm lại để về một tay.
+// Cầm hai tay vũ khí trái: vũ khí phải được cất sau lưng, vũ khí trái lên nắm bằng cả hai tay (hoán đổi tạm, trả lại khi thôi).
+function oneHand() {
+  if (S.twoL) { const r = S.equipped; S.equipped = S.off; S.off = r; }
+  S.twoH = false; S.twoL = false;
+}
+function toggleTwoHand(side = 'R') {
   if (P.mounted || P.state === 'dead') return;
-  if (W.twoHanded) { toast(W.type === 'bow' ? 'Cung luôn cầm bằng hai tay' : 'Vũ khí này vốn đã phải cầm hai tay'); return; }
-  if (W.paired) { toast('Vũ khí đôi: mỗi tay đã cầm một lưỡi'); return; }
-  if (W.type !== 'melee') return;
-  S.twoH = !S.twoH; SFX.equip();
+  if (S.twoH) {
+    const wasL = !!S.twoL; oneHand();
+    if ((side === 'L') === wasL) { SFX.equip(); toast('Cầm một tay' + (leftWeapon() ? ' · tay trái: ' + leftWeapon().name : '')); if (P.state === 'guard') { P.state = 'idle'; P.t = 0; } save(); return; }
+  }
+  if (side === 'L') {
+    const L = WEAPONS[S.off];
+    if (!L || L.type !== 'melee' || !canGrip2(S.off)) { toast(L && L.type === 'shield' ? 'Khiên không cầm hai tay được' : 'Tay trái không có vũ khí để cầm hai tay'); return; }
+    const r = S.equipped; S.equipped = S.off; S.off = r; S.twoL = true;
+  } else {
+    const W = WEAPONS[S.equipped];
+    if (W.twoHanded) { toast('Cung luôn cầm bằng hai tay'); return; }
+    if (W.paired) { toast('Vũ khí đôi: mỗi tay đã cầm một lưỡi'); return; }
+    if (W.type !== 'melee') return;
+  }
+  S.twoH = true; SFX.equip();
   if (P.state === 'guard') { P.state = 'idle'; P.t = 0; }
-  toast(S.twoH ? 'Cầm hai tay: ' + W.name + ' · Sức Mạnh tính ×1.5' : 'Cầm một tay' + (leftWeapon() ? ' · tay trái: ' + leftWeapon().name : ''));
+  toast('Cầm hai tay: ' + WEAPONS[S.equipped].name + (S.twoL ? ' (vũ khí trái)' : '') + ' · Sức Mạnh tính ×1.5');
   save();
 }
 // tiêu thể lực sau một hành động; cạn sạch thì phải thở một nhịp lâu hơn mới hồi lại (như dòng souls)
@@ -290,6 +305,7 @@ function equip(id) {
   const Wp = WEAPONS[id];
   if (Wp.hand === 'off') return equipOff(id);
   if (S.equipped !== id) {
+    S.twoL = false;
     const old = S.equipped;
     // món đang ở tay trái được chuyển sang tay phải: tay trái nhận lại món cũ của tay phải (nếu cầm một tay được), không thì cầm khiên
     if (S.off === id) S.off = canGrip2(old) ? old : S.weapons.includes('shield') ? 'shield' : OFF_ORDER.find(w => S.weapons.includes(w)) || 'shield';
@@ -305,7 +321,7 @@ function equipOff(id) {
   if (W.type === 'bow') { toast('Cung chỉ cầm ở tay phải'); return false; }
   if (id === S.equipped) { toast('Món này đang ở tay phải'); return false; }
   if (S.off !== id) {
-    S.off = id; SFX.glint(); save();
+    S.twoL = false; S.off = id; SFX.glint(); save();
     toast('Tay trái: ' + W.name + (powerStance() ? ' · TƯ THẾ SONG KIẾM' : W.type === 'melee' ? ' · nút Đỡ thành đòn tay trái' : ''));
   }
   return true;
@@ -708,6 +724,7 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
   dmg = Math.max(1, Math.round(dmg * rand(0.94, 1.06)));
   if (hasTal('batfang') && P.state !== 'dead') P.hp = Math.min(P.maxHp, P.hp + dmg * 0.03);
   if (!opt.ally && e.foe && Math.random() < 0.5) e.foe = null;
+  if (e.T && e.T.dummy) { if (!e.tot) e.t0 = G.clock; e.tot = (e.tot || 0) + dmg; }
   e.hp -= dmg; e.hurtFlash = 0.12; e.lastHit = 0; e.lastParts = typeof dmgIn === 'number' ? null : dmgIn;
   const quiet = opt.quiet;
   if (!quiet) { G.hitStop = crit ? 0.14 : kind === 'heavy' ? 0.075 : 0.045; shake(crit ? 11 : kind === 'heavy' ? 6 : 3); }
@@ -736,6 +753,7 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
       floatText(e.x, e.y - e.r - 60, 'CHẢY MÁU ' + extra, '#ff6a5a', true);
     }
   }
+  if (e.T && e.T.dummy && e.hp <= 0) e.hp = e.maxHp;
   if (e.hp <= 0) { if (e.isFinal && e.phase === 1) { finalTransform(); return; } killEnemy(e); return; }
   if (crit) { e.state = 'stagger'; e.t = 0; e.stagDur = 0.8; e.poiseAcc = 0; e.atk = null; return; }
   e.poiseAcc += poise;

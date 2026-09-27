@@ -84,6 +84,14 @@ function wake(e, group) { e.state = 'chase'; e.t = 0; e.wakeAt = 0; e.sus = 0; e
 // boss, quái tinh anh và Kẻ Xâm Nhập không bị giới hạn. Đòn bắn xa chỉ bắn khi đã vào khung hình và không bị tường chắn.
 const tokExempt = e => e.elite || e.T.miniboss || e.invader || e.punish;
 const atkClass = A => (RANGED_KINDS.has(A.kind) ? 'ranged' : A.kind === 'warp' ? null : 'melee');
+// hình nộm: đứng yên, lắc lư khi trúng đòn, tự hồi đầy sau vài giây không bị đánh; đếm tổng sát thương để thử vũ khí
+function tickDummy(e, dt) {
+  e.lastHit += dt; e.hurtFlash = Math.max(0, (e.hurtFlash || 0) - dt); e.vx = e.vy = 0; e.x = e.hx; e.y = e.hy; e.atk = null;
+  if ((e.state === 'stagger' || e.state === 'broken') && e.t < (e.state === 'broken' ? 2.2 : e.stagDur || 0.6)) return;
+  if (e.state !== 'idle') { e.state = 'idle'; e.t = 0; }
+  e.face = Math.PI / 2;
+  if (e.lastHit > 4 && e.tot) { e.hp = e.maxHp; e.tot = 0; e.t0 = 0; e.bleed = 0; }
+}
 function countTokens() {
   TOK.melee = TOK.ranged = 0;
   for (const e of enemies) if (!e.dead && e.state === 'atk' && e.atk && !tokExempt(e) && Math.abs(e.x - P.x) < 1000 && Math.abs(e.y - P.y) < 1000) { const c = atkClass(e.atk); if (c) TOK[c]++; }
@@ -307,6 +315,7 @@ function updateEnemies(dt) {
   for (const e of enemies) {
     e.t += dt;
     if (e.dead) continue;
+    if (e.T.dummy) { tickDummy(e, dt); continue; }
     // mục tiêu: người chơi, hoặc hồn triệu hồi vừa đánh nó
     const foe = e.foe && !e.foe.dead && e.foe.hp > 0 && e.state !== 'idle' && e.state !== 'return' ? e.foe : (e.foe = null);
     const tx = foe ? foe.x : P.x, ty = foe ? foe.y : P.y, tr = foe ? foe.r : P.r;

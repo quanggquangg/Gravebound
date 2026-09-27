@@ -3,7 +3,7 @@
 const BIND_LABEL = {
   up: 'Đi lên', down: 'Đi xuống', left: 'Sang trái', right: 'Sang phải', roll: 'Lăn né / chạy nhanh', guard: 'Đỡ đòn', light: 'Đánh thường', heavy: 'Đánh mạnh',
   spell: 'Niệm phép', skill: 'Kỹ năng vũ khí', item: 'Dùng đồ', interact: 'Tương tác', mount: 'Gọi ngựa', lock: 'Khóa mục tiêu', map: 'Bản đồ', inv: 'Hành trang',
-  itemnext: 'Đổi đồ', spellnext: 'Đổi phép', eqprev: 'Vũ khí trước', eqnext: 'Vũ khí sau', twohand: 'Cầm một tay / hai tay',
+  itemnext: 'Đổi đồ', spellnext: 'Đổi phép', eqprev: 'Vũ khí trước', eqnext: 'Vũ khí sau', twohand: 'Cầm hai tay vũ khí phải', twohandl: 'Cầm hai tay vũ khí trái',
 };
 function applyTextSize() { document.documentElement.style.setProperty('--uiz', SET.text); }
 function applyVolumes() {

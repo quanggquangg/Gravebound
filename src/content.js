@@ -103,7 +103,7 @@ const AFFIXES = {
 const AFF_KEYS = Object.keys(AFFIXES);
 const hasAff = (e, k) => !!(e && e.aff && e.aff.includes(k));
 function applyAffixes(e) {
-  if (!DIFF.elite || e.T.miniboss || e.summoned || e.invader || Math.random() >= DIFF.elite) return;
+  if (!DIFF.elite || e.T.miniboss || e.T.dummy || e.summoned || e.invader || Math.random() >= DIFF.elite) return;
   const pool = AFF_KEYS.slice(), n = DIFF.aff >= 2 && Math.random() < 0.3 ? 2 : 1;
   e.aff = [];
   for (let i = 0; i < n; i++) e.aff.push(pool.splice((Math.random() * pool.length) | 0, 1)[0]);

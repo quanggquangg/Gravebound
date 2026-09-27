@@ -138,7 +138,10 @@ function renderGear() {
     ['ash', ash ? 'x' : null, ash, ash ? ASHES[ash].name : '—'], ['armor', 'a', S.armor, ARMORS[S.armor].name], ['tal', S.tal[0] ? 't' : null, S.tal[0], S.tal.length + '/' + S.talSlots + ' bùa'],
   ];
   const nwSlot = { right: ownedRight().some(w => isNew('w', w)), left: leftOwned().some(w => isNew('w', w)), ash: S.ashes.some(a => isNew('x', a)), armor: S.armors.some(a => isNew('a', a)), tal: S.tals.some(t => isNew('t', t)) };
-  const grip = canGrip2() ? `<div class="grip"><button class="mini${gripTwo() ? ' on' : ''}" data-twoh="1">${gripTwo() ? 'Đang cầm hai tay' : 'Cầm hai tay'}</button><span>${gripTwo() ? 'Sức Mạnh ×1.5, phá thế mạnh hơn; đỡ đòn bằng thân vũ khí.' : powerStance() ? 'Tư thế song kiếm: nút Đỡ ra chuỗi đòn bằng cả hai lưỡi.' : 'Nắm vũ khí tay phải bằng cả hai tay: Sức Mạnh ×1.5.'} <kbd data-k="twohand">H</kbd></span></div>` : '';
+  // hai nút cầm hai tay như Elden Ring: vũ khí phải (△ + R1) và vũ khí trái (△ + L1)
+  const offW = WEAPONS[S.off], rOk = S.twoL ? canGrip2(S.off) : canGrip2(), lOk = S.twoL || (offW && offW.type === 'melee' && canGrip2(S.off) && S.off !== S.equipped);
+  const gbtn = (side, on, lbl, k) => `<button class="mini${on ? ' on' : ''}" data-twoh="${side}">${lbl} <kbd data-k="${k}">H</kbd></button>`;
+  const grip = rOk || lOk ? `<div class="grip">${rOk ? gbtn('R', gripTwo() && !S.twoL, gripTwo() && !S.twoL ? 'Đang cầm hai tay vũ khí phải' : 'Cầm hai tay vũ khí phải', 'twohand') : ''}${lOk ? gbtn('L', !!S.twoL, S.twoL ? 'Đang cầm hai tay vũ khí trái' : 'Cầm hai tay vũ khí trái', 'twohandl') : ''}<span>${gripTwo() ? 'Sức Mạnh ×1.5, phá thế mạnh hơn; món còn lại cất sau lưng, đỡ đòn bằng thân vũ khí.' : powerStance() ? 'Tư thế song kiếm: nút Đỡ ra chuỗi đòn bằng cả hai lưỡi.' : 'Nắm một vũ khí bằng cả hai tay: Sức Mạnh ×1.5.'}</span></div>` : '';
   let h = '<div class="slots">' + slots.map(([s, kind, id, nm]) => `<button class="slot${invSlot === s ? ' on' : ''}" data-slot="${s}">${kind && id ? img(kind, id, 44) : '<span class="empty"></span>'}<span class="lbl">${SLOT_LABEL[s]}</span><span class="val">${esc(nm)}</span>${nwSlot[s] ? '<em class="newb">MỚI</em>' : ''}</button>`).join('') + '</div>' + grip;
   const list = gearTiles();
   const why = invSlot === 'ash' ? (Wp.type !== 'melee' ? 'Vũ khí này không gắn kỹ năng' : Wp.unique ? 'Kỹ năng riêng của vũ khí, không đổi được' : !atGrace() ? 'Chỉ đổi kỹ năng khi nghỉ ở Ân Điển' : '') : invSlot === 'left' && Wp.twoHanded ? 'Tay trái bị khóa vì tay phải cầm vũ khí hai tay' : invSlot === 'left' && Wp.paired ? 'Vũ khí đôi chiếm cả hai tay: món ở tay trái chỉ được cất theo, không dùng' : invSlot === 'left' && gripTwo() ? 'Đang cầm hai tay: món ở tay trái được cất sau lưng' : invSlot === 'left' ? 'Cầm vũ khí ở tay trái thì nút Đỡ thành đòn tay trái. Hai vũ khí cùng loại: tư thế song kiếm' : invSlot === 'tal' ? `Đeo tối đa ${S.talSlots} bùa. Bấm để đeo hoặc tháo.` : '';
@@ -206,7 +209,7 @@ function hookDetail(wrapId, detail) {
 }
 hookDetail('gearWrap', cardFor); hookDetail('invWrap', bagDetail); hookDetail('spellWrap', cardFor);
 // bấm ô trang bị: đổi danh sách; bấm ô vật phẩm: nhớ món đang xem (các nút hành động xử lý ở hud.js)
-$('gearWrap').addEventListener('click', e => { if (e.target.closest('[data-twoh]')) { toggleTwoHand(); renderGear(); return; } const s = e.target.closest('[data-slot]'); if (s) { invSlot = s.dataset.slot; detailKey = null; renderGear(); return; } const t = e.target.closest('.tile'); if (t) detailKey = t.dataset.key; }, true);
+$('gearWrap').addEventListener('click', e => { { const tb = e.target.closest('[data-twoh]'); if (tb) { toggleTwoHand(tb.dataset.twoh); renderGear(); return; } } const s = e.target.closest('[data-slot]'); if (s) { invSlot = s.dataset.slot; detailKey = null; renderGear(); return; } const t = e.target.closest('.tile'); if (t) detailKey = t.dataset.key; }, true);
 $('invWrap').addEventListener('click', e => { const c = e.target.closest('[data-cat]'); if (c) { bagCat = c.dataset.cat; detailKey = null; renderBag(); return; } const t = e.target.closest('.tile'); if (t) { detailKey = t.dataset.key; const d = $('bagDetail'); if (d) d.innerHTML = bagDetail(detailKey); for (const x of $('invWrap').querySelectorAll('.tile')) x.classList.toggle('sel', x === t); } }, true);
 $('spellWrap').addEventListener('click', e => { const t = e.target.closest('.tile'); if (t) detailKey = t.dataset.key; }, true);
 
@@ -273,7 +276,7 @@ $('btnClsGo').addEventListener('click', () => { audioInit(); startGame(null, cls
 
 // ───────────────────────── nút bấm theo thiết bị: bàn phím, tay cầm hay cảm ứng ─────────────────────────
 let INPUT = 'kb';
-const PAD_NAME = { light: 'R1', heavy: 'R2', guard: 'L1', skill: 'L2', spell: 'L1', roll: 'B / ○', item: 'X / □', interact: 'Y / △', mount: 'A / ×', lock: 'R3', map: 'Back', inv: 'Start', itemnext: '↓', spellnext: '↑', eqnext: '→', eqprev: '←', twohand: 'Y + R1', up: 'Cần trái', down: 'Cần trái', left: 'Cần trái', right: 'Cần trái' };
+const PAD_NAME = { light: 'R1', heavy: 'R2', guard: 'L1', skill: 'L2', spell: 'L1', roll: 'B / ○', item: 'X / □', interact: 'Y / △', mount: 'A / ×', lock: 'R3', map: 'Back', inv: 'Start', itemnext: '↓', spellnext: '↑', eqnext: '→', eqprev: '←', twohand: 'Y + R1', twohandl: 'Y + L1', up: 'Cần trái', down: 'Cần trái', left: 'Cần trái', right: 'Cần trái' };
 const TOUCH_NAME = { light: 'Đánh', heavy: 'Mạnh', guard: 'Đỡ', skill: 'Kỹ năng', spell: 'Đỡ', roll: 'Lăn', item: 'Bình', interact: 'Dùng', mount: 'Ngựa', lock: 'Khóa', map: 'Bản đồ', inv: 'Hành trang', itemnext: 'Đồ', spellnext: 'Phép', eqnext: 'Vũ khí', eqprev: 'Vũ khí', twohand: '2 tay' };
 function setInput(d) { if (d === INPUT) return; INPUT = d; refreshKbd(); }
 window.addEventListener('keydown', () => setInput('kb'), true);
@@ -290,7 +293,7 @@ const HOWTO = [
   ['Đánh mạnh', ['heavy'], 'Hoặc Shift + chuột trái. Chậm nhưng phá thế đứng'],
   ['Lăn né', ['roll'], 'Trong lúc lăn ngươi bất khả xâm phạm một khoảnh khắc'],
   ['Đỡ đòn / phản đòn', ['guard'], 'Hoặc chuột phải. Giơ đúng lúc đòn chạm tới để phản đòn'],
-  ['Cầm hai tay', ['twohand'], 'Sức Mạnh ×1.5. Tay trái cầm vũ khí thì nút Đỡ thành đòn tay trái; hai vũ khí cùng loại: tư thế song kiếm'],
+  ['Cầm hai tay (phải / trái)', ['twohand', 'twohandl'], 'Sức Mạnh ×1.5. Tay trái cầm vũ khí thì nút Đỡ thành đòn tay trái; hai vũ khí cùng loại: tư thế song kiếm'],
   ['Kỹ năng vũ khí', ['skill'], 'Tốn FP. Mỗi vũ khí một kỹ năng riêng'],
   ['Niệm phép', ['spell'], 'Cần gậy hoặc ấn ở tay trái'],
   ['Uống bình / dùng đồ', ['item'], 'Đổi đồ trong ô nhanh bằng', 'itemnext'],
@@ -304,6 +307,7 @@ function renderHowto() {
   $('howtoTips').innerHTML = [
     ['Thể lực', 'Đánh, lăn, đỡ đều tốn thể lực. Hết thể lực là không thể né, hãy luôn chừa lại một cú lăn.'],
     ['Ân Điển', 'Điểm sáng vàng. Nghỉ để hồi máu, nạp bình, lên cấp. Quái thường sẽ hồi sinh khi ngươi nghỉ.'],
+    ['Sảnh Hearthhold', 'Chốn nương thân: thợ rèn, lái buôn, học giả, nữ tu và sân tập. Về bằng nút “Về Sảnh Hearthhold” trong Hành trang, menu tạm dừng hoặc khi nghỉ ở Ân Điển.'],
     ['Rune', 'Hạ quái nhận rune để lên cấp. Chết thì rune rơi lại; quay về nhặt trước khi chết lần nữa.'],
     ['Đọc đòn', 'Kẻ địch vung vũ khí lên trước khi chém. Đừng lăn quá sớm: chờ lưỡi kiếm gần chạm mới lăn.'],
   ].map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('');

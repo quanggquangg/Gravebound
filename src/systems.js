@@ -112,6 +112,18 @@ const nearStatue = () => STATUES.find(st => !S.statues.includes(st.id) && dist(P
 const nearStele = () => MAP_FRAGS.find(f => !S.frags.includes(f.id) && dist(P.x, P.y, f.x, f.y) < 50);
 const nearFlag = () => !S.coloDone && !G.colo.active && dist(P.x, P.y, FLAG.x, FLAG.y) < 50;
 const nearNote = () => NOTES.find(n => dist(P.x, P.y, n.x, n.y) < 46);
+// Sảnh Hearthhold: bàn bản đồ và cổng lớn (mở bảng dịch chuyển để ra thế giới)
+const nearHubMap = () => dist(P.x, P.y, HUB_MAP.x, HUB_MAP.y) < 64;
+const nearHubDoor = () => dist(P.x, P.y, HUB_DOOR.x, HUB_DOOR.y) < 70;
+const inHub = () => { const a = areaAt(P.x, P.y); return !!a && a.id === 'hub'; };
+// về Sảnh Hearthhold từ bất cứ đâu khi không giao chiến (như Bàn Tròn trong Elden Ring)
+function goHub() {
+  if (inHub()) { toast('Ngươi đang ở Sảnh Hearthhold'); return false; }
+  if (inCombat()) { toast('Không thể về Sảnh Hearthhold khi đang giao chiến'); return false; }
+  UI.grace.hidden = true; UI.pause.hidden = true; pend = {};
+  if (G.mode === 'menu' && atGrace()) { S.lastGrace = 22; save(); respawnAt(22); SFX.grace(); } else travelTo(22);
+  setMode('play'); G.region = null; return true;
+}
 function interact() {
   const g = nearGrace();
   if (g) { restAtGrace(g); return; }
@@ -139,6 +151,8 @@ function interact() {
   }
   const it = nearItem();
   if (it) { takeItem(it); return; }
+  if (nearHubMap()) { toggleMap(); return; }
+  if (nearHubDoor()) { openInventory('travel'); return; }
   const nt = nearNote();
   if (nt) { subtitle('“' + nt.text + '”', 5.5); SFX.glint(); const i = NOTES.indexOf(nt); if (!S.readN.includes(i)) { S.readN.push(i); save(); } }
 }
@@ -259,6 +273,11 @@ function worldChecks(dt) {
     }
   }
   firstSightTips();
+  // lần đầu tới Sảnh Hearthhold: Melyra chào và chỉ từng gian
+  if (!S.hubSeen && inHub()) {
+    S.hubSeen = 1; save();
+    later(1.2, () => subtitle('Melyra: “Đây là Sảnh Hearthhold, chốn nương thân của kẻ Gravebound. Thợ rèn ở gian tây, học giả ở gian đông, nữ tu trong nhà nguyện phía bắc, lái buôn ở chợ phía nam. Muốn ra ngoài, hãy chạm Ân Điển hoặc tới cổng lớn.”', 9));
+  }
   const key = G.touch ? '' : keyOf('interact'), gp = gatePrompt();
   let nd;
   if (nearGrace()) G.prompt = { key, text: 'Nghỉ ngơi tại Ân Điển' };
@@ -272,6 +291,8 @@ function worldChecks(dt) {
   else if (nearFlag()) G.prompt = { key, text: 'Bắt đầu thử thách' };
   else if (nearStele()) G.prompt = { key, text: 'Đọc Bia Bản Đồ' };
   else if (nearItem()) G.prompt = { key, text: 'Nhặt vật phẩm' };
+  else if (nearHubMap()) G.prompt = { key, text: 'Xem bản đồ' };
+  else if (nearHubDoor()) G.prompt = { key, text: 'Rời Sảnh Hearthhold (dịch chuyển)' };
   else if (gp) G.prompt = { key: '', text: gp };
   else if (nearNote()) G.prompt = { key, text: 'Đọc lời nhắn' };
   else G.prompt = null;
