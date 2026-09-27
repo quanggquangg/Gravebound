@@ -9,7 +9,7 @@ function setSlot(i) { SLOT = i; try { localStorage.setItem(SLOT_KEY, String(i));
 function deleteSave(i) { try { localStorage.removeItem(saveKey(i)); } catch (e) { /* bỏ qua */ } }
 function defaultSave() {
   return {
-    cls: 'knight', level: 1, stats: { vig: 10, mnd: 10, end: 10, str: 10, dex: 10, int: 10, fai: 10 }, runes: 0,
+    cls: 'knight', level: 1, stats: { vig: 10, mnd: 10, end: 10, str: 10, dex: 10, int: 10, fai: 10, arc: 10 }, runes: 0,
     flaskMax: 3, flaskFp: 0, tears: 0, lastGrace: 0, discovered: [0, 22], bossDead: false, boss2Dead: false, taken: [], lost: null,
     treeReached: false, deaths: 0, time: 0, weapons: ['broken', 'shield'], wup: {}, equipped: 'broken', off: 'shield',
     armor: 'rags', armors: ['rags'], tals: [], tal: [], talSlots: 1, spells: [], att: [], slots: 2, spellIdx: 0,
@@ -100,7 +100,11 @@ const ROLLS = {
   back: { name: 'Nhảy lùi', dur: 0.34, iframe: [0.02, 0.18], speed: 330, st: 10, back: true },
 };
 // hấp thụ sát thương từ giáp và bùa
-const poisonMul = () => (hasTal('tidelocket') ? 0 : hasTal('toadskin') ? 0.4 : 1);
+// Tinh Hoa: tăng khám phá (tỉ lệ rơi đồ), tích tụ chảy máu của vũ khí và sức kháng độc
+const arcK = () => curve(S.stats.arc || 10);
+const discovery = () => 100 + (S.stats.arc || 10);
+const bleedMul = () => 1 + arcK() * 0.5;
+const poisonMul = () => (hasTal('tidelocket') ? 0 : hasTal('toadskin') ? 0.4 : 1) * (1 - Math.min(0.35, arcK() * 0.35));
 function absorb(kind) {
   let k = 1 - armorDef().abs;
   if (kind === 'fire' && hasTal('emberscale')) k *= 0.7;

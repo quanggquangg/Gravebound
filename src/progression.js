@@ -131,11 +131,11 @@ function buyRow(npc, i) {
 // như Rennala trong Elden Ring: chỉ số về như lúc mới chọn xuất thân, rune đã dùng để lên cấp được trả lại để phân bổ lại.
 // Lần đầu miễn phí, các lần sau cần một Nước Mắt Ấu Trùng.
 // xuất thân của bản lưu: bản lưu cũ (trước khi đổi sang mười xuất thân kiểu Elden Ring) giữ chỉ số gốc cũ và cấp 1
-const LEGACY_CLS = { knight: { vig: 12, mnd: 8, end: 11, str: 13, dex: 10, int: 8, fai: 8 }, samurai: { vig: 11, mnd: 8, end: 11, str: 9, dex: 15, int: 8, fai: 8 },
-  mage: { vig: 9, mnd: 13, end: 9, str: 8, dex: 9, int: 15, fai: 7 }, cleric: { vig: 10, mnd: 13, end: 9, str: 10, dex: 8, int: 7, fai: 13 }, hunter: { vig: 11, mnd: 9, end: 12, str: 9, dex: 13, int: 8, fai: 8 } };
+const LEGACY_CLS = { knight: { vig: 12, mnd: 8, end: 11, str: 13, dex: 10, int: 8, fai: 8, arc: 10 }, samurai: { vig: 11, mnd: 8, end: 11, str: 9, dex: 15, int: 8, fai: 8, arc: 10 },
+  mage: { vig: 9, mnd: 13, end: 9, str: 8, dex: 9, int: 15, fai: 7, arc: 10 }, cleric: { vig: 10, mnd: 13, end: 9, str: 10, dex: 8, int: 7, fai: 13, arc: 10 }, hunter: { vig: 11, mnd: 9, end: 12, str: 9, dex: 13, int: 8, fai: 8, arc: 10 } };
 function clsBase() {
   const C = CLASSES.find(c => c.id === S.cls) || CLASSES[0];
-  if (S.clsV !== 2 && LEGACY_CLS[S.cls]) return { stats: LEGACY_CLS[S.cls], lv: 1 };
+  if (!S.clsV && LEGACY_CLS[S.cls]) return { stats: LEGACY_CLS[S.cls], lv: 1 };
   return { stats: C.stats, lv: C.lv };
 }
 const clsBaseLv = () => clsBase().lv;
@@ -186,7 +186,7 @@ function flaskAlloc(d) {
 }
 function applyClass(id) {
   const c = CLASSES.find(q => q.id === id) || CLASSES[0];
-  S.cls = c.id; S.clsV = 2; S.stats = Object.assign({}, c.stats); S.level = c.lv; S.twoH = false;
+  S.cls = c.id; S.clsV = 3; S.stats = Object.assign({}, c.stats); S.level = c.lv; S.twoH = false;
   S.weapons = [...new Set([...c.weapons, 'shield', c.off])];
   S.equipped = c.equipped; S.off = c.off; S.armor = c.armor; S.armors = [...new Set(['rags', c.armor])];
   S.spells = [...c.spells]; S.att = [...c.spells]; S.flaskFp = c.flaskFp;

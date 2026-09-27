@@ -12,8 +12,8 @@ function weaponAngle(phase, k, swing) {
   return 0.6;
 }
 const OL = 'rgba(10,8,6,.85)';
-// gió thổi theo từng đợt: cỏ, tán cây, áo choàng, cờ cùng lay mạnh lên rồi dịu lại
-const gust = () => 1 + 1.1 * Math.pow(Math.max(0, Math.sin(G.clock * 0.23)), 4) + 0.15 * Math.sin(G.clock * 0.9);
+// đợt gió lướt qua từng vùng như một làn sóng (không lay mọi thứ cùng lúc): 0 lặng → 1 gió mạnh nhất
+const gustAt = (x, y) => Math.pow(Math.max(0, Math.sin(G.clock * 0.23 - x * 0.0016 - y * 0.0009)), 4);
 // nét có viền tối: vẽ nét đen dày hơn trước rồi nét màu lên trên, kèm một vệt sáng mảnh
 function olLine(x0, y0, x1, y1, w, col) {
   ctx.lineCap = 'round';
@@ -2425,7 +2425,9 @@ function drawCanopies() {
     else if (enemies.some(e => !e.dead && near(e.x, e.y, 0))) a = 0.6;
     ctx.globalAlpha = a;
     const size = spr.width * (o.cr / 52);
-    const gs = gust(), swx = Math.sin(G.clock * 1.1 * Math.min(1.4, gs) + o.x * 0.013 + o.y * 0.007) * 2.2 * gs, swy = Math.cos(G.clock * 0.9 + o.x * 0.011) * 1.2 * gs;
+    // mỗi cây một nhịp riêng (tần số, pha lấy từ vị trí), biên độ nhỏ; gió tới thì lay mạnh hơn một chút rồi dịu lại
+    const h = Math.abs(Math.sin(o.x * 12.9898 + o.y * 78.233) * 43758.5453) % 1, fq = 0.55 + h * 0.45, ph = h * TAU, g = 0.7 + 0.8 * gustAt(o.x, o.y), t2 = G.clock;
+    const swx = (Math.sin(t2 * fq + ph) * 0.65 + Math.sin(t2 * fq * 2.3 + ph * 1.7) * 0.2) * g, swy = Math.cos(t2 * fq * 0.8 + ph) * 0.35 * g;
     ctx.drawImage(spr, o.x - size / 2 + swx, o.y - size / 2 - 10 + swy, size, size);
   }
   ctx.globalAlpha = 1;
@@ -2815,7 +2817,7 @@ function drawGroundDetail() {
 }
 function drawGrass() {
   if (FX_LOW || (cam.x > INST_X && G.mode !== 'title')) return;
-  const cell = 46, t = G.clock, gs = gust();
+  const cell = 46, t = G.clock;
   const benders = G.mode === 'title' ? [] : [P, ...enemies.filter(e => !e.dead && !e.T.flier && (e.z || 0) < 10 && inView(e.x, e.y, 40))];
   const gx0 = Math.floor(VIEW.x0 / cell), gx1 = Math.ceil(VIEW.x1 / cell), gy0 = Math.floor(VIEW.y0 / cell), gy1 = Math.ceil(VIEW.y1 / cell);
   ctx.lineWidth = 1.6; ctx.lineCap = 'round';
@@ -2830,7 +2832,7 @@ function drawGrass() {
       grassCache.set(key, c);
     }
     if (!c) continue;
-    const sway = (Math.sin(t * 1.8 + c.x * 0.02 + c.y * 0.013) * 3 + gs * 1.6 - 1.6) * gs;
+    const gl = gustAt(c.x, c.y), sway = Math.sin(t * (1.5 + c.h * 0.6) + c.x * 0.02 + c.y * 0.013) * (2.2 + gl * 1.2) + gl * 1.5;
     let bend = 0;
     // cỏ rạp xuống quanh người chơi và quái đi qua
     for (const b of benders) { const dx = c.x - b.x, dy = c.y - b.y; if (Math.abs(dx) > 36 || Math.abs(dy) > 36) continue; const d = Math.hypot(dx, dy); if (d < 36) bend += (dx >= 0 ? 1 : -1) * (36 - d) * 0.25; }

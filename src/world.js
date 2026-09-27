@@ -233,6 +233,13 @@ function migrateSave(s) {
     if (s.lost && typeof s.lost.x === 'number' && s.lost.x < INST_X && inRect(s.lost.x, s.lost.y, THORN_R, 40)) { const g = GRACES.find(q => q.id === 3); s.lost.x = g.x; s.lost.y = g.y + 60; }
     s.worldV = 5;
   }
+  // thêm chỉ số Tinh Hoa: bản lưu cũ nhận Tinh Hoa của xuất thân (bản lưu rất cũ nhận 10);
+  // bản lưu theo mười xuất thân có cấp tính lại để khớp tổng tám chỉ số như Elden Ring
+  if (s.stats && s.stats.arc === undefined) {
+    const C = s.clsV === 2 && typeof CLASSES !== 'undefined' ? CLASSES.find(c => c.id === s.cls) : null, arc = C ? C.stats.arc : 10;
+    s.stats.arc = arc;
+    if (C) { s.level = Math.max(1, (s.level || 1) + arc - 10); s.clsV = 3; }
+  }
   return s;
 }
 // thế giới ×1,5 → ×2: điểm ngoài thế giới nhân thêm, khu biệt lập dời sang đông 2000; vùng đã khám phá vẽ lại theo lưới mới

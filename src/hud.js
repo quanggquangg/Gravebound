@@ -642,7 +642,7 @@ const UI = { slots: $('slots'), settings: $('settings'), title: $('title'), paus
 const STAT_INFO = [
   ['vig', 'Tăng máu tối đa'], ['mnd', 'Tăng FP'], ['end', 'Tăng thể lực và sức mang vác'],
   ['str', 'Vũ khí nặng, sát thương theo Sức Mạnh'], ['dex', 'Vũ khí nhanh, cung, theo Khéo Léo'],
-  ['int', 'Phép Trí Tuệ (dùng gậy)'], ['fai', 'Phép Đức Tin (dùng ấn)'],
+  ['int', 'Phép Trí Tuệ (dùng gậy)'], ['fai', 'Phép Đức Tin (dùng ấn)'], ['arc', 'Khám phá đồ rơi, chảy máu, kháng độc'],
 ];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function setMode(m) {
@@ -710,7 +710,7 @@ function withPend(fn) {
 function derivedRows() {
   const cat = catalyst();
   return [['Máu', maxHp()], ['Thể lực', maxSt()], ['FP', maxFp()], ['Sức mang', maxLoad().toFixed(1)], ['Kiểu lăn', ROLLS[rollType()].name],
-    ['Công tay phải', Math.round(weaponAR(S.equipped))], [cat ? 'Sức mạnh phép' : 'Hấp thụ', cat ? Math.round(spellPower(S.off)) : Math.round((1 - absorb('phys')) * 100) + '%'], ['Tải trọng', equipLoad().toFixed(1)]];
+    ['Công tay phải', Math.round(weaponAR(S.equipped))], [cat ? 'Sức mạnh phép' : 'Hấp thụ', cat ? Math.round(spellPower(S.off)) : Math.round((1 - absorb('phys')) * 100) + '%'], ['Tải trọng', equipLoad().toFixed(1)], ['Khám phá', discovery()]];
 }
 function renderLevel() {
   const g = atGrace(), n = pendLv(), cost = pendCost(), next = pendCost(n + 1) - cost, left = S.runes - cost;

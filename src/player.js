@@ -744,7 +744,7 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
   if (!e.isBoss && !e.isDragon && !e.isFinal && !e.ally) provoke(e, opt.ally ? fx : P.x, opt.ally ? fy : P.y);
   if (!e.isBoss && !e.isDragon && !e.isFinal && !quiet) { const kb = e.elite ? 40 : kind === 'heavy' ? 240 : 120; e.vx += Math.cos(a) * kb; e.vy += Math.sin(a) * kb; }
   if (opt.bleed && e.hp > 0) {
-    e.bleed = (e.bleed || 0) + opt.bleed * (hasTal('blood') ? 1.4 : 1);
+    e.bleed = (e.bleed || 0) + opt.bleed * (hasTal('blood') ? 1.4 : 1) * bleedMul();
     const cap = e.bleedMax || (e.elite ? 110 : 60);
     if (e.bleed >= cap) {
       e.bleed = 0;
@@ -777,11 +777,12 @@ const DROP_MUL = 0.5, RARE_MUL = 0.35;
 function dropLoot(e) {
   const T = e.T, items = {};
   // quái thường rơi đồ thưa như dòng souls: nguyên liệu còn một nửa, trang bị hiếm chỉ khoảng 1–3%
-  for (const [id, ch, n] of T.drops || []) if (Math.random() < ch * (id === 'arrows' ? 1 : DROP_MUL)) items[id] = (items[id] || 0) + n;
+  const disc = discovery() / 110; // Tinh Hoa 10 là mức gốc
+  for (const [id, ch, n] of T.drops || []) if (Math.random() < ch * (id === 'arrows' ? 1 : DROP_MUL * disc)) items[id] = (items[id] || 0) + n;
   if (Object.keys(items).length) loot.push({ x: e.x + rand(-8, 8), y: e.y + rand(-8, 8), loot: { items }, t: 0 });
   // đồ hiếm: giáp, vũ khí hoặc bùa riêng của từng loại quái (đã có rồi thì không rơi nữa)
   const R = T.rare;
-  if (R && Math.random() < R.chance * RARE_MUL) {
+  if (R && Math.random() < R.chance * RARE_MUL * disc) {
     const [k, id, own] = R.armor ? ['armor', R.armor, S.armors] : R.weapon ? ['weapon', R.weapon, S.weapons] : ['tal', R.tal, S.tals];
     if (!own.includes(id)) loot.push({ x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), loot: { [k]: id }, t: 0, rare: true });
   }

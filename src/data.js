@@ -23,8 +23,8 @@ const USE_ORDER = ['firepot', 'knife', 'cure', 'grease', 'grune1', 'grune2'];
 // Vũ khí thường cường hóa tới +9 bằng Đá Rèn, vũ khí đặc biệt (somber) tới +5 bằng Đá Rèn U Ám.
 const LETTER = { S: 1.5, A: 1.2, B: 0.95, C: 0.7, D: 0.45, E: 0.25 };
 const DT_NAME = { phys: 'Vật lý', magic: 'Ma thuật', fire: 'Lửa', holy: 'Thánh', light: 'Sét' };
-const STAT_NAME = { vig: 'Sinh Lực', mnd: 'Tâm Trí', end: 'Bền Bỉ', str: 'Sức Mạnh', dex: 'Khéo Léo', int: 'Trí Tuệ', fai: 'Đức Tin' };
-const STAT_SHORT = { str: 'Sức', dex: 'Khéo', int: 'Trí', fai: 'Tín' };
+const STAT_NAME = { vig: 'Sinh Lực', mnd: 'Tâm Trí', end: 'Bền Bỉ', str: 'Sức Mạnh', dex: 'Khéo Léo', int: 'Trí Tuệ', fai: 'Đức Tin', arc: 'Tinh Hoa' };
+const STAT_SHORT = { str: 'Sức', dex: 'Khéo', int: 'Trí', fai: 'Tín', arc: 'Tinh' };
 const S_ = (anim, wind, act, rec, mul, range, arc, lunge, poise, o = {}) => Object.assign({ anim, wind, act, rec, mul, range, arc, lunge, poise }, o);
 const WEAPONS = {
   broken: {
@@ -64,7 +64,7 @@ const WEAPONS = {
     heavy: S_('dash', 0.5, 0.2, 0.45, 1.66, 118, 0.9, 0, 42, { dashSpeed: 700, thrust: true }),
   },
   tuskdagger: {
-    cls: 'dagger', name: "Boartusk Dagger", desc: 'Nanh lợn rừng mài sắc: rất nhanh, gây chảy máu mạnh', type: 'melee', dt: 'phys', base: 14, sc: { str: 'D', dex: 'C' }, req: { dex: 10 }, wt: 1.5, crit: 1.4, bleed: [14, 24], ash: 'flurry',
+    cls: 'dagger', name: "Boartusk Dagger", desc: 'Nanh lợn rừng mài sắc: rất nhanh, gây chảy máu mạnh', type: 'melee', dt: 'phys', base: 14, sc: { str: 'D', dex: 'C', arc: 'D' }, req: { dex: 10 }, wt: 1.5, crit: 1.4, bleed: [14, 24], ash: 'flurry',
     look: { form: 'tusk', weapon: 'sword', wlen: 20, wcol: '#efe6cc' }, cost: [7, 16],
     light: [S_('slash', 0.07, 0.08, 0.18, 0.74, 52, 1.8, 170, 8, { swing: 1 }), S_('slash', 0.06, 0.08, 0.18, 0.76, 52, 1.8, 170, 8, { swing: -1 }), S_('thrust', 0.08, 0.08, 0.24, 0.9, 60, 0.8, 220, 10, { thrust: true })],
     heavy: S_('dash', 0.3, 0.14, 0.32, 1.29, 62, 1.0, 0, 26, { dashSpeed: 800, thrust: true }),
@@ -130,7 +130,7 @@ const WEAPONS = {
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 92, 1.2, 220, 120, { off: 55, r: 118, shake: 14, quake: true }),
   },
   scythe: {
-    cls: 'reaper', name: "Wraithreaper Scythe", desc: 'Vũ khí lớn, nên cầm hai tay. Quét rộng, gây chảy máu', type: 'melee', dt: 'phys', base: 25, sc: { str: 'D', dex: 'C' }, req: { str: 12, dex: 14 }, wt: 8, somber: true, unique: true, big: true, bleed: [12, 22], ash: 'whirl',
+    cls: 'reaper', name: "Wraithreaper Scythe", desc: 'Vũ khí lớn, nên cầm hai tay. Quét rộng, gây chảy máu', type: 'melee', dt: 'phys', base: 25, sc: { str: 'D', dex: 'C', arc: 'C' }, req: { str: 12, dex: 14 }, wt: 8, somber: true, unique: true, big: true, bleed: [12, 22], ash: 'whirl',
     look: { weapon: 'scythe', wlen: 50, wcol: '#cfefff' }, cost: [13, 26],
     light: [S_('slash', 0.16, 0.13, 0.3, 1.0, 92, 3.0, 150, 16, { swing: 1 }), S_('slash', 0.14, 0.13, 0.3, 1.05, 92, 3.0, 150, 16, { swing: -1 }), S_('spin', 0.18, 0.24, 0.36, 1.3, 96, TAU, 120, 24, { turns: 1 })],
     heavy: S_('spin', 0.5, 0.42, 0.5, 1.75, 98, TAU, 60, 40, { turns: 2 }),
@@ -179,7 +179,7 @@ const WEAPONS = {
     heavy: S_('overhead', 0.5, 0.13, 0.46, 1.8, 70, 1.2, 220, 66, { off: 54, r: 58, shake: 6 }),
   },
   riverfang: {
-    cls: 'katana', name: "Riverfang Katana", desc: 'Katana lưỡi dài như răng nanh sông, tầm với xa và gây chảy máu mạnh. Cầm đôi với một katana khác để vào tư thế song kiếm', type: 'melee', dt: 'phys', base: 21, sc: { str: 'E', dex: 'B' }, req: { str: 12, dex: 16 }, wt: 7, bleed: [18, 32], ash: 'unsheathe',
+    cls: 'katana', name: "Riverfang Katana", desc: 'Katana lưỡi dài như răng nanh sông, tầm với xa và gây chảy máu mạnh. Cầm đôi với một katana khác để vào tư thế song kiếm', type: 'melee', dt: 'phys', base: 21, sc: { str: 'E', dex: 'C', arc: 'C' }, req: { str: 12, dex: 16 }, wt: 7, bleed: [18, 32], ash: 'unsheathe',
     look: { weapon: 'katana', wlen: 48, wcol: '#dfe8f4' }, cost: [10, 22],
     light: [S_('slash', 0.1, 0.1, 0.24, 0.88, 78, 2.1, 180, 11, { swing: 1 }), S_('slash', 0.09, 0.1, 0.24, 0.92, 78, 2.1, 180, 11, { swing: -1 }), S_('spin', 0.13, 0.22, 0.32, 1.18, 84, TAU, 120, 18, { turns: 1 })],
     heavy: S_('dash', 0.38, 0.16, 0.4, 1.52, 82, 1.5, 0, 36, { dashSpeed: 950, swing: -1 }),
@@ -313,22 +313,22 @@ const ASHES = {
 const ASH_ORDER = ['lunge', 'whirl', 'quake', 'flame', 'holy', 'unsheathe'];
 
 // ───────────────────────── lớp nhân vật ─────────────────────────
-// Mười xuất thân theo Elden Ring (bỏ Tinh Hoa vì game không có chỉ số này). Cấp khởi đầu tính theo tổng chỉ số
-// như Elden Ring: xuất thân mạnh sẵn thì cấp cao hơn và lên cấp đắt hơn, Kẻ Khốn Cùng cấp 1 nhưng tự do phân điểm.
+// Mười xuất thân theo Elden Ring, đủ tám chỉ số. Cấp khởi đầu = tổng tám chỉ số − 79, đúng như Elden Ring:
+// xuất thân mạnh sẵn thì cấp cao hơn và lên cấp đắt hơn, Kẻ Khốn Cùng cấp 1 nhưng tự do phân điểm.
 // id cũ (knight, mage, cleric, hunter) được giữ để bản lưu và bảng xếp hạng cũ vẫn khớp.
 const CLASSES = [
-  { id: 'knight', name: 'Kẻ Lang Bạt', desc: 'Hiệp sĩ lưu lạc: kiếm dài, kích và khiên diều.', stats: { vig: 15, mnd: 10, end: 11, str: 14, dex: 13, int: 9, fai: 9 }, weapons: ['sword', 'halberd', 'kite'], equipped: 'sword', off: 'kite', armor: 'squire', spells: [], flaskFp: 0 },
-  { id: 'warrior', name: 'Chiến Binh', desc: 'Kiếm sĩ song đao: hai thanh kiếm cong, mỗi tay một thanh.', stats: { vig: 11, mnd: 12, end: 11, str: 10, dex: 16, int: 10, fai: 8 }, weapons: ['scimitar', 'shamshir'], equipped: 'scimitar', off: 'shamshir', armor: 'leather', spells: [], flaskFp: 0 },
-  { id: 'hero', name: 'Anh Hùng', desc: 'Thủ lĩnh bộ tộc: rìu chiến và khiên diều, Sức Mạnh cao nhất.', stats: { vig: 14, mnd: 9, end: 12, str: 16, dex: 9, int: 7, fai: 8 }, weapons: ['axe', 'kite'], equipped: 'axe', off: 'kite', armor: 'squire', spells: [], flaskFp: 0 },
-  { id: 'hunter', name: 'Kẻ Cướp', desc: 'Sát thủ đường phố: dao găm, cung ngắn và khiên nhỏ phản đòn.', stats: { vig: 10, mnd: 11, end: 10, str: 9, dex: 13, int: 9, fai: 8 }, weapons: ['dagger', 'shortbow'], equipped: 'dagger', off: 'shield', armor: 'leather', spells: [], flaskFp: 0 },
-  { id: 'mage', name: 'Chiêm Tinh Sư', desc: 'Học giả đọc sao: kiếm ngắn, gậy phép và phép Đá Sao.', stats: { vig: 9, mnd: 15, end: 9, str: 8, dex: 12, int: 16, fai: 7 }, weapons: ['shortsword'], equipped: 'shortsword', off: 'staff0', armor: 'robe', spells: ['pebble'], flaskFp: 1 },
-  { id: 'cleric', name: 'Nhà Tiên Tri', desc: 'Kẻ bị trục xuất vì lời sấm: giáo ngắn, ấn thánh, Hồi Phục và Lửa Thiêng.', stats: { vig: 10, mnd: 14, end: 8, str: 11, dex: 10, int: 7, fai: 16 }, weapons: ['shortspear'], equipped: 'shortspear', off: 'seal0', armor: 'priest', spells: ['heal', 'flame'], flaskFp: 1 },
-  { id: 'samurai', name: 'Võ Sĩ', desc: 'Kiếm khách phương xa: katana, cung dài và khiên nhỏ.', stats: { vig: 12, mnd: 11, end: 13, str: 12, dex: 15, int: 9, fai: 8 }, weapons: ['katana', 'longbow'], equipped: 'katana', off: 'shield', armor: 'samurai', spells: [], flaskFp: 0 },
-  { id: 'prisoner', name: 'Tù Nhân', desc: 'Kẻ đeo mặt nạ sắt: kiếm đâm và gậy phép, vừa kiếm vừa phép.', stats: { vig: 11, mnd: 12, end: 11, str: 11, dex: 14, int: 14, fai: 6 }, weapons: ['rapier'], equipped: 'rapier', off: 'staff0', armor: 'leather', spells: ['pebble'], flaskFp: 1 },
-  { id: 'confessor', name: 'Kẻ Xưng Tội', desc: 'Mật thám của giáo hội: kiếm bản rộng, ấn thánh và phép Hồi Phục.', stats: { vig: 10, mnd: 13, end: 10, str: 12, dex: 12, int: 9, fai: 14 }, weapons: ['broadsword', 'kite'], equipped: 'broadsword', off: 'seal0', armor: 'squire', spells: ['heal'], flaskFp: 1 },
-  { id: 'wretch', name: 'Kẻ Khốn Cùng', desc: 'Trần trụi với một cây chùy gỗ. Mọi chỉ số đều 10, cấp 1: tự do phân điểm theo ý mình.', stats: { vig: 10, mnd: 10, end: 10, str: 10, dex: 10, int: 10, fai: 10 }, weapons: ['club'], equipped: 'club', off: 'shield', armor: 'rags', spells: [], flaskFp: 0 },
+  { id: 'knight', name: 'Kẻ Lang Bạt', desc: 'Hiệp sĩ lưu lạc: kiếm dài, kích và khiên diều.', stats: { vig: 15, mnd: 10, end: 11, str: 14, dex: 13, int: 9, fai: 9, arc: 7 }, weapons: ['sword', 'halberd', 'kite'], equipped: 'sword', off: 'kite', armor: 'squire', spells: [], flaskFp: 0 },
+  { id: 'warrior', name: 'Chiến Binh', desc: 'Kiếm sĩ song đao: hai thanh kiếm cong, mỗi tay một thanh.', stats: { vig: 11, mnd: 12, end: 11, str: 10, dex: 16, int: 10, fai: 8, arc: 9 }, weapons: ['scimitar', 'shamshir'], equipped: 'scimitar', off: 'shamshir', armor: 'leather', spells: [], flaskFp: 0 },
+  { id: 'hero', name: 'Anh Hùng', desc: 'Thủ lĩnh bộ tộc: rìu chiến và khiên diều, Sức Mạnh cao nhất.', stats: { vig: 14, mnd: 9, end: 12, str: 16, dex: 9, int: 7, fai: 8, arc: 11 }, weapons: ['axe', 'kite'], equipped: 'axe', off: 'kite', armor: 'squire', spells: [], flaskFp: 0 },
+  { id: 'hunter', name: 'Kẻ Cướp', desc: 'Sát thủ đường phố: dao găm, cung ngắn và khiên nhỏ phản đòn.', stats: { vig: 10, mnd: 11, end: 10, str: 9, dex: 13, int: 9, fai: 8, arc: 14 }, weapons: ['dagger', 'shortbow'], equipped: 'dagger', off: 'shield', armor: 'leather', spells: [], flaskFp: 0 },
+  { id: 'mage', name: 'Chiêm Tinh Sư', desc: 'Học giả đọc sao: kiếm ngắn, gậy phép và phép Đá Sao.', stats: { vig: 9, mnd: 15, end: 9, str: 8, dex: 12, int: 16, fai: 7, arc: 9 }, weapons: ['shortsword'], equipped: 'shortsword', off: 'staff0', armor: 'robe', spells: ['pebble'], flaskFp: 1 },
+  { id: 'cleric', name: 'Nhà Tiên Tri', desc: 'Kẻ bị trục xuất vì lời sấm: giáo ngắn, ấn thánh, Hồi Phục và Lửa Thiêng.', stats: { vig: 10, mnd: 14, end: 8, str: 11, dex: 10, int: 7, fai: 16, arc: 10 }, weapons: ['shortspear'], equipped: 'shortspear', off: 'seal0', armor: 'priest', spells: ['heal', 'flame'], flaskFp: 1 },
+  { id: 'samurai', name: 'Võ Sĩ', desc: 'Kiếm khách phương xa: katana, cung dài và khiên nhỏ.', stats: { vig: 12, mnd: 11, end: 13, str: 12, dex: 15, int: 9, fai: 8, arc: 8 }, weapons: ['katana', 'longbow'], equipped: 'katana', off: 'shield', armor: 'samurai', spells: [], flaskFp: 0 },
+  { id: 'prisoner', name: 'Tù Nhân', desc: 'Kẻ đeo mặt nạ sắt: kiếm đâm và gậy phép, vừa kiếm vừa phép.', stats: { vig: 11, mnd: 12, end: 11, str: 11, dex: 14, int: 14, fai: 6, arc: 9 }, weapons: ['rapier'], equipped: 'rapier', off: 'staff0', armor: 'leather', spells: ['pebble'], flaskFp: 1 },
+  { id: 'confessor', name: 'Kẻ Xưng Tội', desc: 'Mật thám của giáo hội: kiếm bản rộng, ấn thánh và phép Hồi Phục.', stats: { vig: 10, mnd: 13, end: 10, str: 12, dex: 12, int: 9, fai: 14, arc: 9 }, weapons: ['broadsword', 'kite'], equipped: 'broadsword', off: 'seal0', armor: 'squire', spells: ['heal'], flaskFp: 1 },
+  { id: 'wretch', name: 'Kẻ Khốn Cùng', desc: 'Trần trụi với một cây chùy gỗ. Mọi chỉ số đều 10, cấp 1: tự do phân điểm theo ý mình.', stats: { vig: 10, mnd: 10, end: 10, str: 10, dex: 10, int: 10, fai: 10, arc: 10 }, weapons: ['club'], equipped: 'club', off: 'shield', armor: 'rags', spells: [], flaskFp: 0 },
 ];
-for (const c of CLASSES) c.lv = 1 + Object.values(c.stats).reduce((a, b) => a + b, 0) - 70;
+for (const c of CLASSES) c.lv = Object.values(c.stats).reduce((a, b) => a + b, 0) - 79;
 
 // ───────────────────────── cửa hàng ở Sảnh Hearthhold ─────────────────────────
 const SHOPS = {
