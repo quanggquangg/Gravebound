@@ -305,7 +305,7 @@ kbd{font:600 11px/1 var(--ui);padding:3px 6px;border:1px solid var(--line);borde
 h1{filter:drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 0 24px rgba(226,186,96,.25))}
 .title-inner .actions::before{content:"";display:block;width:min(320px,70vw);height:9px;margin:0 auto 6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='9'%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='150'%3E%3Cstop offset='0' stop-color='%23d6b25e' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23d6b25e'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='320' x2='170'%3E%3Cstop offset='0' stop-color='%23d6b25e' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23d6b25e'/%3E%3C/linearGradient%3E%3Cpath d='M0 4.5h152' stroke='url(%23a)'/%3E%3Cpath d='M320 4.5H168' stroke='url(%23b)'/%3E%3Cpath d='M160 .5 164 4.5 160 8.5 156 4.5Z' fill='%2315120c' stroke='%23f2dc97'/%3E%3C/svg%3E") center/100% 9px no-repeat}
 .sbtn{border-top:0;position:relative}
-.sbtn:not(:last-child)::after{content:"";position:absolute;right:-5px;top:50%;width:4px;height:4px;background:var(--gold-dim);transform:translateY(-50%) rotate(45deg)}
+.subactions .sbtn:has(~ .sbtn:not([hidden]))::after{content:"";position:absolute;right:-5px;top:50%;width:4px;height:4px;background:var(--gold-dim);transform:translateY(-50%) rotate(45deg)}
 .board{background:linear-gradient(180deg,rgba(214,178,94,.04),rgba(214,178,94,0))}
 .board tr:nth-child(1) td:first-child{color:#ffe08a;text-shadow:0 0 8px rgba(255,210,110,.6)}
 kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,240,200,.15)}
@@ -352,6 +352,43 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 
 /* ── hành trang kiểu souls: ô trang bị, lưới vật phẩm, thẻ chi tiết ── */
 .panel.inv{max-width:1000px}
+/* ── nghỉ ở Ân Điển / lên cấp kiểu Elden Ring: chỉ số bên trái, chỉ số phụ và nút xác nhận bên phải ── */
+.lvpane{display:grid;gap:12px}
+.lvgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.lvgrid{grid-template-columns:1fr}}
+.lvgrid .stats li{padding:3px 0;gap:8px}
+.lvgrid .stats .nm span:first-child{font-size:17px}
+.lvgrid .stats .nm span:last-child{font-size:11.5px}
+.lvgrid .stats .val{font-size:18px}
+.lvgrid .stats .plus{width:30px;height:30px}
+.lvside{position:sticky;top:0;display:grid;gap:10px;padding:10px 14px;border:1px solid rgba(214,178,94,.22);background:rgba(214,178,94,.04)}
+.lvside .drv{grid-template-columns:repeat(2,minmax(0,1fr))}
+.lvbtns{display:flex;gap:8px;flex-wrap:wrap}
+.lvbtns .pbtn{flex:1}
+.gfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.glinks{display:flex;gap:18px;flex-wrap:wrap}
+
+/* ── menu tạm dừng kiểu Elden Ring: danh sách dọc, việc hay dùng lên đầu, nút rời game nhỏ ở dưới ── */
+.panel.pausep{max-width:400px;gap:14px}
+.pstat{margin:4px 0 0;font:500 13px/1.4 var(--ui);color:var(--muted);letter-spacing:.02em}
+.pmenu{display:grid;gap:2px}
+.pm{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:11px 16px;background:none;border:0;border-left:2px solid transparent;color:var(--parch);font:600 18px/1.2 var(--head);letter-spacing:.03em;text-align:left;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s,padding-left .15s}
+.pm kbd{font-size:11px;opacity:.75}
+@media (hover:none){.pm kbd{display:none}}
+.pm:hover,.pm:focus-visible{outline:none;color:var(--gold-hi);border-left-color:var(--gold);padding-left:22px;background:linear-gradient(90deg,rgba(214,178,94,.18),rgba(214,178,94,0))}
+.pm.main{font-size:21px;color:var(--gold-hi)}
+.pm.sub{font-size:15px;padding-block:8px;color:var(--muted)}
+.pm.sub:hover,.pm.sub:focus-visible{color:var(--gold-hi)}
+.psep{display:block;height:1px;margin:8px 16px;background:linear-gradient(90deg,rgba(214,178,94,0),rgba(214,178,94,.45),rgba(214,178,94,0))}
+.pfoot{display:flex;justify-content:center;gap:22px;border-top:1px solid var(--line);padding-top:12px}
+.lnk{appearance:none;background:none;border:0;color:var(--muted);font:500 13px/1.2 var(--ui);letter-spacing:.04em;cursor:pointer;padding:6px 4px}
+.lnk:hover,.lnk:focus-visible{color:var(--gold-hi);outline:none;text-decoration:underline;text-underline-offset:4px}
+.lnk.warn{color:#f0a58f}
+.setrow .langsel{position:static;margin:0}
+.setrow .btns2{display:flex;gap:8px;flex-wrap:wrap}
+.setrow.scr:not(:has(button:not([hidden]))){display:none}
+.title-inner .actions .mbtn{min-width:240px}
+
 /* bảng có nội dung thay đổi theo thẻ / món đang xem: khóa cứng chiều cao, chỉ phần giữa cuộn,
    để bấm qua lại không làm khung co giãn và nhảy vị trí */
 .panel.fixed{display:flex;flex-direction:column;height:min(680px,calc((100vh - 48px) / var(--uiz,1)))}
@@ -375,7 +412,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 .pbtn,.mini,.tile,.slot,.ci,.chip,.tab{transition:transform .12s ease,background-color .15s,border-color .15s,color .15s}
 .tile:hover,.slot:hover,.ci:hover{transform:translateY(-2px)}
 .pbtn:active,.mini:active,.tile:active,.slot:active,.chip:active{transform:scale(.96)}
-.hubcall{margin:10px 0 0;padding:10px 14px;border:1px solid rgba(214,178,94,.45);border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(214,178,94,.14),rgba(214,178,94,.03));font:400 14px/1.5 var(--ui);color:var(--parch)} .hubcall b{color:var(--gold-hi);font-weight:600} .hubcall em{font-style:normal;color:var(--gold-hi)}
+.hubcall{margin:6px 0 0;padding:8px 12px;font-size:13px!important;border:1px solid rgba(214,178,94,.45);border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(214,178,94,.14),rgba(214,178,94,.03));font:400 14px/1.5 var(--ui);color:var(--parch)} .hubcall b{color:var(--gold-hi);font-weight:600} .hubcall em{font-style:normal;color:var(--gold-hi)}
 .grip{display:flex;align-items:center;gap:10px;margin:10px 0 0;flex-wrap:wrap} .grip span{font:400 13px/1.4 var(--ui);color:var(--muted)} .grip .mini.on{border-color:var(--gold);background:rgba(214,178,94,.22)}
 .slot{appearance:none;position:relative;display:grid;justify-items:center;gap:2px;width:92px;padding:7px 4px 6px;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.2);color:var(--muted);cursor:pointer;font:500 11px/1.2 var(--ui)}
 .slot img,.slot .empty{width:44px;height:44px;display:block}
@@ -536,14 +573,14 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
       <div class="actions">
         <button id="btnContinue" class="mbtn" hidden>Tiếp tục</button>
         <button id="btnNew" class="mbtn">Hành trình mới</button>
+        <button id="btnSlots" class="mbtn">Ô lưu</button>
+        <button id="btnSettings" class="mbtn">Cài đặt</button>
         <div class="subactions">
           <button id="btnLore" class="sbtn">Truyền thuyết</button>
           <button id="btnControls" class="sbtn">Điều khiển</button>
           <button id="btnBoard" class="sbtn">Bảng xếp hạng</button>
           <button id="btnAch" class="sbtn">Thành tựu</button>
-          <button id="btnSlots" class="sbtn">Ô lưu</button>
           <button id="btnInstall" class="sbtn" hidden>Cài như ứng dụng</button>
-          <button id="btnSettings" class="sbtn">Cài đặt</button>
         </div>
       </div>
       <p class="fine">Game do người hâm mộ tự làm, lấy cảm hứng từ Elden Ring.</p>
@@ -611,33 +648,20 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="pause" class="overlay" hidden>
-    <div class="panel center">
-      <header><p class="eyebrow" id="pauseEyebrow">Tạm dừng</p><h2>Hơi thở giữa trận</h2></header>
-      <dl class="controls">
-        <div><dt>Lăn / chạy</dt><dd><kbd data-k="roll">Space</kbd> nhấn / giữ</dd></div>
-        <div><dt>Đánh / đánh mạnh</dt><dd>chuột trái / <kbd>Shift</kbd>+trái</dd></div>
-        <div><dt>Đỡ hoặc niệm phép / kỹ năng</dt><dd>chuột phải / <kbd>Shift</kbd>+phải</dd></div>
-        <div><dt>Dùng đồ / tương tác</dt><dd><kbd data-k="item">R</kbd> <kbd data-k="interact">E</kbd></dd></div>
-        <div><dt>Đổi đồ / đổi phép</dt><dd><kbd data-k="itemnext">↓</kbd> <kbd data-k="spellnext">↑</kbd></dd></div>
-        <div><dt>Khóa / ngựa</dt><dd><kbd data-k="lock">Q</kbd> <kbd data-k="mount">F</kbd></dd></div>
-        <div><dt>Vũ khí / bản đồ / hành trang</dt><dd><kbd data-k="eqprev">←</kbd><kbd data-k="eqnext">→</kbd> <kbd data-k="map">G</kbd> <kbd data-k="inv">I</kbd></dd></div>
-      </dl>
-      <div class="row">
-        <button id="btnResume" class="pbtn">Tiếp tục</button>
-        <button id="btnHowto" class="pbtn">Cách chơi</button>
-        <button id="btnSound" class="pbtn">Âm thanh: bật</button>
-        <button id="btnFx" class="pbtn">Đồ họa: cao</button>
-        <button id="btnInv" class="pbtn">Hành trang</button>
-        <button id="btnPauseHub" class="pbtn">Về Sảnh Hearthhold</button>
-        <button id="btnPauseLore" class="pbtn">Truyền thuyết</button>
-        <button id="btnPauseFull" class="pbtn" hidden>Toàn màn hình</button>
-        <button id="btnRot" class="pbtn" hidden>Xoay ngang: bật</button>
-        <button id="btnPauseAch" class="pbtn">Thành tựu</button>
-        <button id="btnPauseSet" class="pbtn">Cài đặt</button>
-        <button id="btnPauseNew" class="pbtn ghost">Hành trình mới</button>
-        <button id="btnQuit" class="pbtn ghost">Về màn hình chính</button>
-      </div>
-      <div class="langsel" data-notr role="group" aria-label="Language"><button type="button" data-lang="vi">Tiếng Việt</button><button type="button" data-lang="en">English</button></div>
+    <div class="panel center pausep">
+      <header><p class="eyebrow" id="pauseEyebrow">Tạm dừng</p><h2>Hơi thở giữa trận</h2><p class="pstat" id="pauseStat"></p></header>
+      <nav class="pmenu" aria-label="Tạm dừng">
+        <button id="btnResume" class="pm main"><span>Tiếp tục</span><kbd>Esc</kbd></button>
+        <button id="btnInv" class="pm"><span>Hành trang</span><kbd data-k="inv">I</kbd></button>
+        <button id="btnPauseMap" class="pm"><span>Bản đồ</span><kbd data-k="map">G</kbd></button>
+        <button id="btnPauseHub" class="pm"><span>Về Sảnh Hearthhold</span></button>
+        <i class="psep" aria-hidden="true"></i>
+        <button id="btnHowto" class="pm sub"><span>Cách chơi</span></button>
+        <button id="btnPauseSet" class="pm sub"><span>Cài đặt</span></button>
+        <button id="btnPauseLore" class="pm sub"><span>Truyền thuyết</span></button>
+        <button id="btnPauseAch" class="pm sub"><span>Thành tựu</span></button>
+      </nav>
+      <div class="pfoot"><button id="btnQuit" class="lnk">Về màn hình chính</button><button id="btnPauseNew" class="lnk">Hành trình mới</button></div>
     </div>
   </section>
 
@@ -657,7 +681,11 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <h3 class="sec">Âm thanh</h3>
         <label class="setrow"><span>Nhạc nền</span><input type="range" id="setMusic" min="0" max="100" step="5"></label>
         <label class="setrow"><span>Hiệu ứng âm thanh</span><input type="range" id="setSfx" min="0" max="100" step="5"></label>
+        <div class="setrow"><span>Tắt / bật tiếng <kbd>M</kbd></span><button type="button" id="btnSound" class="mini">Âm thanh: bật</button></div>
         <h3 class="sec">Hiển thị</h3>
+        <div class="setrow"><span>Ngôn ngữ</span><div class="langsel" data-notr role="group" aria-label="Language"><button type="button" data-lang="vi">Tiếng Việt</button><button type="button" data-lang="en">English</button></div></div>
+        <div class="setrow"><span>Chất lượng đồ họa</span><button type="button" id="btnFx" class="mini">Đồ họa: cao</button></div>
+        <div class="setrow scr"><span>Màn hình</span><div class="btns2"><button type="button" id="btnPauseFull" class="mini" hidden>Toàn màn hình</button><button type="button" id="btnRot" class="mini" hidden>Xoay ngang: bật</button></div></div>
         <div class="setrow"><span>Rung màn hình</span><div class="seg" id="setShake"><button type="button" data-v="1">Bật</button><button type="button" data-v="0">Tắt</button></div></div>
         <div class="setrow"><span>Cỡ chữ</span><div class="seg" id="setText"><button type="button" data-v="0.9">Nhỏ</button><button type="button" data-v="1">Vừa</button><button type="button" data-v="1.2">Lớn</button></div></div>
         <h3 class="sec">Phím bấm</h3>
@@ -694,15 +722,20 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <button class="tab" role="tab" id="tabTravel" aria-selected="false">Dịch chuyển</button>
         <button class="tab" role="tab" id="tabBeast" aria-selected="false">Sổ tay</button>
       </div>
-      <div id="paneLevel" class="scroll" style="display:grid;gap:14px">
+      <div id="paneLevel" class="scroll lvpane">
         <div class="lvtop">
           <div><span class="k">Cấp</span><b id="lvNum">1</b></div>
           <div><span class="k">Rune còn lại</span><b id="lvRunes">0</b></div>
           <div><span class="k">Cấp tiếp theo cần</span><b id="lvCost">0</b></div>
         </div>
-        <ul class="stats" id="statList"></ul>
-        <p class="note" id="lvFieldNote">Lên cấp khi nghỉ tại Ân Điển.</p>
-        <dl class="drv" id="derived"></dl>
+        <div class="lvgrid">
+          <ul class="stats" id="statList"></ul>
+          <aside class="lvside">
+            <dl class="drv" id="derived"></dl>
+            <p class="note" id="lvFieldNote">Lên cấp khi nghỉ tại Ân Điển.</p>
+            <span id="lvConfirm" class="lvbtns"><button id="btnLvOk" class="pbtn">Xác nhận</button><button id="btnLvCancel" class="pbtn ghost">Đặt lại</button></span>
+          </aside>
+        </div>
         <div id="journal"></div>
       </div>
       <div id="paneGear" class="scroll" hidden><div id="gearWrap"></div></div>
@@ -717,7 +750,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <p class="note" id="travelNote"></p>
         <ul class="travel" id="travelList"></ul>
       </div>
-      <div class="row"><span id="lvConfirm" class="row"><button id="btnLvOk" class="pbtn">Xác nhận</button><button id="btnLvCancel" class="pbtn ghost">Đặt lại</button></span><button id="btnHub" class="pbtn ghost">Về Sảnh Hearthhold</button><button id="btnWait" class="pbtn ghost" hidden>Chờ đến đêm</button><button id="btnLeave" class="pbtn">Rời đi</button></div>
+      <div class="gfoot"><div class="glinks"><button id="btnHub" class="lnk">Về Sảnh Hearthhold</button><button id="btnWait" class="lnk" hidden>Chờ đến đêm</button></div><button id="btnLeave" class="pbtn">Rời đi</button></div>
     </div>
   </section>
 

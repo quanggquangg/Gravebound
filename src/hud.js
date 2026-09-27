@@ -713,8 +713,8 @@ function withPend(fn) {
 }
 function derivedRows() {
   const cat = catalyst();
-  return [['Máu', maxHp()], ['Thể lực', maxSt()], ['FP', maxFp()], ['Sức mang', maxLoad().toFixed(1)], ['Kiểu lăn', ROLLS[rollType()].name],
-    ['Công tay phải', Math.round(weaponAR(S.equipped))], [cat ? 'Sức mạnh phép' : 'Hấp thụ', cat ? Math.round(spellPower(S.off)) : Math.round((1 - absorb('phys')) * 100) + '%'], ['Tải trọng', equipLoad().toFixed(1)], ['Khám phá', discovery()]];
+  return [['Máu', maxHp()], ['Thể lực', maxSt()], ['FP', maxFp()], ['Kiểu lăn', ROLLS[rollType()].name],
+    ['Công tay phải', Math.round(weaponAR(S.equipped))], [cat ? 'Sức mạnh phép' : 'Hấp thụ', cat ? Math.round(spellPower(S.off)) : Math.round((1 - absorb('phys')) * 100) + '%'], ['Tải trọng', equipLoad().toFixed(1) + ' / ' + maxLoad().toFixed(1)], ['Khám phá', discovery()]];
 }
 function renderLevel() {
   const g = atGrace(), n = pendLv(), cost = pendCost(), next = pendCost(n + 1) - cost, left = S.runes - cost;
@@ -927,7 +927,7 @@ function togglePause() {
   if (!UI.lore.hidden || !UI.controls.hidden || !UI.ach.hidden || !UI.settings.hidden || !UI.slots.hidden) { closeInfo(); return; }
   if (G.mode === 'map') { toggleMap(); return; }
   if (G.mode === 'menu' && !UI.grace.hidden && menuAt === 'field') { closeGrace(); return; }
-  if (G.mode === 'play') { setMode('pause'); UI.pause.hidden = false; $('pauseEyebrow').textContent = 'Tạm dừng · Độ khó ' + DIFF.name; resetPauseNew(); $('btnResume').focus({ preventScroll: true }); }
+  if (G.mode === 'play') { setMode('pause'); UI.pause.hidden = false; $('pauseEyebrow').textContent = 'Tạm dừng'; $('pauseStat').textContent = (regionAt(P.x, P.y) || '') + ' · Cấp ' + S.level + ' · ' + fmtTime(S.time) + ' · Chết ' + S.deaths + ' · Độ khó ' + DIFF.name; $('btnPauseHub').hidden = inHub(); resetPauseNew(); refreshKbd(UI.pause); $('btnResume').focus({ preventScroll: true }); }
   else if (G.mode === 'pause') { UI.pause.hidden = true; setMode('play'); }
   else if (G.mode === 'menu' && !UI.shop.hidden) closeShop();
   else if (G.mode === 'menu' && !UI.grace.hidden) closeGrace();
@@ -940,6 +940,7 @@ function togglePause() {
 function toggleMute() { muted = !muted; $('btnSound').textContent = 'Âm thanh: ' + (muted ? 'tắt' : 'bật'); toast(muted ? 'Đã tắt âm thanh' : 'Đã bật âm thanh'); }
 $('btnResume').onclick = togglePause;
 $('btnInv').onclick = () => openInventory();
+$('btnPauseMap').onclick = () => { UI.pause.hidden = true; setMode('play'); toggleMap(); };
 // bảng Truyền thuyết / Điều khiển: mở từ màn hình chính hoặc từ menu tạm dừng
 let infoBack = null;
 function openInfo(el, from) {
