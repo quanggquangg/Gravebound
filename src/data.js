@@ -28,112 +28,168 @@ const STAT_SHORT = { str: 'Sức', dex: 'Khéo', int: 'Trí', fai: 'Tín' };
 const S_ = (anim, wind, act, rec, mul, range, arc, lunge, poise, o = {}) => Object.assign({ anim, wind, act, rec, mul, range, arc, lunge, poise }, o);
 const WEAPONS = {
   broken: {
-    name: "Shattered Blade", desc: 'Lưỡi kiếm mẻ, ngắn và yếu', type: 'melee', dt: 'phys', base: 15, sc: { str: 'E', dex: 'E' }, req: { str: 6 }, wt: 2, ash: 'lunge',
+    cls: 'straight', name: "Shattered Blade", desc: 'Lưỡi kiếm mẻ, ngắn và yếu', type: 'melee', dt: 'phys', base: 15, sc: { str: 'E', dex: 'E' }, req: { str: 6 }, wt: 2, ash: 'lunge',
     look: { form: 'broken', weapon: 'sword', wlen: 26, wcol: '#9a958a' }, cost: [11, 22],
     light: [S_('slash', 0.12, 0.1, 0.26, 0.75, 56, 2.0, 160, 10, { swing: 1 }), S_('slash', 0.1, 0.1, 0.26, 0.8, 56, 2.0, 160, 10, { swing: -1 }), S_('thrust', 0.14, 0.1, 0.34, 0.95, 66, 0.8, 220, 14, { thrust: true })],
     heavy: S_('overhead', 0.46, 0.12, 0.44, 1.31, 66, 1.2, 200, 38, { off: 50, r: 44 }),
   },
   dagger: {
-    name: "Chipped Dagger", desc: 'Rất nhanh, đâm chí mạng đau hơn', type: 'melee', dt: 'phys', base: 12, sc: { str: 'E', dex: 'C' }, req: { dex: 8 }, wt: 1.5, crit: 1.35, bleed: [8, 14], ash: 'flurry',
+    cls: 'dagger', name: "Chipped Dagger", desc: 'Rất nhanh, đâm chí mạng đau hơn', type: 'melee', dt: 'phys', base: 12, sc: { str: 'E', dex: 'C' }, req: { dex: 8 }, wt: 1.5, crit: 1.35, bleed: [8, 14], ash: 'flurry',
     look: { form: 'dagger', weapon: 'sword', wlen: 18, wcol: '#c8c4b8' }, cost: [7, 16],
     light: [S_('slash', 0.07, 0.08, 0.18, 0.7, 50, 1.8, 170, 8, { swing: 1 }), S_('slash', 0.06, 0.08, 0.18, 0.72, 50, 1.8, 170, 8, { swing: -1 }), S_('thrust', 0.08, 0.08, 0.24, 0.85, 58, 0.8, 220, 10, { thrust: true })],
     heavy: S_('dash', 0.3, 0.14, 0.32, 1.22, 60, 1.0, 0, 26, { dashSpeed: 800, thrust: true }),
   },
   sword: {
-    name: "Wanderer's Longsword", desc: 'Cân bằng, đáng tin cậy', type: 'melee', dt: 'phys', base: 20, sc: { str: 'D', dex: 'D' }, req: { str: 10, dex: 10 }, wt: 3.5, ash: 'lunge',
+    cls: 'straight', name: "Wanderer's Longsword", desc: 'Cân bằng, đáng tin cậy', type: 'melee', dt: 'phys', base: 20, sc: { str: 'D', dex: 'D' }, req: { str: 10, dex: 10 }, wt: 3.5, ash: 'lunge',
     look: { weapon: 'sword', wlen: 38, wcol: '#dcdcd2' }, cost: [11, 22],
     light: [S_('slash', 0.12, 0.1, 0.26, 1, 66, 2.0, 170, 14, { swing: 1 }), S_('slash', 0.1, 0.1, 0.26, 1.05, 66, 2.0, 170, 14, { swing: -1 }), S_('thrust', 0.14, 0.1, 0.34, 1.3, 86, 0.8, 260, 22, { thrust: true })],
     heavy: S_('overhead', 0.46, 0.12, 0.44, 1.75, 80, 1.2, 230, 50, { off: 60, r: 56, shake: 5 }),
   },
   rapier: {
-    name: "Willowthorn Rapier", desc: 'Kiếm đâm mảnh, tầm xa, chí mạng cao', type: 'melee', dt: 'phys', base: 19, sc: { str: 'E', dex: 'B' }, req: { str: 8, dex: 14 }, wt: 3, crit: 1.3, ash: 'needle',
+    cls: 'thrust', name: "Willowthorn Rapier", desc: 'Kiếm đâm mảnh, tầm xa, chí mạng cao', type: 'melee', dt: 'phys', base: 19, sc: { str: 'E', dex: 'B' }, req: { str: 8, dex: 14 }, wt: 3, crit: 1.3, ash: 'needle',
     look: { form: 'rapier', weapon: 'spear', wlen: 40, wcol: '#e6e6ee' }, cost: [9, 20],
     light: [S_('thrust', 0.09, 0.09, 0.22, 0.9, 88, 0.7, 140, 10, { thrust: true }), S_('thrust', 0.08, 0.09, 0.22, 0.92, 88, 0.7, 140, 10, { thrust: true }), S_('thrust', 0.1, 0.1, 0.3, 1.15, 94, 0.7, 220, 14, { thrust: true })],
     heavy: S_('dash', 0.4, 0.16, 0.36, 1.57, 100, 0.8, 0, 32, { dashSpeed: 900, thrust: true }),
   },
   katana: {
-    name: "Ashen Katana", desc: 'Nhanh, gây chảy máu', type: 'melee', dt: 'phys', base: 19, sc: { str: 'E', dex: 'B' }, req: { str: 10, dex: 14 }, wt: 5.5, bleed: [16, 30], ash: 'unsheathe',
+    cls: 'katana', name: "Ashen Katana", desc: 'Nhanh, gây chảy máu', type: 'melee', dt: 'phys', base: 19, sc: { str: 'E', dex: 'B' }, req: { str: 10, dex: 14 }, wt: 5.5, bleed: [16, 30], ash: 'unsheathe',
     look: { weapon: 'katana', wlen: 42, wcol: '#e8ecf2' }, cost: [9, 20],
     light: [S_('slash', 0.09, 0.09, 0.22, 0.85, 70, 2.1, 180, 10, { swing: 1 }), S_('slash', 0.08, 0.09, 0.22, 0.9, 70, 2.1, 180, 10, { swing: -1 }), S_('spin', 0.12, 0.22, 0.3, 1.15, 76, TAU, 120, 16, { turns: 1 })],
     heavy: S_('dash', 0.36, 0.16, 0.38, 1.49, 74, 1.5, 0, 34, { dashSpeed: 950, swing: -1 }),
   },
   spear: {
-    name: "Cavalier Spear", desc: 'Đâm xa, góc đánh hẹp', type: 'melee', dt: 'phys', base: 21, sc: { str: 'C', dex: 'D' }, req: { str: 12, dex: 11 }, wt: 6, ash: 'impale',
+    cls: 'spear', name: "Cavalier Spear", desc: 'Đâm xa, góc đánh hẹp', type: 'melee', dt: 'phys', base: 21, sc: { str: 'C', dex: 'D' }, req: { str: 12, dex: 11 }, wt: 6, ash: 'impale',
     look: { weapon: 'spear', wlen: 58, wcol: '#d2ccba' }, cost: [10, 22],
     light: [S_('thrust', 0.12, 0.1, 0.28, 0.95, 104, 0.75, 120, 12, { thrust: true }), S_('thrust', 0.1, 0.1, 0.28, 0.95, 104, 0.75, 120, 12, { thrust: true }), S_('slash', 0.16, 0.13, 0.36, 1.15, 100, 2.4, 150, 18, { swing: 1 })],
     heavy: S_('dash', 0.5, 0.2, 0.45, 1.66, 118, 0.9, 0, 42, { dashSpeed: 700, thrust: true }),
   },
   tuskdagger: {
-    name: "Boartusk Dagger", desc: 'Nanh lợn rừng mài sắc: rất nhanh, gây chảy máu mạnh', type: 'melee', dt: 'phys', base: 14, sc: { str: 'D', dex: 'C' }, req: { dex: 10 }, wt: 1.5, crit: 1.4, bleed: [14, 24], ash: 'flurry',
+    cls: 'dagger', name: "Boartusk Dagger", desc: 'Nanh lợn rừng mài sắc: rất nhanh, gây chảy máu mạnh', type: 'melee', dt: 'phys', base: 14, sc: { str: 'D', dex: 'C' }, req: { dex: 10 }, wt: 1.5, crit: 1.4, bleed: [14, 24], ash: 'flurry',
     look: { form: 'tusk', weapon: 'sword', wlen: 20, wcol: '#efe6cc' }, cost: [7, 16],
     light: [S_('slash', 0.07, 0.08, 0.18, 0.74, 52, 1.8, 170, 8, { swing: 1 }), S_('slash', 0.06, 0.08, 0.18, 0.76, 52, 1.8, 170, 8, { swing: -1 }), S_('thrust', 0.08, 0.08, 0.24, 0.9, 60, 0.8, 220, 10, { thrust: true })],
     heavy: S_('dash', 0.3, 0.14, 0.32, 1.29, 62, 1.0, 0, 26, { dashSpeed: 800, thrust: true }),
   },
   gargspear: {
-    name: "Gargoyle's Glaive", desc: 'Giáo đá của tượng quỷ: đâm xa, chém rộng, phá thế tốt', type: 'melee', dt: 'phys', base: 27, sc: { str: 'B', dex: 'D' }, req: { str: 16, dex: 12 }, wt: 8, ash: 'impale',
+    cls: 'halberd', name: "Gargoyle's Glaive", desc: 'Giáo đá của tượng quỷ: đâm xa, chém rộng, phá thế tốt', type: 'melee', dt: 'phys', base: 27, sc: { str: 'B', dex: 'D' }, req: { str: 16, dex: 12 }, wt: 8, ash: 'impale',
     look: { form: 'halberd', weapon: 'spear', wlen: 60, wcol: '#8a857a' }, cost: [12, 24],
     light: [S_('thrust', 0.14, 0.1, 0.3, 1.0, 106, 0.75, 120, 16, { thrust: true }), S_('slash', 0.16, 0.13, 0.36, 1.2, 102, 2.4, 150, 22, { swing: 1 }), S_('slash', 0.14, 0.13, 0.36, 1.2, 102, 2.4, 150, 22, { swing: -1 })],
     heavy: S_('dash', 0.5, 0.2, 0.45, 1.75, 120, 0.9, 0, 48, { dashSpeed: 700, thrust: true }),
   },
   crystalpincer: {
-    name: "Karkos' Pincer", desc: 'Càng của Vua Cua Pha Lê: chặt mạnh, gây sát thương ma thuật', type: 'melee', dt: 'magic', base: 26, sc: { str: 'C', int: 'B' }, req: { str: 14, int: 14 }, wt: 7, somber: true, unique: true, ash: 'crystal',
+    cls: 'axe', name: "Karkos' Pincer", desc: 'Càng của Vua Cua Pha Lê: chặt mạnh, gây sát thương ma thuật', type: 'melee', dt: 'magic', base: 26, sc: { str: 'C', int: 'B' }, req: { str: 14, int: 14 }, wt: 7, somber: true, unique: true, ash: 'crystal',
     look: { form: 'pincer', weapon: 'axe', wlen: 38, wcol: '#cfefff', glow: '#9fd0ff' }, cost: [13, 26],
     light: [S_('slash', 0.15, 0.11, 0.3, 1.08, 66, 2.2, 170, 22, { swing: 1 }), S_('slash', 0.13, 0.11, 0.3, 1.12, 66, 2.2, 170, 22, { swing: -1 }), S_('overhead', 0.2, 0.12, 0.4, 1.4, 72, 1.2, 200, 32, { off: 52, r: 52, shake: 4 })],
     heavy: S_('overhead', 0.5, 0.13, 0.46, 1.89, 76, 1.2, 230, 66, { off: 56, r: 64, shake: 6 }),
   },
   goldhorn: {
-    name: "Goldhorn Maul", desc: 'Hai tay. Sừng vàng của Dê Chúa: nện xuống bằng sức mạnh thánh, không bị ngắt đòn', type: 'melee', dt: 'holy', base: 30, sc: { str: 'B', fai: 'C' }, req: { str: 22, fai: 14 }, wt: 14, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'horncharge',
+    cls: 'hammer', name: "Goldhorn Maul", desc: 'Hai tay. Sừng vàng của Dê Chúa: nện xuống bằng sức mạnh thánh, không bị ngắt đòn', type: 'melee', dt: 'holy', base: 30, sc: { str: 'B', fai: 'C' }, req: { str: 22, fai: 14 }, wt: 14, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'horncharge',
     look: { form: 'horn', weapon: 'club', wlen: 46, wcol: '#e2c26c', glow: '#ffd76a' }, cost: [24, 40],
     light: [S_('overhead', 0.3, 0.13, 0.48, 1.15, 86, 1.2, 180, 52, { off: 62, r: 64, shake: 6 }), S_('slash', 0.3, 0.14, 0.52, 1.21, 86, 2.3, 180, 52, { swing: -1 })],
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 94, 1.2, 220, 125, { off: 55, r: 120, shake: 14, quake: true }),
   },
   axe: {
-    name: "Warborn Axe", desc: 'Một tay, chặt mạnh, phá thế tốt', type: 'melee', dt: 'phys', base: 24, sc: { str: 'B' }, req: { str: 15 }, wt: 6, ash: 'warcry',
+    cls: 'axe', name: "Warborn Axe", desc: 'Một tay, chặt mạnh, phá thế tốt', type: 'melee', dt: 'phys', base: 24, sc: { str: 'B' }, req: { str: 15 }, wt: 6, ash: 'warcry',
     look: { weapon: 'axe', wlen: 36, wcol: '#b8b2a4' }, cost: [13, 26],
     light: [S_('slash', 0.15, 0.11, 0.3, 1.05, 64, 2.2, 170, 20, { swing: 1 }), S_('slash', 0.13, 0.11, 0.3, 1.1, 64, 2.2, 170, 20, { swing: -1 }), S_('overhead', 0.2, 0.12, 0.4, 1.35, 70, 1.2, 200, 30, { off: 52, r: 50, shake: 4 })],
     heavy: S_('overhead', 0.5, 0.13, 0.46, 1.84, 74, 1.2, 230, 62, { off: 56, r: 60, shake: 6 }),
   },
   crystalsword: {
-    name: "Crystalmere Blade", desc: 'Lưỡi kiếm pha lê, gây sát thương ma thuật', type: 'melee', dt: 'magic', base: 21, sc: { str: 'D', int: 'B' }, req: { str: 10, int: 16 }, wt: 5, ash: 'crystal', unique: true,
+    cls: 'straight', name: "Crystalmere Blade", desc: 'Lưỡi kiếm pha lê, gây sát thương ma thuật', type: 'melee', dt: 'magic', base: 21, sc: { str: 'D', int: 'B' }, req: { str: 10, int: 16 }, wt: 5, ash: 'crystal', unique: true,
     look: { form: 'crystal', weapon: 'sword', wlen: 40, wcol: '#bfe4ff', glow: '#9fd0ff' }, cost: [12, 24],
     light: [S_('slash', 0.12, 0.1, 0.27, 1, 68, 2.0, 170, 16, { swing: 1 }), S_('slash', 0.1, 0.1, 0.27, 1.05, 68, 2.0, 170, 16, { swing: -1 }), S_('thrust', 0.14, 0.1, 0.34, 1.3, 88, 0.8, 250, 22, { thrust: true })],
     heavy: S_('overhead', 0.46, 0.12, 0.44, 1.75, 80, 1.2, 230, 50, { off: 60, r: 58, shake: 5 }),
   },
   royalsword: {
-    name: "Royal Sunblade", desc: 'Kiếm của nhà vô địch hoàng gia, pha sức mạnh thánh', type: 'melee', dt: 'holy', base: 30, sc: { str: 'C', dex: 'C', fai: 'C' }, req: { str: 16, dex: 14, fai: 12 }, wt: 8, somber: true, unique: true, ash: 'holy',
+    cls: 'straight', name: "Royal Sunblade", desc: 'Kiếm của nhà vô địch hoàng gia, pha sức mạnh thánh', type: 'melee', dt: 'holy', base: 30, sc: { str: 'C', dex: 'C', fai: 'C' }, req: { str: 16, dex: 14, fai: 12 }, wt: 8, somber: true, unique: true, ash: 'holy',
     look: { form: 'royal', weapon: 'sword', wlen: 46, wcol: '#ffe7a0', glow: '#ffd76a' }, cost: [13, 26],
     light: [S_('slash', 0.13, 0.11, 0.28, 1.05, 76, 2.2, 180, 20, { swing: 1 }), S_('slash', 0.11, 0.11, 0.28, 1.1, 76, 2.2, 180, 20, { swing: -1 }), S_('spin', 0.14, 0.22, 0.34, 1.3, 82, TAU, 120, 26, { turns: 1 })],
     heavy: S_('overhead', 0.48, 0.13, 0.46, 1.84, 86, 1.2, 240, 56, { off: 64, r: 66, shake: 6, wave: true }),
   },
   varek: {
-    name: "Varek's Goldbrand", desc: 'Hai tay. Đòn mạnh phóng ra sóng ánh vàng', type: 'melee', dt: 'phys', base: 30, sc: { str: 'C', dex: 'D' }, req: { str: 16, dex: 10 }, wt: 10, somber: true, unique: true, twoHanded: true, ash: 'wave',
+    cls: 'greatsword', name: "Varek's Goldbrand", desc: 'Hai tay. Đòn mạnh phóng ra sóng ánh vàng', type: 'melee', dt: 'phys', base: 30, sc: { str: 'C', dex: 'D' }, req: { str: 16, dex: 10 }, wt: 10, somber: true, unique: true, twoHanded: true, ash: 'wave',
     look: { form: 'varek', weapon: 'greatsword', wlen: 44, wcol: '#e0c068', glow: true }, cost: [14, 28],
     light: [S_('slash', 0.15, 0.11, 0.3, 1.05, 76, 2.2, 190, 20, { swing: 1 }), S_('slash', 0.13, 0.11, 0.3, 1.09, 76, 2.2, 190, 20, { swing: -1 }), S_('overhead', 0.2, 0.13, 0.42, 1.34, 82, 1.2, 240, 30, { off: 70, r: 66, shake: 5 })],
     heavy: S_('overhead', 0.55, 0.15, 0.5, 1.84, 88, 1.2, 260, 60, { off: 72, r: 78, wave: true, shake: 8 }),
   },
   greatsword: {
-    name: "Dragonfang Greatsword", desc: 'Hai tay. Chậm, cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 32, sc: { str: 'B' }, req: { str: 22 }, wt: 16, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'leap',
+    cls: 'colossal', name: "Dragonfang Greatsword", desc: 'Hai tay. Chậm, cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 32, sc: { str: 'B' }, req: { str: 22 }, wt: 16, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'leap',
     look: { form: 'slab', weapon: 'greatsword', wlen: 52, wcol: '#c9b48a' }, cost: [26, 42],
     light: [S_('slash', 0.3, 0.14, 0.45, 1.15, 94, 2.6, 200, 38, { swing: 1 }), S_('slash', 0.28, 0.14, 0.5, 1.21, 94, 2.6, 200, 38, { swing: -1 }), S_('overhead', 0.36, 0.15, 0.55, 1.39, 96, 1.2, 220, 55, { off: 78, r: 80, shake: 8 })],
     heavy: S_('spin', 0.6, 0.36, 0.6, 1.75, 104, TAU, 100, 90, { turns: 1 }),
   },
   greataxe: {
-    name: "Goldspire Greataxe", desc: 'Hai tay. Bổ xuống làm rung chuyển mặt đất', type: 'melee', dt: 'phys', base: 34, sc: { str: 'A' }, req: { str: 26 }, wt: 15, twoHanded: true, hyper: true, ash: 'wildspin',
+    cls: 'greataxe', name: "Goldspire Greataxe", desc: 'Hai tay. Bổ xuống làm rung chuyển mặt đất', type: 'melee', dt: 'phys', base: 34, sc: { str: 'A' }, req: { str: 26 }, wt: 15, twoHanded: true, hyper: true, ash: 'wildspin',
     look: { form: 'greataxe', weapon: 'axe', wlen: 48, wcol: '#a8a298' }, cost: [26, 42],
     light: [S_('slash', 0.32, 0.14, 0.48, 1.15, 92, 2.5, 200, 44, { swing: 1 }), S_('overhead', 0.34, 0.14, 0.52, 1.27, 92, 1.2, 200, 56, { off: 74, r: 76, shake: 8 })],
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 96, 1.2, 220, 110, { off: 60, r: 116, shake: 14, quake: true }),
   },
   hammer: {
-    name: "Warden's Maul", desc: 'Hai tay. Phá thế cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 30, sc: { str: 'A' }, req: { str: 20 }, wt: 14, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'quake',
+    cls: 'hammer', name: "Warden's Maul", desc: 'Hai tay. Phá thế cực mạnh, không bị ngắt đòn', type: 'melee', dt: 'phys', base: 30, sc: { str: 'A' }, req: { str: 20 }, wt: 14, somber: true, unique: true, twoHanded: true, hyper: true, ash: 'quake',
     look: { form: 'warhammer', weapon: 'club', wlen: 44, wcol: '#8f8a80' }, cost: [24, 40],
     light: [S_('overhead', 0.3, 0.13, 0.48, 1.15, 84, 1.2, 180, 50, { off: 62, r: 62, shake: 6 }), S_('slash', 0.3, 0.14, 0.52, 1.21, 84, 2.3, 180, 50, { swing: -1 })],
     heavy: S_('overhead', 0.8, 0.16, 0.62, 1.75, 92, 1.2, 220, 120, { off: 55, r: 118, shake: 14, quake: true }),
   },
   scythe: {
-    name: "Wraithreaper Scythe", desc: 'Hai tay. Quét rộng, gây chảy máu', type: 'melee', dt: 'phys', base: 25, sc: { str: 'D', dex: 'C' }, req: { str: 12, dex: 14 }, wt: 8, somber: true, unique: true, twoHanded: true, bleed: [12, 22], ash: 'whirl',
+    cls: 'reaper', name: "Wraithreaper Scythe", desc: 'Hai tay. Quét rộng, gây chảy máu', type: 'melee', dt: 'phys', base: 25, sc: { str: 'D', dex: 'C' }, req: { str: 12, dex: 14 }, wt: 8, somber: true, unique: true, twoHanded: true, bleed: [12, 22], ash: 'whirl',
     look: { weapon: 'scythe', wlen: 50, wcol: '#cfefff' }, cost: [13, 26],
     light: [S_('slash', 0.16, 0.13, 0.3, 1.0, 92, 3.0, 150, 16, { swing: 1 }), S_('slash', 0.14, 0.13, 0.3, 1.05, 92, 3.0, 150, 16, { swing: -1 }), S_('spin', 0.18, 0.24, 0.36, 1.3, 96, TAU, 120, 24, { turns: 1 })],
     heavy: S_('spin', 0.5, 0.42, 0.5, 1.75, 98, TAU, 60, 40, { turns: 2 }),
+  },
+  // ── vũ khí khởi đầu kiểu Elden Ring và vũ khí cho lối chơi song kiếm ──
+  shortsword: {
+    cls: 'straight', name: "Hollow Shortsword", desc: 'Kiếm ngắn nhẹ tay, ra đòn nhanh. Hợp cầm cả hai tay mỗi tay một thanh', type: 'melee', dt: 'phys', base: 17, sc: { str: 'D', dex: 'D' }, req: { str: 8, dex: 10 }, wt: 2.5, ash: 'lunge',
+    look: { weapon: 'sword', wlen: 32, wcol: '#d4d0c4' }, cost: [10, 20],
+    light: [S_('slash', 0.1, 0.1, 0.24, 0.95, 60, 2.0, 170, 12, { swing: 1 }), S_('slash', 0.09, 0.1, 0.24, 1, 60, 2.0, 170, 12, { swing: -1 }), S_('thrust', 0.12, 0.1, 0.3, 1.2, 78, 0.8, 240, 18, { thrust: true })],
+    heavy: S_('overhead', 0.42, 0.12, 0.42, 1.65, 72, 1.2, 220, 44, { off: 54, r: 50, shake: 4 }),
+  },
+  broadsword: {
+    cls: 'straight', name: "Penitent Broadsword", desc: 'Kiếm bản rộng của kẻ sám hối: chém nặng tay, thiên về Sức Mạnh', type: 'melee', dt: 'phys', base: 22, sc: { str: 'C', dex: 'E' }, req: { str: 12, dex: 9 }, wt: 5, ash: 'lunge',
+    look: { form: 'broad', weapon: 'sword', wlen: 38, wcol: '#c8c0ae' }, cost: [12, 24],
+    light: [S_('slash', 0.13, 0.11, 0.28, 1.05, 68, 2.2, 170, 16, { swing: 1 }), S_('slash', 0.12, 0.11, 0.28, 1.1, 68, 2.2, 170, 16, { swing: -1 }), S_('overhead', 0.18, 0.12, 0.38, 1.3, 74, 1.2, 200, 26, { off: 54, r: 50, shake: 4 })],
+    heavy: S_('overhead', 0.48, 0.12, 0.46, 1.8, 80, 1.2, 230, 54, { off: 60, r: 58, shake: 5 }),
+  },
+  scimitar: {
+    cls: 'curved', name: "Duskwind Scimitar", desc: 'Đao cong nhẹ, chém liên hoàn rất nhanh. Cầm đôi với một thanh kiếm cong khác để vào tư thế song kiếm', type: 'melee', dt: 'phys', base: 16, sc: { str: 'D', dex: 'C' }, req: { str: 7, dex: 13 }, wt: 3.5, ash: 'whirl',
+    look: { form: 'scimitar', weapon: 'sword', wlen: 36, wcol: '#dcd6c6' }, cost: [9, 20],
+    light: [S_('slash', 0.09, 0.09, 0.22, 0.9, 64, 2.2, 170, 10, { swing: 1 }), S_('slash', 0.08, 0.09, 0.22, 0.92, 64, 2.2, 170, 10, { swing: -1 }), S_('slash', 0.09, 0.1, 0.24, 0.95, 64, 2.2, 170, 12, { swing: 1 }), S_('spin', 0.12, 0.22, 0.3, 1.15, 70, TAU, 120, 16, { turns: 1 })],
+    heavy: S_('dash', 0.36, 0.16, 0.38, 1.5, 70, 1.6, 0, 32, { dashSpeed: 900, swing: -1 }),
+  },
+  shamshir: {
+    cls: 'curved', name: "Sandveil Shamshir", desc: 'Kiếm cong của dân sa mạc, lưỡi dài và nặng hơn đao cong thường', type: 'melee', dt: 'phys', base: 18, sc: { str: 'D', dex: 'C' }, req: { str: 8, dex: 13 }, wt: 4, ash: 'whirl',
+    look: { form: 'scimitar', weapon: 'sword', wlen: 39, wcol: '#e6dcc0' }, cost: [10, 21],
+    light: [S_('slash', 0.1, 0.09, 0.23, 0.92, 68, 2.2, 170, 11, { swing: 1 }), S_('slash', 0.09, 0.09, 0.23, 0.95, 68, 2.2, 170, 11, { swing: -1 }), S_('slash', 0.1, 0.1, 0.25, 1, 68, 2.2, 170, 13, { swing: 1 }), S_('spin', 0.13, 0.22, 0.3, 1.2, 74, TAU, 120, 18, { turns: 1 })],
+    heavy: S_('dash', 0.38, 0.16, 0.38, 1.55, 74, 1.6, 0, 34, { dashSpeed: 900, swing: -1 }),
+  },
+  halberd: {
+    cls: 'halberd', name: "Wayfarer's Halberd", desc: 'Kích dài một tay cầm được: đâm xa, quét rộng. Cầm hai tay để đánh mạnh hơn', type: 'melee', dt: 'phys', base: 24, sc: { str: 'C', dex: 'D' }, req: { str: 14, dex: 10 }, wt: 9, ash: 'impale',
+    look: { form: 'halberd', weapon: 'spear', wlen: 58, wcol: '#c8c2b0' }, cost: [13, 26],
+    light: [S_('slash', 0.16, 0.13, 0.36, 1.1, 100, 2.5, 150, 20, { swing: 1 }), S_('slash', 0.15, 0.13, 0.36, 1.12, 100, 2.5, 150, 20, { swing: -1 }), S_('thrust', 0.14, 0.1, 0.32, 1.15, 108, 0.75, 140, 18, { thrust: true })],
+    heavy: S_('overhead', 0.52, 0.14, 0.5, 1.8, 104, 1.2, 200, 58, { off: 78, r: 60, shake: 6 }),
+  },
+  shortspear: {
+    cls: 'spear', name: "Pilgrim's Shortspear", desc: 'Giáo ngắn của người hành hương: nhẹ, đâm nhanh, giữ kẻ địch ở xa', type: 'melee', dt: 'phys', base: 18, sc: { str: 'D', dex: 'D' }, req: { str: 9, dex: 8 }, wt: 4, ash: 'impale',
+    look: { weapon: 'spear', wlen: 50, wcol: '#d0c8b4' }, cost: [9, 20],
+    light: [S_('thrust', 0.11, 0.1, 0.26, 0.92, 96, 0.75, 120, 10, { thrust: true }), S_('thrust', 0.1, 0.1, 0.26, 0.94, 96, 0.75, 120, 10, { thrust: true }), S_('slash', 0.15, 0.12, 0.34, 1.1, 92, 2.4, 150, 16, { swing: 1 })],
+    heavy: S_('dash', 0.46, 0.2, 0.42, 1.6, 108, 0.9, 0, 38, { dashSpeed: 700, thrust: true }),
+  },
+  club: {
+    cls: 'club', name: "Gravedigger's Club", desc: 'Khúc gỗ đẽo thô của phu đào mộ. Nặng tay, phá thế tốt, chẳng cần khéo léo', type: 'melee', dt: 'phys', base: 20, sc: { str: 'C' }, req: { str: 10 }, wt: 3, ash: 'warcry',
+    look: { weapon: 'club', wlen: 32, wcol: '#7a6040' }, cost: [12, 24],
+    light: [S_('slash', 0.14, 0.11, 0.3, 1, 62, 2.2, 160, 22, { swing: 1 }), S_('slash', 0.13, 0.11, 0.3, 1.05, 62, 2.2, 160, 22, { swing: -1 }), S_('overhead', 0.2, 0.12, 0.4, 1.3, 66, 1.2, 190, 34, { off: 50, r: 48, shake: 4 })],
+    heavy: S_('overhead', 0.5, 0.13, 0.46, 1.8, 70, 1.2, 220, 66, { off: 54, r: 58, shake: 6 }),
+  },
+  riverfang: {
+    cls: 'katana', name: "Riverfang Katana", desc: 'Katana lưỡi dài như răng nanh sông, tầm với xa và gây chảy máu mạnh. Cầm đôi với một katana khác để vào tư thế song kiếm', type: 'melee', dt: 'phys', base: 21, sc: { str: 'E', dex: 'B' }, req: { str: 12, dex: 16 }, wt: 7, bleed: [18, 32], ash: 'unsheathe',
+    look: { weapon: 'katana', wlen: 48, wcol: '#dfe8f4' }, cost: [10, 22],
+    light: [S_('slash', 0.1, 0.1, 0.24, 0.88, 78, 2.1, 180, 11, { swing: 1 }), S_('slash', 0.09, 0.1, 0.24, 0.92, 78, 2.1, 180, 11, { swing: -1 }), S_('spin', 0.13, 0.22, 0.32, 1.18, 84, TAU, 120, 18, { turns: 1 })],
+    heavy: S_('dash', 0.38, 0.16, 0.4, 1.52, 82, 1.5, 0, 36, { dashSpeed: 950, swing: -1 }),
+  },
+  // vũ khí đôi: một món gồm hai lưỡi, luôn ở tư thế song kiếm; nút tay trái ra chuỗi đòn hai tay
+  twinblades: {
+    cls: 'paired', name: "Twinned Oathblades", desc: 'Vũ khí đôi: hai thanh kiếm thề ước cầm hai tay cùng lúc. Đòn nào cũng chém bằng cả hai lưỡi; tay trái bị chiếm nên không cầm khiên', type: 'melee', dt: 'phys', base: 19, sc: { str: 'D', dex: 'C' }, req: { str: 12, dex: 15 }, wt: 7, paired: true, somber: true, unique: true, ash: 'dance',
+    look: { weapon: 'sword', wlen: 36, wcol: '#e8e0cc', glow: '#ffe7a0' }, cost: [12, 24],
+    light: [S_('slash', 0.11, 0.14, 0.26, 0.6, 68, 2.4, 170, 10, { swing: 1, multi: 2, dual: 1 }), S_('slash', 0.1, 0.14, 0.26, 0.62, 68, 2.4, 170, 10, { swing: -1, multi: 2, dual: 1 }), S_('spin', 0.12, 0.3, 0.32, 0.6, 74, TAU, 120, 12, { turns: 1, multi: 2, dual: 1 })],
+    heavy: S_('overhead', 0.46, 0.18, 0.46, 1.0, 80, 1.4, 230, 30, { off: 58, r: 56, shake: 6, multi: 2, dual: 1 }),
   },
   // cung: hai tay, đánh thường bắn nhanh, đánh mạnh ngắm bắn xuyên giáp
   shortbow: { name: "Worn Shortbow", desc: 'Cung hai tay. Bắn nhanh, tầm vừa', type: 'bow', dt: 'phys', base: 14, sc: { str: 'E', dex: 'C' }, req: { str: 7, dex: 9 }, wt: 2, twoHanded: true, ash: 'barrage', look: { weapon: 'bow', wlen: 26, wcol: '#7a6040' }, cost: [6, 14], speed: 620, range: 0.75 },
@@ -151,7 +207,7 @@ const WEAPONS = {
   seal1: { name: "Golden Seal", desc: 'Tay trái. Ấn thánh, tăng mạnh theo Đức Tin', hand: 'off', type: 'seal', sp: 100, sc: { fai: 'B' }, req: { fai: 14 }, wt: 1.5 },
   seal2: { name: "Hallowed Ash Seal", desc: 'Tay trái. Ấn cổ của Kinh Thành', hand: 'off', type: 'seal', sp: 112, sc: { fai: 'A' }, req: { fai: 24 }, wt: 1.5, somber: true },
 };
-const WEAPON_ORDER = ['broken', 'dagger', 'tuskdagger', 'sword', 'rapier', 'katana', 'spear', 'gargspear', 'axe', 'crystalsword', 'crystalpincer', 'royalsword', 'varek', 'greatsword', 'greataxe', 'hammer', 'goldhorn', 'scythe', 'shortbow', 'longbow', 'goldbow'];
+const WEAPON_ORDER = ['broken', 'dagger', 'tuskdagger', 'shortsword', 'sword', 'broadsword', 'scimitar', 'shamshir', 'rapier', 'katana', 'riverfang', 'twinblades', 'shortspear', 'spear', 'halberd', 'gargspear', 'club', 'axe', 'crystalsword', 'crystalpincer', 'royalsword', 'varek', 'greatsword', 'greataxe', 'hammer', 'goldhorn', 'scythe', 'shortbow', 'longbow', 'goldbow'];
 const OFF_ORDER = ['shield', 'kite', 'crabshield', 'staff0', 'staff1', 'staff3', 'staff2', 'seal0', 'seal1', 'seal2'];
 for (const [k, w] of Object.entries(WEAPONS)) { w.id = k; if (!w.hand) w.hand = 'right'; }
 
@@ -210,6 +266,9 @@ const TALISMANS = {
   wispglow: { name: 'Ánh Đốm Hồn', desc: 'Hồi 1.5 FP mỗi giây' },
   anchor: { name: 'Mỏ Neo Rỉ Sét', desc: 'Gây thêm 15% sát thương khi đứng trong nước' },
   ramhorn: { name: 'Sừng Dê Núi', desc: 'Đòn mạnh phá thế nhanh hơn 30%' },
+  // lối chơi hai vũ khí và cầm hai tay
+  twinblade: { name: 'Bùa Song Nhận', desc: 'Đòn tay trái và đòn song kiếm gây thêm 15% sát thương, nhát cuối mỗi chuỗi đòn thêm 10%' },
+  gripseal: { name: 'Ấn Tay Siết', desc: 'Khi cầm hai tay: đòn phá thế mạnh hơn 25%, đỡ đòn bằng vũ khí mất ít thể lực hơn' },
 };
 const TAL_ORDER = Object.keys(TALISMANS);
 
@@ -248,18 +307,28 @@ const ASHES = {
   warcry: { name: 'Chiến Hống', fp: 12, desc: 'Gầm vang: sát thương +20% và phá thế mạnh hơn trong 20 giây', unique: true },
   wildspin: { name: 'Cuồng Phong Rìu', fp: 14, desc: 'Vừa tiến tới vừa xoay rìu ba vòng', unique: true },
   leap: { name: 'Vuốt Sư Tử', fp: 16, desc: 'Lộn người bay tới rồi bổ xuống, không bị trúng đòn khi đang bay', unique: true },
+  dance: { name: 'Vũ Điệu Song Kiếm', fp: 12, desc: 'Xoay người lướt tới, hai lưỡi kiếm chém liền sáu nhát', unique: true },
   horncharge: { name: 'Húc Sừng', fp: 12, desc: 'Cúi đầu lao thẳng tới, hất văng mọi thứ trên đường', unique: true },
 };
 const ASH_ORDER = ['lunge', 'whirl', 'quake', 'flame', 'holy', 'unsheathe'];
 
 // ───────────────────────── lớp nhân vật ─────────────────────────
+// Mười xuất thân theo Elden Ring (bỏ Tinh Hoa vì game không có chỉ số này). Cấp khởi đầu tính theo tổng chỉ số
+// như Elden Ring: xuất thân mạnh sẵn thì cấp cao hơn và lên cấp đắt hơn, Kẻ Khốn Cùng cấp 1 nhưng tự do phân điểm.
+// id cũ (knight, mage, cleric, hunter) được giữ để bản lưu và bảng xếp hạng cũ vẫn khớp.
 const CLASSES = [
-  { id: 'knight', name: 'Hiệp Sĩ', desc: 'Cân bằng, chịu đòn tốt. Shattered Blade và Oakplank Shield.', stats: { vig: 12, mnd: 8, end: 11, str: 13, dex: 10, int: 8, fai: 8 }, weapons: ['broken'], equipped: 'broken', off: 'shield', armor: 'squire', spells: [], flaskFp: 0 },
-  { id: 'samurai', name: 'Kiếm Khách', desc: 'Nhanh nhẹn, dựa vào Khéo Léo. Chipped Dagger và Oakplank Shield.', stats: { vig: 11, mnd: 8, end: 11, str: 9, dex: 15, int: 8, fai: 8 }, weapons: ['dagger'], equipped: 'dagger', off: 'shield', armor: 'samurai', spells: [], flaskFp: 0 },
-  { id: 'mage', name: 'Pháp Sư', desc: 'Trí Tuệ cao. Shattered Blade, Rotwood Staff và phép Đá Sao.', stats: { vig: 9, mnd: 13, end: 9, str: 8, dex: 9, int: 15, fai: 7 }, weapons: ['broken'], equipped: 'broken', off: 'staff0', armor: 'robe', spells: ['pebble'], flaskFp: 1 },
-  { id: 'cleric', name: 'Tu Sĩ', desc: 'Đức Tin cao. Shattered Blade, Rotwood Seal, phép Hồi Phục và Lửa Thiêng.', stats: { vig: 10, mnd: 13, end: 9, str: 10, dex: 8, int: 7, fai: 13 }, weapons: ['broken'], equipped: 'broken', off: 'seal0', armor: 'priest', spells: ['heal', 'flame'], flaskFp: 1 },
-  { id: 'hunter', name: 'Thợ Săn', desc: 'Khéo Léo và Bền Bỉ. Worn Shortbow và Chipped Dagger.', stats: { vig: 11, mnd: 9, end: 12, str: 9, dex: 13, int: 8, fai: 8 }, weapons: ['shortbow', 'dagger'], equipped: 'shortbow', off: 'shield', armor: 'leather', spells: [], flaskFp: 0 },
+  { id: 'knight', name: 'Kẻ Lang Bạt', desc: 'Hiệp sĩ lưu lạc: kiếm dài, kích và khiên diều.', stats: { vig: 15, mnd: 10, end: 11, str: 14, dex: 13, int: 9, fai: 9 }, weapons: ['sword', 'halberd', 'kite'], equipped: 'sword', off: 'kite', armor: 'squire', spells: [], flaskFp: 0 },
+  { id: 'warrior', name: 'Chiến Binh', desc: 'Kiếm sĩ song đao: hai thanh kiếm cong, mỗi tay một thanh.', stats: { vig: 11, mnd: 12, end: 11, str: 10, dex: 16, int: 10, fai: 8 }, weapons: ['scimitar', 'shamshir'], equipped: 'scimitar', off: 'shamshir', armor: 'leather', spells: [], flaskFp: 0 },
+  { id: 'hero', name: 'Anh Hùng', desc: 'Thủ lĩnh bộ tộc: rìu chiến và khiên diều, Sức Mạnh cao nhất.', stats: { vig: 14, mnd: 9, end: 12, str: 16, dex: 9, int: 7, fai: 8 }, weapons: ['axe', 'kite'], equipped: 'axe', off: 'kite', armor: 'squire', spells: [], flaskFp: 0 },
+  { id: 'hunter', name: 'Kẻ Cướp', desc: 'Sát thủ đường phố: dao găm, cung ngắn và khiên nhỏ phản đòn.', stats: { vig: 10, mnd: 11, end: 10, str: 9, dex: 13, int: 9, fai: 8 }, weapons: ['dagger', 'shortbow'], equipped: 'dagger', off: 'shield', armor: 'leather', spells: [], flaskFp: 0 },
+  { id: 'mage', name: 'Chiêm Tinh Sư', desc: 'Học giả đọc sao: kiếm ngắn, gậy phép và phép Đá Sao.', stats: { vig: 9, mnd: 15, end: 9, str: 8, dex: 12, int: 16, fai: 7 }, weapons: ['shortsword'], equipped: 'shortsword', off: 'staff0', armor: 'robe', spells: ['pebble'], flaskFp: 1 },
+  { id: 'cleric', name: 'Nhà Tiên Tri', desc: 'Kẻ bị trục xuất vì lời sấm: giáo ngắn, ấn thánh, Hồi Phục và Lửa Thiêng.', stats: { vig: 10, mnd: 14, end: 8, str: 11, dex: 10, int: 7, fai: 16 }, weapons: ['shortspear'], equipped: 'shortspear', off: 'seal0', armor: 'priest', spells: ['heal', 'flame'], flaskFp: 1 },
+  { id: 'samurai', name: 'Võ Sĩ', desc: 'Kiếm khách phương xa: katana, cung dài và khiên nhỏ.', stats: { vig: 12, mnd: 11, end: 13, str: 12, dex: 15, int: 9, fai: 8 }, weapons: ['katana', 'longbow'], equipped: 'katana', off: 'shield', armor: 'samurai', spells: [], flaskFp: 0 },
+  { id: 'prisoner', name: 'Tù Nhân', desc: 'Kẻ đeo mặt nạ sắt: kiếm đâm và gậy phép, vừa kiếm vừa phép.', stats: { vig: 11, mnd: 12, end: 11, str: 11, dex: 14, int: 14, fai: 6 }, weapons: ['rapier'], equipped: 'rapier', off: 'staff0', armor: 'leather', spells: ['pebble'], flaskFp: 1 },
+  { id: 'confessor', name: 'Kẻ Xưng Tội', desc: 'Mật thám của giáo hội: kiếm bản rộng, ấn thánh và phép Hồi Phục.', stats: { vig: 10, mnd: 13, end: 10, str: 12, dex: 12, int: 9, fai: 14 }, weapons: ['broadsword', 'kite'], equipped: 'broadsword', off: 'seal0', armor: 'squire', spells: ['heal'], flaskFp: 1 },
+  { id: 'wretch', name: 'Kẻ Khốn Cùng', desc: 'Trần trụi với một cây chùy gỗ. Mọi chỉ số đều 10, cấp 1: tự do phân điểm theo ý mình.', stats: { vig: 10, mnd: 10, end: 10, str: 10, dex: 10, int: 10, fai: 10 }, weapons: ['club'], equipped: 'club', off: 'shield', armor: 'rags', spells: [], flaskFp: 0 },
 ];
+for (const c of CLASSES) c.lv = 1 + Object.values(c.stats).reduce((a, b) => a + b, 0) - 70;
 
 // ───────────────────────── cửa hàng ở Sảnh Hearthhold ─────────────────────────
 const SHOPS = {
@@ -267,6 +336,8 @@ const SHOPS = {
     name: 'Lái Buôn Kale', line: '“Rune đổi hàng, hàng đổi mạng. Cứ xem thoải mái.”', stock: [
       { item: 'stone1', price: 220 }, { item: 'stone2', price: 700, req: () => S.bossDead, lock: 'Sau khi hạ Varek' }, { item: 'firepot', price: 140 }, { item: 'knife', price: 50 },
       { item: 'cure', price: 90 }, { item: 'grease', price: 220 }, { item: 'larval', price: 2500 }, { weapon: 'kite', price: 1400 }, { weapon: 'shortbow', price: 600 },
+      { weapon: 'shortsword', price: 500 }, { weapon: 'club', price: 300 }, { weapon: 'scimitar', price: 900 }, { weapon: 'shamshir', price: 1100 }, { weapon: 'broadsword', price: 1100 }, { weapon: 'shortspear', price: 700 }, { weapon: 'halberd', price: 1800 },
+      { weapon: 'riverfang', price: 4800, req: () => S.bossDead, lock: 'Sau khi hạ Varek' }, { weapon: 'twinblades', price: 7500, req: () => S.gr.length >= 1, lock: 'Cần một Đại Ấn' }, { tal: 'twinblade', price: 2800 },
       { armor: 'leather', price: 900 }, { tal: 'green', price: 1800 }, { quiver: 1, price: 1500, id: 'quiver', name: 'Ống Tên Lớn', desc: 'Mang thêm 20 mũi tên' },
       { mem: 1, price: 3500, id: 'mem_shop', name: 'Đá Ký Ức', desc: 'Thêm một ô phép' },
     ],
@@ -281,7 +352,7 @@ const SHOPS = {
     name: 'Nữ Tu Seraphine', line: '“Ánh vàng soi đường cho kẻ có lòng tin.”', stock: [
       { spell: 'heal', price: 800 }, { spell: 'flame', price: 800 }, { spell: 'bolt', price: 2000 }, { spell: 'bless', price: 3600 },
       { spell: 'judge', price: 9000, req: () => S.gr.length >= 2, lock: 'Cần hai Đại Ấn' }, { weapon: 'seal0', price: 400 }, { weapon: 'seal1', price: 2400 },
-      { armor: 'priest', price: 800 }, { tal: 'sun', price: 3000 }, { tal: 'guard', price: 2600 },
+      { armor: 'priest', price: 800 }, { tal: 'sun', price: 3000 }, { tal: 'guard', price: 2600 }, { tal: 'gripseal', price: 2600 },
     ],
   },
 };

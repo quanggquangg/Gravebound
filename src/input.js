@@ -8,7 +8,7 @@ const stick = { x: 0, y: 0 };
 // cài đặt người chơi: âm lượng, rung màn hình, cỡ chữ và phím bấm (đổi được trong bảng Cài đặt)
 const SET_KEY = 'gravebound-settings';
 const BINDS_DEFAULT = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', roll: 'Space', guard: 'KeyX', light: 'KeyJ', heavy: 'KeyK', spell: 'KeyL', skill: 'KeyC',
-  item: 'KeyR', interact: 'KeyE', mount: 'KeyF', lock: 'KeyQ', map: 'KeyG', inv: 'KeyI', itemnext: 'ArrowDown', spellnext: 'ArrowUp', eqprev: 'ArrowLeft', eqnext: 'ArrowRight' };
+  item: 'KeyR', interact: 'KeyE', mount: 'KeyF', lock: 'KeyQ', map: 'KeyG', inv: 'KeyI', itemnext: 'ArrowDown', spellnext: 'ArrowUp', eqprev: 'ArrowLeft', eqnext: 'ArrowRight', twohand: 'KeyH' };
 const SET = (() => {
   const d = { music: 0.6, sfx: 0.8, shake: true, text: 1, binds: Object.assign({}, BINDS_DEFAULT) };
   try { const s = JSON.parse(localStorage.getItem(SET_KEY) || 'null'); if (s) { Object.assign(d, s); d.binds = Object.assign({}, BINDS_DEFAULT, s.binds || {}); } } catch (e) { /* bỏ qua */ }
@@ -51,6 +51,7 @@ function act(a) {
   if (a === 'inv') { if (G.mode === 'play') openInventory(); return; }
   if (G.mode !== 'play') return;
   if (a === 'lock') { toggleLock(); return; }
+  if (a === 'twohand') { toggleTwoHand(); return; }
   if (a.startsWith('eq')) { equipKey(a); return; }
   if (a === 'spellnext') { cycleSpell(); return; }
   if (a === 'itemnext') { cycleQuick(); return; }
@@ -139,6 +140,8 @@ function pollPad() {
   if (G.mode === 'play' || G.mode === 'dead') {
     if (down(PB.B)) { pad.dodgeDown = true; pad.dodgeAt = performance.now(); }
     if (up(PB.B) && pad.dodgeDown) { pad.dodgeDown = false; if (performance.now() - pad.dodgeAt < DASH_HOLD) act('roll'); }
+    // giữ Y rồi bấm RB: đổi cầm một tay / hai tay (như △ + R1 của Elden Ring)
+    if (btn(PB.Y) && down(PB.RB)) { act('twohand'); pad.prev[PB.RB] = true; }
     const map = [[PB.RB, 'light'], [PB.RT, 'heavy'], [PB.LT, 'skill'], [PB.X, 'item'], [PB.Y, 'interact'], [PB.A, 'mount'], [PB.R3, 'lock'], [PB.RIGHT, 'eqnext'], [PB.LEFT, 'eqprev'], [PB.UP, 'spellnext'], [PB.DOWN, 'itemnext'], [PB.BACK, 'map'], [PB.START, 'pause']];
     for (const [i, a] of map) if (down(i)) { aimMode = 'keys'; act(a); }
     pad.guard = btn(PB.LB);

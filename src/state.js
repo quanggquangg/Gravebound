@@ -37,15 +37,15 @@ const maxSt = () => Math.round((80 + 5 * (S.stats.end - 10)) * (hasTal('green') 
 const maxFp = () => Math.round((60 + 7 * (S.stats.mnd - 10)) * (1 + (hasTal('cerulean') ? 0.18 : 0) + (hasGR('west') ? 0.15 : 0)));
 const upLv = id => S.wup[id] || 0;
 const maxUp = id => (WEAPONS[id].somber ? 5 : 9);
-function reqMet(req) { for (const k in req || {}) if (S.stats[k] < req[k]) return false; return true; }
+function reqMet(req, st = S.stats) { for (const k in req || {}) if (st[k] < req[k]) return false; return true; }
 function reqText(req) { return Object.entries(req || {}).map(([k, v]) => `<span class="${S.stats[k] < v ? 'bad' : ''}">${STAT_SHORT[k] || STAT_NAME[k]} ${v}</span>`).join(' '); }
 const upMul = (id, lv) => (WEAPONS[id].somber ? 1 + 0.18 * lv : 1 + 0.1 * lv);
-function scaleSum(Wp, lv) { let sc = 0; for (const k in Wp.sc || {}) sc += LETTER[Wp.sc[k]] * (1 + 0.03 * lv) * curve(S.stats[k]); return sc; }
+function scaleSum(Wp, lv, st = S.stats) { let sc = 0; for (const k in Wp.sc || {}) sc += LETTER[Wp.sc[k]] * (1 + 0.03 * lv) * curve(st[k]); return sc; }
 // sức công phá của vũ khí (AR): gốc × cường hóa × (1 + tổng hệ số theo chỉ số); thiếu chỉ số bị phạt 40%
-function weaponAR(id, lv = upLv(id)) {
-  const Wp = WEAPONS[id];
-  let ar = Wp.base * upMul(id, lv) * (1 + scaleSum(Wp, lv));
-  if (!reqMet(Wp.req)) ar *= 0.6;
+function weaponAR(id, lv = upLv(id), grip) {
+  const Wp = WEAPONS[id], st = wStats(id, grip);
+  let ar = Wp.base * upMul(id, lv) * (1 + scaleSum(Wp, lv, st));
+  if (!reqMet(Wp.req, st)) ar *= 0.6;
   return ar;
 }
 // sức mạnh phép của gậy / ấn
@@ -56,14 +56,35 @@ function spellPower(id, lv = upLv(id)) {
   if (!reqMet(Wp.req)) sp *= 0.6;
   return sp;
 }
-const twoHanded = () => !!WEAPONS[S.equipped].twoHanded;
+// ───────────── cách cầm vũ khí như Elden Ring ─────────────
+// Cầm hai tay (phím Cầm 2 tay): vũ khí một tay ở tay phải được nắm bằng cả hai tay, Sức Mạnh tính ×1.5 cho yêu cầu và hệ số,
+// đòn phá thế mạnh hơn; tay trái nhường chỗ nên không đỡ bằng khiên, không niệm phép, đỡ đòn bằng thân vũ khí.
+// Tay trái cầm vũ khí: nút Đỡ thành đòn tay trái. Hai vũ khí cùng loại (hai kiếm cong, hai katana...) thì vào
+// tư thế song kiếm: nút Đỡ ra chuỗi đòn chém bằng cả hai lưỡi. Vũ khí đôi (paired) luôn ở tư thế song kiếm.
+const canGrip2 = (id = S.equipped) => { const W = WEAPONS[id]; return W.type === 'melee' && !W.twoHanded && !W.paired; };
+const gripTwo = () => !!S.twoH && canGrip2();
+const twoHanded = () => !!WEAPONS[S.equipped].twoHanded || gripTwo();
+const pairedW = () => !!WEAPONS[S.equipped].paired;
+// chỉ số dùng cho một vũ khí: cầm hai tay thì Sức Mạnh ×1.5 (làm tròn xuống, như Elden Ring)
+function wStats(id, grip) {
+  const g = grip === undefined ? id === S.equipped && gripTwo() : grip && canGrip2(id);
+  return g ? Object.assign({}, S.stats, { str: Math.floor(S.stats.str * 1.5) }) : S.stats;
+}
+const WCLS_NAME = { straight: 'Kiếm thẳng', curved: 'Kiếm cong', dagger: 'Dao găm', katana: 'Katana', thrust: 'Kiếm đâm', spear: 'Giáo', halberd: 'Kích', axe: 'Rìu', club: 'Chùy', paired: 'Vũ khí đôi',
+  greatsword: 'Đại kiếm', colossal: 'Kiếm khổng lồ', greataxe: 'Đại rìu', hammer: 'Búa lớn', reaper: 'Lưỡi hái' };
 const offDef = () => WEAPONS[S.off] || WEAPONS.shield;
+// vũ khí đang cầm ở tay trái (null nếu tay trái là khiên / chất xúc tác, hoặc tay trái đang bận)
+const leftWeapon = () => { const o = WEAPONS[S.off]; return o && o.type === 'melee' && !twoHanded() && !pairedW() && S.off !== S.equipped ? o : null; };
+// tư thế song kiếm: vũ khí đôi, hoặc hai tay cầm hai vũ khí cùng loại
+const powerStance = () => pairedW() && !gripTwo() || (!!leftWeapon() && WEAPONS[S.equipped].type === 'melee' && leftWeapon().cls === WEAPONS[S.equipped].cls);
+// nút Đỡ thành nút đánh tay trái
+const offAttack = () => !!leftWeapon() || (pairedW() && !gripTwo());
 // cửa sổ phản đòn theo khiên (giây kể từ lúc giơ): khiên nhỏ rộng, khiên vừa hẹp, khiên lớn không phản đòn được
-const parryWin = () => (twoHanded() || offDef().type !== 'shield' ? 0 : offDef().parry ?? 0.22);
+const parryWin = () => (twoHanded() || offAttack() || offDef().type !== 'shield' ? 0 : offDef().parry ?? 0.22);
 // vũ khí nhẹ gạt được đòn bằng kỹ năng Gạt Đòn; cửa sổ theo loại: dao và kiếm liễu nhanh nhất
-const DEFLECT_WIN = { dagger: 0.2, tuskdagger: 0.2, rapier: 0.2, katana: 0.17, sword: 0.16, broken: 0.15, crystalsword: 0.16, royalsword: 0.16 };
+const DEFLECT_WIN = { dagger: 0.2, tuskdagger: 0.2, rapier: 0.2, katana: 0.17, riverfang: 0.16, sword: 0.16, shortsword: 0.18, broadsword: 0.15, scimitar: 0.18, shamshir: 0.17, broken: 0.15, crystalsword: 0.16, royalsword: 0.16 };
 // chất xúc tác ở tay trái chỉ dùng được khi tay phải không cầm vũ khí hai tay
-const catalyst = () => { const o = offDef(); return !twoHanded() && (o.type === 'staff' || o.type === 'seal') ? o : null; };
+const catalyst = () => { const o = offDef(); return !twoHanded() && !pairedW() && (o.type === 'staff' || o.type === 'seal') ? o : null; };
 const maxLoad = () => (25 + 1.4 * (S.stats.end - 10)) * (hasTal('feather') ? 1.2 : 1);
 const equipLoad = () => (WEAPONS[S.equipped].wt || 0) + (offDef().wt || 0) + armorDef().wt;
 function rollType() {

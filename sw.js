@@ -1,6 +1,6 @@
 // Gravebound — service worker: cài như ứng dụng và chơi khi mất mạng.
 // Luôn ưu tiên bản mới trên mạng (để cập nhật game không bị kẹt bản cũ), chỉ dùng bản lưu sẵn khi không có mạng.
-const CACHE = 'gravebound-v12';
+const CACHE = 'gravebound-v13';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-64.png',
   'src/config.js', 'src/core.js', 'src/lang.js', 'src/music.js', 'src/dungeons.js', 'src/world.js', 'src/data.js', 'src/state.js', 'src/input.js', 'src/player.js', 'src/progression.js',
   'src/enemies.js', 'src/bosses.js', 'src/content.js', 'src/systems.js', 'src/render.js', 'src/bossart.js', 'src/fx.js', 'src/spirits.js', 'src/hud.js', 'src/ui2.js', 'src/bestiary.js', 'src/settings.js', 'src/leaderboard.js'];

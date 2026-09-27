@@ -70,21 +70,27 @@ const WTYPE = { sword: 'Kiếm', greatsword: 'Đại kiếm', katana: 'Katana', 
 function row(k, v, cmp) { return `<dt>${k}</dt><dd>${v}${cmp || ''}</dd>`; }
 function delta(a, b, fmt = x => x) { const d = Math.round(a - b); return d ? ` <span class="${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'}${fmt(Math.abs(d))}</span>` : ''; }
 function weaponCard(id) {
-  const Wp = WEAPONS[id], lv = upLv(id), off = Wp.hand === 'off' || Wp.type === 'shield' || Wp.type === 'staff' || Wp.type === 'seal';
-  const cur = off ? S.off : S.equipped, cmp = cur && cur !== id;
+  const Wp = WEAPONS[id], lv = upLv(id), off = Wp.hand === 'off' || Wp.type === 'shield' || Wp.type === 'staff' || Wp.type === 'seal' || (invSlot === 'left' && Wp.type === 'melee');
+  const cur = off ? S.off : S.equipped, cmp = cur && cur !== id && WEAPONS[cur];
   let dl = '';
   if (Wp.type === 'shield') { dl += row('Chặn', Math.round((1 - 0.15 * Wp.guard.chip) * 100) + '%'); }
   else if (Wp.sp) { const p = spellPower(id); dl += row('Sức mạnh phép', Math.round(p), cmp && WEAPONS[cur].sp ? delta(p, spellPower(cur)) : ''); dl += row('Hệ số', scText(Wp)); }
   else {
-    const ar = weaponAR(id, lv); dl += row('Công', Math.round(ar), cmp && !WEAPONS[cur].sp && WEAPONS[cur].type !== 'shield' ? delta(ar, weaponAR(cur, upLv(cur))) : '');
+    const ar = weaponAR(id, lv, off ? false : undefined); dl += row('Công', Math.round(ar), cmp && !WEAPONS[cur].sp && WEAPONS[cur].type !== 'shield' ? delta(ar, weaponAR(cur, upLv(cur), off ? false : undefined)) : '');
+    if (Wp.cls) dl += row('Loại', WCLS_NAME[Wp.cls] || Wp.cls);
+    if (canGrip2(id)) dl += row('Cầm hai tay', 'Công ' + Math.round(weaponAR(id, lv, true)) + ' · Sức ×1.5');
     dl += row('Loại sát thương', DT_NAME[Wp.dt]); dl += row('Hệ số', scText(Wp));
     if (Wp.ash && ASHES[Wp.ash]) dl += row('Kỹ năng', ASHES[Wp.ash].name);
   }
   if (Wp.req) dl += row('Yêu cầu', reqText(Wp.req));
   dl += row('Cân nặng', Wp.wt, cmp ? delta(Wp.wt, WEAPONS[cur].wt, x => x) .replace('up', 'tmp').replace('dn', 'up').replace('tmp', 'dn') : '');
   if (Wp.twoHanded) dl += row('Cầm', 'Hai tay');
-  const ty = WTYPE[(Wp.look && Wp.look.weapon) || Wp.type] || (Wp.type === 'shield' ? 'Khiên' : 'Vũ khí');
-  return card('w', id, Wp.name + (lv ? ' +' + lv : ''), ty + (off ? ' · tay trái' : ' · tay phải'), Wp.desc + (reqMet(Wp.req) ? '' : ' · <span class="dn">Thiếu chỉ số: đòn yếu đi rất nhiều</span>'), dl);
+  if (Wp.paired) dl += row('Cầm', 'Vũ khí đôi · luôn song kiếm');
+  // ghép đôi: món này với vũ khí ở tay bên kia có vào được tư thế song kiếm không
+  const other = WEAPONS[off ? S.equipped : S.off];
+  if (Wp.type === 'melee' && canGrip2(id) && other && other.type === 'melee' && other.id !== id) dl += row('Song kiếm', other.cls === Wp.cls ? '<span class="up">Được, cùng loại với ' + esc(other.name) + '</span>' : 'Không, khác loại với ' + esc(other.name));
+  const ty = (Wp.cls && WCLS_NAME[Wp.cls]) || WTYPE[(Wp.look && Wp.look.weapon) || Wp.type] || (Wp.type === 'shield' ? 'Khiên' : 'Vũ khí');
+  return card('w', id, Wp.name + (lv ? ' +' + lv : ''), ty + (off ? ' · tay trái' : ' · tay phải'), Wp.desc + (reqMet(Wp.req, off ? S.stats : wStats(id)) ? '' : ' · <span class="dn">Thiếu chỉ số: đòn yếu đi rất nhiều</span>'), dl);
 }
 function card(kind, id, name, ty, desc, dl = '', acts = '') {
   return `<div class="dh">${img(kind, id, 64)}<div><h4>${esc(name)}</h4><div class="ty">${ty}</div></div></div>${desc ? `<p>${desc}</p>` : ''}${dl ? `<dl>${dl}</dl>` : ''}${acts ? `<div class="acts">${acts}</div>` : ''}`;
@@ -102,11 +108,13 @@ function spiritCard(k) { const sp = SPIRITS[k]; return card('p', k, sp.name, 'Tr
 
 // ───────────────────────── tab Trang bị ─────────────────────────
 let invSlot = 'right', detailKey = null, bagCat = 'all';
+// tay trái nhận khiên, chất xúc tác và mọi vũ khí cận chiến cầm một tay được
+const leftOwned = () => [...OFF_ORDER.filter(w => S.weapons.includes(w)), ...WEAPON_ORDER.filter(w => S.weapons.includes(w) && canGrip2(w))];
 const SLOT_LABEL = { right: 'Tay phải', left: 'Tay trái', ash: 'Kỹ năng', armor: 'Giáp', tal: 'Bùa' };
 function gearTiles() {
   const Wp = WEAPONS[S.equipped];
   if (invSlot === 'right') return ownedRight().map(w => ({ k: 'w:' + w, kind: 'w', id: w, name: WEAPONS[w].name, n: upLv(w) ? '+' + upLv(w) : '', eq: w === S.equipped, nw: isNew('w', w), act: `data-weapon="${w}"` }));
-  if (invSlot === 'left') return OFF_ORDER.filter(w => S.weapons.includes(w)).map(w => ({ k: 'w:' + w, kind: 'w', id: w, name: WEAPONS[w].name, n: upLv(w) ? '+' + upLv(w) : '', eq: w === S.off, nw: isNew('w', w), act: `data-off="${w}"` }));
+  if (invSlot === 'left') return leftOwned().map(w => ({ k: 'w:' + w, kind: 'w', id: w, name: WEAPONS[w].name, n: upLv(w) ? '+' + upLv(w) : '', eq: w === S.off, nw: isNew('w', w), act: `data-off="${w}"`, dis: w === S.equipped }));
   if (invSlot === 'ash') {
     if (Wp.type !== 'melee') return [];
     const list = Wp.unique ? [Wp.ash] : [...new Set([Wp.ash, ...S.ashes.filter(a => !ASHES[a].unique && !ASHES[a].bow)])];
@@ -126,17 +134,19 @@ function tilesHTML(list) {
 function renderGear() {
   const Wp = WEAPONS[S.equipped], ash = Wp.type === 'melee' ? ashOf(S.equipped) : null;
   const slots = [
-    ['right', 'w', S.equipped, Wp.name], ['left', 'w', S.off, S.off ? WEAPONS[S.off].name : '—'],
+    ['right', 'w', S.equipped, Wp.name], ['left', 'w', S.off, S.off ? WEAPONS[S.off].name + (powerStance() && !pairedW() ? ' · song kiếm' : '') : '—'],
     ['ash', ash ? 'x' : null, ash, ash ? ASHES[ash].name : '—'], ['armor', 'a', S.armor, ARMORS[S.armor].name], ['tal', S.tal[0] ? 't' : null, S.tal[0], S.tal.length + '/' + S.talSlots + ' bùa'],
   ];
-  const nwSlot = { right: ownedRight().some(w => isNew('w', w)), left: OFF_ORDER.some(w => S.weapons.includes(w) && isNew('w', w)), ash: S.ashes.some(a => isNew('x', a)), armor: S.armors.some(a => isNew('a', a)), tal: S.tals.some(t => isNew('t', t)) };
-  let h = '<div class="slots">' + slots.map(([s, kind, id, nm]) => `<button class="slot${invSlot === s ? ' on' : ''}" data-slot="${s}">${kind && id ? img(kind, id, 44) : '<span class="empty"></span>'}<span class="lbl">${SLOT_LABEL[s]}</span><span class="val">${esc(nm)}</span>${nwSlot[s] ? '<em class="newb">MỚI</em>' : ''}</button>`).join('') + '</div>';
+  const nwSlot = { right: ownedRight().some(w => isNew('w', w)), left: leftOwned().some(w => isNew('w', w)), ash: S.ashes.some(a => isNew('x', a)), armor: S.armors.some(a => isNew('a', a)), tal: S.tals.some(t => isNew('t', t)) };
+  const grip = canGrip2() ? `<div class="grip"><button class="mini${gripTwo() ? ' on' : ''}" data-twoh="1">${gripTwo() ? 'Đang cầm hai tay' : 'Cầm hai tay'}</button><span>${gripTwo() ? 'Sức Mạnh ×1.5, phá thế mạnh hơn; đỡ đòn bằng thân vũ khí.' : powerStance() ? 'Tư thế song kiếm: nút Đỡ ra chuỗi đòn bằng cả hai lưỡi.' : 'Nắm vũ khí tay phải bằng cả hai tay: Sức Mạnh ×1.5.'} <kbd data-k="twohand">H</kbd></span></div>` : '';
+  let h = '<div class="slots">' + slots.map(([s, kind, id, nm]) => `<button class="slot${invSlot === s ? ' on' : ''}" data-slot="${s}">${kind && id ? img(kind, id, 44) : '<span class="empty"></span>'}<span class="lbl">${SLOT_LABEL[s]}</span><span class="val">${esc(nm)}</span>${nwSlot[s] ? '<em class="newb">MỚI</em>' : ''}</button>`).join('') + '</div>' + grip;
   const list = gearTiles();
-  const why = invSlot === 'ash' ? (Wp.type !== 'melee' ? 'Vũ khí này không gắn kỹ năng' : Wp.unique ? 'Kỹ năng riêng của vũ khí, không đổi được' : !atGrace() ? 'Chỉ đổi kỹ năng khi nghỉ ở Ân Điển' : '') : invSlot === 'left' && Wp.twoHanded ? 'Tay trái bị khóa vì tay phải cầm vũ khí hai tay' : invSlot === 'tal' ? `Đeo tối đa ${S.talSlots} bùa. Bấm để đeo hoặc tháo.` : '';
+  const why = invSlot === 'ash' ? (Wp.type !== 'melee' ? 'Vũ khí này không gắn kỹ năng' : Wp.unique ? 'Kỹ năng riêng của vũ khí, không đổi được' : !atGrace() ? 'Chỉ đổi kỹ năng khi nghỉ ở Ân Điển' : '') : invSlot === 'left' && Wp.twoHanded ? 'Tay trái bị khóa vì tay phải cầm vũ khí hai tay' : invSlot === 'left' && Wp.paired ? 'Vũ khí đôi chiếm cả hai tay: món ở tay trái chỉ được cất theo, không dùng' : invSlot === 'left' && gripTwo() ? 'Đang cầm hai tay: món ở tay trái được cất sau lưng' : invSlot === 'left' ? 'Cầm vũ khí ở tay trái thì nút Đỡ thành đòn tay trái. Hai vũ khí cùng loại: tư thế song kiếm' : invSlot === 'tal' ? `Đeo tối đa ${S.talSlots} bùa. Bấm để đeo hoặc tháo.` : '';
   h += `<h3 class="sec">${SLOT_LABEL[invSlot]}${invSlot === 'armor' ? ` · tải trọng ${equipLoad().toFixed(1)} / ${maxLoad().toFixed(1)} (${ROLLS[rollType()].name})` : ''}</h3>` + (why ? `<p class="note">${why}</p>` : '');
   h += list.length ? tilesHTML(list) : '<p class="note">Chưa có món nào cho ô này. Tìm trong rương, hầm ngục và cửa hàng.</p>';
   if (!detailKey || !list.some(t => t.k === detailKey)) detailKey = (list.find(t => t.eq) || list[0] || {}).k || null;
   $('gearWrap').innerHTML = `<div class="inv2"><div>${h}</div><aside class="detail" id="gearDetail">${cardFor(detailKey) || '<p class="note">Rê chuột hoặc chọn một món để xem chi tiết.</p>'}</aside></div>`;
+  refreshKbd($('gearWrap'));
 }
 // ───────────────────────── tab Túi đồ ─────────────────────────
 function bagTiles() {
@@ -196,17 +206,22 @@ function hookDetail(wrapId, detail) {
 }
 hookDetail('gearWrap', cardFor); hookDetail('invWrap', bagDetail); hookDetail('spellWrap', cardFor);
 // bấm ô trang bị: đổi danh sách; bấm ô vật phẩm: nhớ món đang xem (các nút hành động xử lý ở hud.js)
-$('gearWrap').addEventListener('click', e => { const s = e.target.closest('[data-slot]'); if (s) { invSlot = s.dataset.slot; detailKey = null; renderGear(); return; } const t = e.target.closest('.tile'); if (t) detailKey = t.dataset.key; }, true);
+$('gearWrap').addEventListener('click', e => { if (e.target.closest('[data-twoh]')) { toggleTwoHand(); renderGear(); return; } const s = e.target.closest('[data-slot]'); if (s) { invSlot = s.dataset.slot; detailKey = null; renderGear(); return; } const t = e.target.closest('.tile'); if (t) detailKey = t.dataset.key; }, true);
 $('invWrap').addEventListener('click', e => { const c = e.target.closest('[data-cat]'); if (c) { bagCat = c.dataset.cat; detailKey = null; renderBag(); return; } const t = e.target.closest('.tile'); if (t) { detailKey = t.dataset.key; const d = $('bagDetail'); if (d) d.innerHTML = bagDetail(detailKey); for (const x of $('invWrap').querySelectorAll('.tile')) x.classList.toggle('sel', x === t); } }, true);
 $('spellWrap').addEventListener('click', e => { const t = e.target.closest('.tile'); if (t) detailKey = t.dataset.key; }, true);
 
 // ───────────────────────── màn chọn xuất thân ─────────────────────────
 const CLASS_INFO = {
-  knight: { role: 'Cận chiến cân bằng', diff: 1, play: 'Khiên gỗ đỡ đòn, kiếm một tay chém gọn. Đứng vững, chờ sơ hở rồi phản công: lối chơi dễ làm quen nhất.', pros: ['Máu và Sức Mạnh cao', 'Có khiên đỡ đòn và phản đòn ngay từ đầu', 'Mặc giáp khá nặng mà vẫn lăn nhanh'], cons: ['Chưa có phép', 'Đòn đánh chậm hơn Kiếm Khách'] },
-  samurai: { role: 'Kiếm nhanh, khéo léo', diff: 2, play: 'Dao găm ra đòn rất nhanh, chảy máu dồn dần. Né là chính, áp sát liên tục và rút lui trước khi hết thể lực.', pros: ['Khéo Léo cao, đòn nhanh', 'Hợp vũ khí gây chảy máu', 'Giáp nhẹ, lăn xa'], cons: ['Sát thương mỗi nhát thấp', 'Giáp mỏng, bị đánh trúng là đau'] },
-  mage: { role: 'Phép Trí Tuệ từ xa', diff: 3, play: 'Giữ khoảng cách và bắn Đá Sao bằng gậy phép. Thể lực, máu thấp nên phải đọc kỹ đòn của địch và dùng Bình FP khéo.', pros: ['Trí Tuệ và Tâm Trí cao', 'Đánh từ xa an toàn', 'Mở ra những phép rất mạnh về sau'], cons: ['Máu và thể lực thấp nhất', 'Phụ thuộc FP; hết FP là yếu hẳn'] },
-  cleric: { role: 'Đức Tin, hồi phục', diff: 2, play: 'Cận chiến bằng kiếm, tự hồi máu và đốt Lửa Thiêng bằng ấn thánh. Dẻo dai trong trận dài.', pros: ['Có phép Hồi Phục', 'Lửa Thiêng mạnh với quái sợ lửa', 'Tâm Trí cao cho nhiều phép'], cons: ['Khéo Léo và Trí Tuệ thấp', 'Chưa có khiên tốt'] },
-  hunter: { role: 'Cung thủ, cơ động', diff: 2, play: 'Bắn tên từ xa, kéo từng con ra khỏi bầy, đổi sang dao găm khi bị áp sát. Bền Bỉ cao cho nhiều cú lăn.', pros: ['Có cung ngay từ đầu', 'Bền Bỉ cao: thể lực dồi dào', 'Dễ kéo quái lẻ'], cons: ['Mũi tên có hạn', 'Cận chiến chỉ có dao găm'] },
+  knight: { role: 'Hiệp sĩ cân bằng', diff: 1, play: 'Kiếm dài và khiên diều: giơ khiên đỡ đòn, chờ sơ hở rồi phản công. Mang theo cây kích để cầm hai tay khi cần tầm với xa. Lối chơi dễ làm quen nhất.', pros: ['Sinh Lực cao nhất, chịu đòn tốt', 'Khiên diều chặn tốt ngay từ đầu', 'Có cả kiếm lẫn kích để đổi tầm đánh'], cons: ['Cấp khởi đầu cao: lên cấp đắt hơn', 'Chưa có phép'] },
+  warrior: { role: 'Song đao, Khéo Léo', diff: 2, play: 'Mỗi tay một thanh kiếm cong: bấm nút Đỡ để ra chuỗi đòn song kiếm, chém dồn dập bằng cả hai lưỡi. Không có khiên che chắn nên phải lăn né là chính.', pros: ['Khéo Léo cao nhất', 'Tư thế song kiếm ngay từ đầu, dồn sát thương rất nhanh', 'Giáp nhẹ, lăn xa'], cons: ['Cầm hai kiếm thì không đỡ đòn được', 'Máu vừa phải, tốn thể lực'] },
+  hero: { role: 'Rìu nặng, Sức Mạnh', diff: 1, play: 'Rìu chiến chặt mạnh, phá thế nhanh, khiên diều che chắn. Cầm hai tay cây rìu để Sức Mạnh tính ×1.5 và đập vỡ thế đứng của kẻ địch.', pros: ['Sức Mạnh cao nhất', 'Rìu phá thế tốt, có kỹ năng Chiến Hống', 'Máu và Bền Bỉ khá'], cons: ['Khéo Léo, Trí Tuệ thấp', 'Đòn chậm hơn kiếm'] },
+  hunter: { role: 'Dao găm, cung, đâm lưng', diff: 3, play: 'Lẻn ra sau lưng để đâm chí mạng, dùng cung kéo từng con quái ra khỏi bầy. Khiên nhỏ có cửa sổ phản đòn rộng nhất cho ai thích phản đòn.', pros: ['Cấp 1: lên cấp rẻ, phân điểm tự do', 'Dao găm chí mạng mạnh, gây chảy máu', 'Khiên nhỏ dễ phản đòn nhất'], cons: ['Chỉ số khởi đầu thấp', 'Máu thấp, đòn ngắn'] },
+  mage: { role: 'Phép Trí Tuệ từ xa', diff: 3, play: 'Giữ khoảng cách và bắn Đá Sao bằng gậy phép; kiếm ngắn để chống đỡ khi bị áp sát. Máu và thể lực thấp nên phải đọc đòn thật kỹ.', pros: ['Trí Tuệ và Tâm Trí cao', 'Đánh từ xa an toàn', 'Mở ra những phép rất mạnh về sau'], cons: ['Máu và thể lực thấp', 'Hết FP là yếu hẳn'] },
+  cleric: { role: 'Đức Tin, hồi phục', diff: 2, play: 'Giáo ngắn giữ kẻ địch ở xa, ấn thánh để tự hồi máu và phun Lửa Thiêng. Dẻo dai trong những trận dài.', pros: ['Đức Tin cao nhất', 'Có Hồi Phục và Lửa Thiêng', 'Giáo đâm xa, an toàn'], cons: ['Bền Bỉ thấp: ít cú lăn', 'Không có khiên'] },
+  samurai: { role: 'Katana và cung dài', diff: 1, play: 'Katana chém nhanh, gây chảy máu; cung dài bắn xa để mở màn. Bền Bỉ cao cho nhiều cú lăn và chuỗi đòn dài. Được tặng sẵn kỹ năng Gạt Đòn.', pros: ['Katana mạnh, chảy máu dồn nhanh', 'Có cung dài đánh xa', 'Bền Bỉ cao, có sẵn Gạt Đòn'], cons: ['Khiên nhỏ chặn kém', 'Cấp khởi đầu cao'] },
+  prisoner: { role: 'Kiếm đâm và phép', diff: 2, play: 'Kiếm đâm tầm xa, chí mạng cao; gậy phép bắn Đá Sao từ xa. Lối lai giữa kiếm và phép, linh hoạt theo từng trận.', pros: ['Khéo Léo và Trí Tuệ đều cao', 'Vừa cận chiến vừa bắn phép', 'Kiếm đâm chí mạng mạnh'], cons: ['Đức Tin thấp nhất', 'Không có khiên'] },
+  confessor: { role: 'Kiếm và Đức Tin', diff: 2, play: 'Kiếm bản rộng chém chắc tay, ấn thánh để Hồi Phục. Mang sẵn khiên diều: đổi sang tay trái khi cần đỡ đòn, đổi lại ấn khi cần hồi máu.', pros: ['Cân bằng giữa kiếm và phép', 'Có Hồi Phục ngay từ đầu', 'Mang theo khiên diều'], cons: ['Máu vừa phải', 'Phép tấn công còn ít'] },
+  wretch: { role: 'Tự do phân điểm', diff: 3, play: 'Không giáp, một cây chùy gỗ, mọi chỉ số đều 10. Cấp 1 nên lên cấp rẻ nhất: dựng nhân vật đúng như ý muốn từ con số không.', pros: ['Cấp 1: mỗi điểm chỉ số rẻ nhất', 'Không có chỉ số thừa', 'Thử thách cho người chơi lâu năm'], cons: ['Gần như không có giáp', 'Khởi đầu rất yếu'] },
 };
 let clsSel = 'knight';
 function clsPortrait(cv, c, big) {
@@ -218,7 +233,8 @@ function clsPortrait(cv, c, big) {
     S = Object.assign({}, S0, { equipped: c.equipped, armor: c.armor, off: c.off });
     const L = playerLook(), off = WEAPONS[c.off] || {};
     g.save(); g.translate(s / 2, s / 2 + s * 0.05); g.scale(s / (big ? 64 : 42), s / (big ? 64 : 42));
-    drawHumanoid(0, 0, Math.PI / 2 - 0.35, L, 0.7, { anim: G.clock || 1, shield: off.type === 'shield' ? 3 : 0, cat: off.type === 'staff' ? 'staff' : off.type === 'seal' ? 'seal' : null, twoHand: false });
+    drawHumanoid(0, 0, Math.PI / 2 - 0.35, L, 0.7, { anim: G.clock || 1, shield: off.type === 'shield' ? 3 : 0, cat: off.type === 'staff' ? 'staff' : off.type === 'seal' ? 'seal' : null, twoHand: false,
+      left: off.type === 'melee' ? { L: off.look, wAng: 0.7 } : null });
     g.restore();
   } catch (e) { /* bỏ qua */ }
   S = S0; ctx = old;
@@ -226,7 +242,7 @@ function clsPortrait(cv, c, big) {
 function openClassSelect() {
   UI.title.hidden = true; UI.cls.hidden = false;
   $('clsEyebrow').textContent = 'Hành trình mới · Độ khó ' + DIFFS[pendingDiff].name;
-  $('clsList').innerHTML = CLASSES.map(c => `<li><button class="ci${c.id === clsSel ? ' on' : ''}" data-pick="${c.id}"><canvas width="96" height="96"></canvas><span><b>${c.name}</b><small>${CLASS_INFO[c.id].role}</small></span></button></li>`).join('');
+  $('clsList').innerHTML = CLASSES.map(c => `<li><button class="ci${c.id === clsSel ? ' on' : ''}" data-pick="${c.id}"><canvas width="80" height="80"></canvas><span><b>${c.name}</b><small>${CLASS_INFO[c.id].role}</small></span><span class="lv">Cấp ${c.lv}</span></button></li>`).join('');
   $('clsList').querySelectorAll('canvas').forEach((cv, i) => clsPortrait(cv, CLASSES[i], false));
   renderClassDetail();
   setTimeout(() => { const b = $('clsList').querySelector('.ci.on'); if (b) b.focus({ preventScroll: true }); }, 30);
@@ -238,27 +254,27 @@ function renderClassDetail() {
   let hp = 0, fp = 0, st = 0; try { hp = maxHp(); fp = maxFp(); st = maxSt(); } catch (e) { /* bỏ qua */ }
   S = S0;
   const bars = Object.entries(c.stats).map(([k, v]) => `<div class="bar${v === top ? ' hi' : ''}"><span>${STAT_NAME[k]}</span><i style="--w:${Math.round(v / max * 100)}%"></i><b>${v}</b></div>`).join('');
-  const gear = [c.equipped, ...c.weapons.filter(w => w !== c.equipped), c.off].filter(Boolean).map(w => `<li>${img('w', w, 28)}<span>${esc(WEAPONS[w].name)}</span></li>`).join('') + `<li>${img('a', c.armor, 28)}<span>${esc(ARMORS[c.armor].name)}</span></li>` + c.spells.map(s => `<li>${img('s', s, 28)}<span>${esc(SPELLS[s].name)}</span></li>`).join('');
-  $('clsDetail').innerHTML = `<div class="cport"><canvas width="340" height="340" id="clsBig"></canvas><div class="dif">Độ khó làm quen <span>${'◆'.repeat(I.diff)}${'◇'.repeat(3 - I.diff)}</span></div></div>
+  const gear = [...new Set([c.equipped, c.off, ...c.weapons])].filter(Boolean).map(w => `<li>${img('w', w, 28)}<span>${esc(WEAPONS[w].name)}${w === c.equipped ? ' <small>tay phải</small>' : w === c.off ? ' <small>tay trái</small>' : ''}</span></li>`).join('') + `<li>${img('a', c.armor, 28)}<span>${esc(ARMORS[c.armor].name)}</span></li>` + c.spells.map(s => `<li>${img('s', s, 28)}<span>${esc(SPELLS[s].name)}</span></li>`).join('');
+  $('clsDetail').innerHTML = `<div class="cport"><canvas width="340" height="340" id="clsBig"></canvas><div class="clv">Cấp ${c.lv}</div><div class="dif">Độ khó làm quen <span>${'◆'.repeat(I.diff)}${'◇'.repeat(3 - I.diff)}</span></div></div>
     <div class="cinfo"><p class="role">${I.role}</p><h3>${c.name}</h3><p class="play">${I.play}</p>
       <div class="derv"><span>Máu <b>${hp}</b></span><span>FP <b>${fp}</b></span><span>Thể lực <b>${st}</b></span></div>
       <div class="bars">${bars}</div>
       <div class="pc"><ul class="pros">${I.pros.map(p => `<li>${p}</li>`).join('')}</ul><ul class="cons">${I.cons.map(p => `<li>${p}</li>`).join('')}</ul></div>
-      <h4 class="sec">Trang bị ban đầu</h4><ul class="sgear">${gear}</ul>
-      <div class="row" style="justify-content:flex-start"><button class="pbtn" id="btnClsGo">Bắt đầu với ${c.name}</button></div>
+      <h4 class="sec">Trang bị ban đầu${WEAPONS[c.off].cls && WEAPONS[c.off].cls === WEAPONS[c.equipped].cls ? ' · tư thế song kiếm' : ''}</h4><ul class="sgear">${gear}</ul>
     </div>`;
-  clsPortrait($('clsBig'), c, true);
+  clsPortrait($('clsBig'), c, true); $('clsDetail').scrollTop = 0;
+  $('btnClsGo').textContent = 'Bắt đầu với ' + c.name;
   for (const b of $('clsList').querySelectorAll('.ci')) b.classList.toggle('on', b.dataset.pick === clsSel);
 }
-$('clsList').addEventListener('mouseover', e => { const b = e.target.closest('[data-pick]'); if (b && b.dataset.pick !== clsSel) { clsSel = b.dataset.pick; renderClassDetail(); } });
+$('clsList').addEventListener('mouseover', e => { const b = e.target.closest('[data-pick]'); if (b && b.dataset.pick !== clsSel) { clsSel = b.dataset.pick; renderClassDetail(); if (document.activeElement && document.activeElement.closest && document.activeElement.closest('#clsList')) b.focus({ preventScroll: true }); } });
 $('clsList').addEventListener('focusin', e => { const b = e.target.closest('[data-pick]'); if (b && b.dataset.pick !== clsSel) { clsSel = b.dataset.pick; renderClassDetail(); } });
 $('clsList').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (!b) return; if (b.dataset.pick === clsSel && e.detail > 1) { audioInit(); startGame(null, clsSel); return; } clsSel = b.dataset.pick; renderClassDetail(); const go = $('btnClsGo'); if (go && G.touch) go.scrollIntoView({ block: 'nearest' }); });
-$('clsDetail').addEventListener('click', e => { if (e.target.closest('#btnClsGo')) { audioInit(); startGame(null, clsSel); } });
+$('btnClsGo').addEventListener('click', () => { audioInit(); startGame(null, clsSel); });
 
 // ───────────────────────── nút bấm theo thiết bị: bàn phím, tay cầm hay cảm ứng ─────────────────────────
 let INPUT = 'kb';
-const PAD_NAME = { light: 'R1', heavy: 'R2', guard: 'L1', skill: 'L2', spell: 'L1', roll: 'B / ○', item: 'X / □', interact: 'Y / △', mount: 'A / ×', lock: 'R3', map: 'Back', inv: 'Start', itemnext: '↓', spellnext: '↑', eqnext: '→', eqprev: '←', up: 'Cần trái', down: 'Cần trái', left: 'Cần trái', right: 'Cần trái' };
-const TOUCH_NAME = { light: 'Đánh', heavy: 'Mạnh', guard: 'Đỡ', skill: 'Kỹ năng', spell: 'Đỡ', roll: 'Lăn', item: 'Bình', interact: 'Dùng', mount: 'Ngựa', lock: 'Khóa', map: 'Bản đồ', inv: 'Hành trang', itemnext: 'Đồ', spellnext: 'Phép', eqnext: 'Vũ khí', eqprev: 'Vũ khí' };
+const PAD_NAME = { light: 'R1', heavy: 'R2', guard: 'L1', skill: 'L2', spell: 'L1', roll: 'B / ○', item: 'X / □', interact: 'Y / △', mount: 'A / ×', lock: 'R3', map: 'Back', inv: 'Start', itemnext: '↓', spellnext: '↑', eqnext: '→', eqprev: '←', twohand: 'Y + R1', up: 'Cần trái', down: 'Cần trái', left: 'Cần trái', right: 'Cần trái' };
+const TOUCH_NAME = { light: 'Đánh', heavy: 'Mạnh', guard: 'Đỡ', skill: 'Kỹ năng', spell: 'Đỡ', roll: 'Lăn', item: 'Bình', interact: 'Dùng', mount: 'Ngựa', lock: 'Khóa', map: 'Bản đồ', inv: 'Hành trang', itemnext: 'Đồ', spellnext: 'Phép', eqnext: 'Vũ khí', eqprev: 'Vũ khí', twohand: '2 tay' };
 function setInput(d) { if (d === INPUT) return; INPUT = d; refreshKbd(); }
 window.addEventListener('keydown', () => setInput('kb'), true);
 window.addEventListener('mousedown', () => { if (!G.touch) setInput('kb'); }, true);
@@ -274,6 +290,7 @@ const HOWTO = [
   ['Đánh mạnh', ['heavy'], 'Hoặc Shift + chuột trái. Chậm nhưng phá thế đứng'],
   ['Lăn né', ['roll'], 'Trong lúc lăn ngươi bất khả xâm phạm một khoảnh khắc'],
   ['Đỡ đòn / phản đòn', ['guard'], 'Hoặc chuột phải. Giơ đúng lúc đòn chạm tới để phản đòn'],
+  ['Cầm hai tay', ['twohand'], 'Sức Mạnh ×1.5. Tay trái cầm vũ khí thì nút Đỡ thành đòn tay trái; hai vũ khí cùng loại: tư thế song kiếm'],
   ['Kỹ năng vũ khí', ['skill'], 'Tốn FP. Mỗi vũ khí một kỹ năng riêng'],
   ['Niệm phép', ['spell'], 'Cần gậy hoặc ấn ở tay trái'],
   ['Uống bình / dùng đồ', ['item'], 'Đổi đồ trong ô nhanh bằng', 'itemnext'],
@@ -304,7 +321,7 @@ $('btnHowtoOk').onclick = closeHowto;
 $('btnHowto').onclick = () => openHowto('pause');
 // lần đầu vào game của một hành trình mới: mở bảng Cách chơi sau khi màn hình hiện lên
 function maybeShowHowto() { if (window.__T) return; // bản thử tự động không cần bảng này
-  if (S && S.tips && !S.tips.howto && S.level <= 1 && G.mode === 'play') openHowto(); }
+  if (S && S.tips && !S.tips.howto && S.level <= clsBaseLv() && G.mode === 'play') openHowto(); }
 
 // ───────────────────────── chú thích khi rê chuột lên HUD ─────────────────────────
 const HUD_TIPS = [];

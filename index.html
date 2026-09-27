@@ -348,6 +348,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 .inv2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
 @media (max-width:780px){.inv2{grid-template-columns:1fr}}
 .slots{display:flex;flex-wrap:wrap;gap:6px}
+.grip{display:flex;align-items:center;gap:10px;margin:10px 0 0;flex-wrap:wrap} .grip span{font:400 13px/1.4 var(--ui);color:var(--muted)} .grip .mini.on{border-color:var(--gold);background:rgba(214,178,94,.22)}
 .slot{appearance:none;position:relative;display:grid;justify-items:center;gap:2px;width:92px;padding:7px 4px 6px;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.2);color:var(--muted);cursor:pointer;font:500 11px/1.2 var(--ui)}
 .slot img,.slot .empty{width:44px;height:44px;display:block}
 .slot .lbl{font:600 10px/1.2 var(--ui);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
@@ -380,19 +381,30 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 .chip{appearance:none;border:1px solid var(--line);background:none;color:var(--muted);font:600 12.5px/1 var(--ui);padding:7px 11px;cursor:pointer}
 .chip.on{border-color:var(--gold);color:var(--gold-hi);background:rgba(214,178,94,.1)}
 /* ── chọn xuất thân ── */
-.panel.clsp{max-width:1000px}
-.clsx{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
-@media (max-width:760px){.clsx{grid-template-columns:1fr}}
-.clsx>ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.ci{appearance:none;width:100%;display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;text-align:left;padding:7px 10px;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.18);color:var(--parch);cursor:pointer}
-.ci canvas{width:48px;height:48px}
-.ci b{display:block;font:700 19px/1.1 var(--head);color:var(--gold-hi)}
-.ci small{display:block;font:500 12px/1.35 var(--ui);color:var(--muted)}
+.panel.clsp{max-width:1040px;width:min(1040px,100%)}
+.clsp header .note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:760px){.clsp header .note{white-space:normal}}
+/* kích thước khóa cứng: đổi xuất thân chỉ thay nội dung, khung không co giãn */
+.clsx{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;height:clamp(420px,calc(100vh - 250px),520px)}
+.clsx>ul{list-style:none;margin:0;padding:0 4px 0 0;display:grid;grid-auto-rows:min-content;gap:4px;overflow-y:auto;min-height:0;scrollbar-width:thin}
+.ci{appearance:none;width:100%;height:46px;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;text-align:left;padding:4px 10px 4px 6px;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.18);color:var(--parch);cursor:pointer}
+.ci canvas{width:38px;height:38px}
+.ci b{display:block;font:700 16px/1.1 var(--head);color:var(--gold-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci small{display:block;font:500 11.5px/1.3 var(--ui);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci .lv{white-space:nowrap;font:600 11px/1 var(--ui);color:var(--muted);font-variant-numeric:tabular-nums}
 .ci.on,.ci:hover,.ci:focus-visible{border-color:var(--gold);background:rgba(214,178,94,.14);outline:none}
-#clsDetail{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;border:1px solid rgba(214,178,94,.25);background:linear-gradient(180deg,rgba(26,21,14,.7),rgba(10,9,7,.6));padding:16px}
+.ci.on .lv{color:var(--gold-hi)}
+#clsDetail{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;border:1px solid rgba(214,178,94,.25);background:linear-gradient(180deg,rgba(26,21,14,.7),rgba(10,9,7,.6));padding:16px;min-height:0;overflow-y:auto;scrollbar-width:thin}
+@media (max-width:760px){
+  .clsx{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);height:auto}
+  .clsx>ul{grid-auto-flow:column;grid-auto-columns:158px;overflow-x:auto;overflow-y:hidden;padding:0 0 4px}
+  .ci{grid-template-columns:34px minmax(0,1fr)} .ci canvas{width:34px;height:34px} .ci .lv{display:none} .ci b{font-size:15px}
+  #clsDetail{height:clamp(420px,58vh,620px)}
+}
 @media (max-width:560px){#clsDetail{grid-template-columns:1fr}}
 .cport{display:grid;gap:8px;justify-items:center;align-content:start}
 .cport canvas{width:170px;height:170px;border:1px solid rgba(214,178,94,.2);background:rgba(0,0,0,.25)}
+.cport .clv{font:600 12px/1.3 var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 .dif{font:500 12px/1.3 var(--ui);color:var(--muted)} .dif span{color:var(--gold-hi);letter-spacing:.15em}
 .cinfo{display:grid;gap:10px;align-content:start}
 .cinfo .role{margin:0;font:600 11px/1.3 var(--ui);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
@@ -411,6 +423,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 .pc ul{margin:0;padding-left:18px}.pros li{color:#cfe8c4}.pros li::marker{content:"＋ ";color:#9fdc8a}.cons li{color:#f0c8b8}.cons li::marker{content:"－ ";color:#f0a58f}
 .sgear{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px;font:500 13px/1 var(--head);color:var(--parch)}
 .sgear li{display:flex;align-items:center;gap:6px}
+.sgear small{font:500 11px/1 var(--ui);color:var(--muted);margin-left:4px}
 /* ── cách chơi ── */
 .howto{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 22px;margin:0;font:500 13.5px/1.35 var(--ui);color:var(--parch)}
 @media (max-width:620px){.howto{grid-template-columns:1fr}}
@@ -438,6 +451,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
       <button data-act="lock">Khóa</button>
       <button data-act="mount">Ngựa</button>
       <button data-act="eqnext">Vũ khí</button>
+      <button data-act="twohand">2 tay</button>
       <button data-act="itemnext">Đồ</button>
       <button data-act="spellnext">Phép</button>
       <button data-act="map">Bản đồ</button>
@@ -547,6 +561,8 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <div><dt>Đánh mạnh</dt><dd><kbd>Shift</kbd> + chuột trái</dd></div>
         <div><dt>Đỡ / phản đòn</dt><dd>giữ chuột phải</dd></div>
         <div><dt>Niệm phép (tay trái cầm gậy / ấn)</dt><dd>giữ chuột phải</dd></div>
+        <div><dt>Đánh tay trái / song kiếm (tay trái cầm vũ khí)</dt><dd>chuột phải</dd></div>
+        <div><dt>Cầm một tay / hai tay</dt><dd><kbd data-k="twohand">H</kbd></dd></div>
         <div><dt>Kỹ năng vũ khí</dt><dd><kbd>Shift</kbd> + chuột phải</dd></div>
         <div><dt>Dùng đồ / đổi đồ</dt><dd><kbd data-k="item">R</kbd> / <kbd data-k="itemnext">↓</kbd></dd></div>
         <div><dt>Đổi phép</dt><dd><kbd data-k="spellnext">↑</kbd></dd></div>
@@ -559,7 +575,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
         <div><dt>Tạm dừng</dt><dd><kbd>Esc</kbd></dd></div>
         <div><dt>Chỉ dùng bàn phím</dt><dd><kbd data-k="light">J</kbd> <kbd data-k="heavy">K</kbd> <kbd data-k="guard">X</kbd> <kbd data-k="skill">C</kbd></dd></div>
       </dl>
-      <p class="fine">Tay cầm (giống Elden Ring): R1 đánh · R2 đánh mạnh · L1 đỡ / niệm phép · L2 kỹ năng · ○/B lăn (giữ để chạy) · □/X dùng đồ · △/Y tương tác · ×/A ngựa · R3 khóa · ←→ vũ khí · ↑ phép · ↓ đồ · Share/Back bản đồ</p>
+      <p class="fine">Tay cầm (giống Elden Ring): R1 đánh · R2 đánh mạnh · L1 đỡ / niệm phép / đánh tay trái · L2 kỹ năng · giữ △/Y + R1 cầm hai tay · ○/B lăn (giữ để chạy) · □/X dùng đồ · △/Y tương tác · ×/A ngựa · R3 khóa · ←→ vũ khí · ↑ phép · ↓ đồ · Share/Back bản đồ</p>
       <p class="fine">Trên điện thoại, cần điều khiển ảo và các nút bấm tự hiện ra.</p>
       </div>
       <div class="row"><button id="btnControlsClose" class="pbtn">Đóng</button></div>
@@ -716,7 +732,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
     <div class="panel wide clsp">
       <header><p class="eyebrow" id="clsEyebrow">Hành trình mới</p><h2>Chọn xuất thân</h2><p class="note">Rê chuột hoặc chọn một xuất thân để xem lối chơi, chỉ số và trang bị. Xuất thân chỉ quyết định điểm khởi đầu; sau này có thể tăng bất kỳ chỉ số nào và dùng mọi loại vũ khí.</p></header>
       <div class="clsx"><ul id="clsList"></ul><div id="clsDetail"></div></div>
-      <div class="row"><button id="btnClsBack" class="pbtn ghost">Quay lại</button></div>
+      <div class="row"><button id="btnClsBack" class="pbtn ghost">Quay lại</button><button class="pbtn" id="btnClsGo">Bắt đầu</button></div>
     </div>
   </section>
 

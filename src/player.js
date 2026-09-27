@@ -31,8 +31,8 @@ function aimPoint(range = 260) {
   return [P.x + Math.cos(P.face) * range, P.y + Math.sin(P.face) * range];
 }
 // sát thương vũ khí tách theo loại, cộng thêm lửa/thánh nếu vũ khí đang được phủ
-function atkParts(mul, dt) {
-  const Wp = WEAPONS[S.equipped], ar = weaponAR(S.equipped) * mul * dmgBonus(), out = { [dt || Wp.dt]: ar };
+function atkParts(mul, dt, arBase) {
+  const Wp = WEAPONS[S.equipped], ar = (arBase === undefined ? weaponAR(S.equipped) : arBase) * mul * dmgBonus(), out = { [dt || Wp.dt]: ar };
   if (P.buffs.flame > 0) out.fire = (out.fire || 0) + ar * 0.3;
   if (P.buffs.holy > 0) out.holy = (out.holy || 0) + ar * 0.3;
   return out;
@@ -52,7 +52,73 @@ function makeAtk(kind, combo) {
   if (kind === 'heavy' && hasTal('claw')) mul *= 1.18;
   if (kind === 'heavy' && hasTal('crown')) mul *= 1.1;
   if (Wp.type === 'bow' && hasTal('arrow')) mul *= 1.2;
-  return Object.assign(a, { kind, combo, maxCombo: Wp.light ? Wp.light.length - 1 : 0, parts: atkParts(mul), hits: new Set(), lunged: false });
+  if (kind === 'light' && Wp.light && combo === Wp.light.length - 1 && hasTal('twinblade')) mul *= 1.1;
+  if (Wp.paired && hasTal('twinblade')) mul *= 1.15;
+  // cầm hai tay: đòn nặng tay hơn, phá thế tốt hơn
+  if (gripTwo() && kind !== 'mounted') a.poise *= 1.2 * (hasTal('gripseal') ? 1.25 : 1);
+  return Object.assign(a, { kind, combo, maxCombo: Wp.light ? Wp.light.length - 1 : 0, parts: atkParts(mul), hits: new Set(), lunged: false, side: Wp.paired ? 'dual' : null });
+}
+// ───────────────────────── đòn tay trái và tư thế song kiếm ─────────────────────────
+// Chuỗi đòn song kiếm theo loại vũ khí: mỗi nhịp chém bằng cả hai lưỡi (multi), sát thương theo trung bình hai vũ khí.
+const DUAL = {
+  blade: [
+    S_('slash', 0.12, 0.16, 0.26, 0.62, 0, 2.4, 150, 12, { swing: 1, multi: 2 }),
+    S_('slash', 0.1, 0.16, 0.26, 0.64, 0, 2.4, 150, 12, { swing: -1, multi: 2 }),
+    S_('spin', 0.12, 0.32, 0.3, 0.6, 0, TAU, 110, 14, { turns: 1, multi: 2 }),
+    S_('spin', 0.16, 0.46, 0.42, 0.62, 0, TAU, 90, 18, { turns: 2, multi: 3, drift: 120 }),
+  ],
+  stab: [
+    S_('thrust', 0.08, 0.3, 0.22, 0.42, 0, 0.9, 110, 6, { thrust: true, multi: 3 }),
+    S_('thrust', 0.07, 0.3, 0.22, 0.44, 0, 0.9, 110, 6, { thrust: true, multi: 3 }),
+    S_('spin', 0.1, 0.3, 0.3, 0.55, 0, TAU, 90, 10, { turns: 1, multi: 2 }),
+    S_('thrust', 0.12, 0.5, 0.36, 0.46, 0, 0.9, 140, 8, { thrust: true, multi: 5 }),
+  ],
+  pole: [
+    S_('thrust', 0.14, 0.24, 0.3, 0.62, 0, 0.8, 120, 12, { thrust: true, multi: 2, rangeK: 1.1 }),
+    S_('slash', 0.16, 0.2, 0.34, 0.66, 0, 2.6, 140, 16, { swing: 1, multi: 2 }),
+    S_('thrust', 0.16, 0.36, 0.4, 0.58, 0, 0.8, 180, 14, { thrust: true, multi: 3, rangeK: 1.15 }),
+  ],
+  heavy: [
+    S_('slash', 0.16, 0.18, 0.32, 0.7, 0, 2.4, 150, 22, { swing: 1, multi: 2 }),
+    S_('slash', 0.15, 0.18, 0.32, 0.72, 0, 2.4, 150, 22, { swing: -1, multi: 2 }),
+    S_('overhead', 0.24, 0.14, 0.46, 1.5, 0, 1.4, 200, 60, { off: 56, r: 64, shake: 7 }),
+  ],
+};
+const DUAL_OF = { straight: 'blade', curved: 'blade', katana: 'blade', paired: 'blade', dagger: 'stab', thrust: 'stab', spear: 'pole', halberd: 'pole', axe: 'heavy', club: 'heavy' };
+function makeOffAtk(combo) {
+  const R = WEAPONS[S.equipped], tw = hasTal('twinblade') ? 1.15 : 1, bm = hasTal('blade') ? 1.12 : 1;
+  if (powerStance()) {
+    const L = pairedW() ? R : leftWeapon(), set = DUAL[DUAL_OF[R.cls] || 'blade'], c = combo % set.length, a = Object.assign({}, set[c]);
+    const arR = weaponAR(S.equipped), arL = pairedW() ? arR : weaponAR(S.off, upLv(S.off), false);
+    a.range = Math.max(R.light[0].range, L.light[0].range) * (a.rangeK || 1) + 4;
+    const mul = a.mul * tw * bm * (c === set.length - 1 && hasTal('twinblade') ? 1.1 : 1);
+    return Object.assign(a, { kind: 'dual', side: 'dual', combo: c, maxCombo: set.length - 1, cost: Math.round((R.cost[0] + L.cost[0]) * 0.7), bleed: Math.round(((R.bleed || [0])[0] + (L.bleed || [0])[0]) / 2),
+      hyper: false, parts: atkParts(mul, R.dt, (arR + arL) / 2), hits: new Set(), lunged: false });
+  }
+  // tay trái cầm vũ khí khác loại: hai nhát chém đơn giản bằng tay trái, như Elden Ring
+  const L = leftWeapon(), n = Math.min(2, L.light.length), c = combo % n, a = Object.assign({}, L.light[c]);
+  a.swing = -(a.swing || 1);
+  return Object.assign(a, { kind: 'left', side: 'left', combo: c, maxCombo: n - 1, cost: L.cost[0], bleed: (L.bleed || [0])[0], hyper: false,
+    parts: atkParts(a.mul * tw * bm, L.dt, weaponAR(S.off, upLv(S.off), false)), hits: new Set(), lunged: false });
+}
+function startOff(combo, moving, mx, my) {
+  if (!offAttack()) return;
+  P.face = aimFace(moving, mx, my);
+  P.atk = makeOffAtk(combo);
+  spendSt(P.atk.cost, ST_DELAY);
+  P.state = 'attack'; P.t = 0;
+}
+// đổi cách cầm: một tay / hai tay (như giữ △ + R1 trong Elden Ring)
+function toggleTwoHand() {
+  const W = WEAPONS[S.equipped];
+  if (P.mounted || P.state === 'dead') return;
+  if (W.twoHanded) { toast(W.type === 'bow' ? 'Cung luôn cầm bằng hai tay' : 'Vũ khí này vốn đã phải cầm hai tay'); return; }
+  if (W.paired) { toast('Vũ khí đôi: mỗi tay đã cầm một lưỡi'); return; }
+  if (W.type !== 'melee') return;
+  S.twoH = !S.twoH; SFX.equip();
+  if (P.state === 'guard') { P.state = 'idle'; P.t = 0; }
+  toast(S.twoH ? 'Cầm hai tay: ' + W.name + ' · Sức Mạnh tính ×1.5' : 'Cầm một tay' + (leftWeapon() ? ' · tay trái: ' + leftWeapon().name : ''));
+  save();
 }
 // tiêu thể lực sau một hành động; cạn sạch thì phải thở một nhịp lâu hơn mới hồi lại (như dòng souls)
 function spendSt(n, delay) {
@@ -105,6 +171,7 @@ function startSkill(moving, mx, my) {
     impale: { anim: 'thrust', wind: 0.45, act: 0.16, rec: 0.45, mul: 2.0, range: 170, arc: 0.36, lunge: 300, poise: 55, thrust: true },
     wildspin: { anim: 'spin', wind: 0.22, act: 0.9, rec: 0.45, mul: 0.9, range: 92, arc: TAU, lunge: 0, poise: 30, turns: 3, multi: 3, drift: 170 },
     leap: { anim: 'overhead', wind: 0.55, act: 0.15, rec: 0.55, mul: 2.1, range: 100, arc: 1.2, off: 50, r: 100, lunge: 0, leap: 330, poise: 90, shake: 12, ring: true, quake: true },
+    dance: { anim: 'spin', wind: 0.16, act: 0.72, rec: 0.42, mul: 0.62, range: 80, arc: TAU, lunge: 60, poise: 14, turns: 3, multi: 6, drift: 200 },
     horncharge: { anim: 'dash', wind: 0.3, act: 0.5, rec: 0.45, mul: 1.5, range: 70, arc: 1.8, lunge: 0, dashSpeed: 640, poise: 70 },
   }[id];
   const a = Object.assign({ cost: 10, bleed: bl[0], hyper: true }, M);
@@ -223,14 +290,24 @@ function equip(id) {
   const Wp = WEAPONS[id];
   if (Wp.hand === 'off') return equipOff(id);
   if (S.equipped !== id) {
+    const old = S.equipped;
+    // món đang ở tay trái được chuyển sang tay phải: tay trái nhận lại món cũ của tay phải (nếu cầm một tay được), không thì cầm khiên
+    if (S.off === id) S.off = canGrip2(old) ? old : S.weapons.includes('shield') ? 'shield' : OFF_ORDER.find(w => S.weapons.includes(w)) || 'shield';
     S.equipped = id; SFX.equip(); save();
-    toast('Tay phải: ' + Wp.name + (reqMet(Wp.req) ? '' : ' (thiếu chỉ số!)') + (Wp.twoHanded && offDef().type !== 'shield' ? ' · tay trái bị khóa' : ''));
+    toast('Tay phải: ' + Wp.name + (reqMet(Wp.req, wStats(id)) ? '' : ' (thiếu chỉ số!)') + (Wp.twoHanded && offDef().type !== 'shield' ? ' · tay trái bị khóa' : '') + (powerStance() && !Wp.paired ? ' · tư thế song kiếm' : ''));
   }
   return true;
 }
 function equipOff(id) {
   if (!S.weapons.includes(id)) return false;
-  if (S.off !== id) { S.off = id; SFX.glint(); save(); toast('Tay trái: ' + WEAPONS[id].name); }
+  const W = WEAPONS[id];
+  if (W.type === 'melee' && !canGrip2(id)) { toast(W.paired ? 'Vũ khí đôi chỉ cầm ở tay phải' : 'Vũ khí hai tay không cầm ở tay trái được'); return false; }
+  if (W.type === 'bow') { toast('Cung chỉ cầm ở tay phải'); return false; }
+  if (id === S.equipped) { toast('Món này đang ở tay phải'); return false; }
+  if (S.off !== id) {
+    S.off = id; SFX.glint(); save();
+    toast('Tay trái: ' + W.name + (powerStance() ? ' · TƯ THẾ SONG KIẾM' : W.type === 'melee' ? ' · nút Đỡ thành đòn tay trái' : ''));
+  }
   return true;
 }
 function ownedRight() { return WEAPON_ORDER.filter(w => S.weapons.includes(w)); }
@@ -269,6 +346,7 @@ function doAction(a, moving, mx, my) {
       }
       break;
     }
+    case 'left': if (!P.mounted && P.st > 0) startOff(0, moving, mx, my); break;
     case 'skill': if (!P.mounted && P.st > 0) startSkill(moving, mx, my); break;
     case 'spell': if (!P.mounted) startSpell(moving, mx, my); break;
     case 'item': useQuick(moving, mx, my); break;
@@ -300,6 +378,10 @@ function updatePlayer(dt) {
   const p = P;
   if (p.state === 'dead') return;
   p.t += dt;
+  // tay trái cầm vũ khí: mỗi lần bấm nút Đỡ là một đòn tay trái (đưa vào hàng chờ như các nút đánh khác)
+  const gh = guardHeld();
+  if (gh && !p.gPrev && offAttack() && !p.mounted) buf = { a: 'left', t: G.clock };
+  p.gPrev = gh;
   if (p.invuln > 0) p.invuln -= dt;
   for (const k in p.buffs) if (p.buffs[k] > 0) p.buffs[k] = Math.max(0, p.buffs[k] - dt);
   if (p.buffs.bless > 0) p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.006 * dt);
@@ -361,7 +443,7 @@ function updatePlayer(dt) {
     const a = takeBuf();
     if (a) doAction(a, moving, mx, my);
     // tay trái cầm gậy / ấn: giữ nút đỡ để niệm phép liên tục (như Elden Ring); cầm khiên: đỡ đòn
-    if (p.state === 'idle' && !p.mounted && guardHeld()) {
+    if (p.state === 'idle' && !p.mounted && guardHeld() && !offAttack()) {
       if (catalyst()) { if (p.fp >= 1) doAction('spell', moving, mx, my); }
       else { p.state = 'guard'; p.t = 0; p.parryOk = parryWin() > 0 && G.clock - p.lastGuardAt > 0.45; p.lastGuardAt = G.clock; }
     }
@@ -381,7 +463,7 @@ function updatePlayer(dt) {
     if (p.t >= R.dur) { p.state = 'idle'; p.t = 0; if (!R.back && !p.lock) p.face = p.rollDir; }
     else if (p.t > R.dur * (R.back ? 0.6 : 0.68)) {
       const a = peekBuf();
-      if (a === 'light' || a === 'heavy' || a === 'roll' || a === 'item') { takeBuf(); p.state = 'idle'; doAction(a, moving, mx, my); }
+      if (a === 'light' || a === 'heavy' || a === 'roll' || a === 'item' || a === 'left') { takeBuf(); p.state = 'idle'; doAction(a, moving, mx, my); }
     }
   } else if (p.state === 'attack') {
     const A = p.atk, t = p.t;
@@ -434,14 +516,15 @@ function updatePlayer(dt) {
         if (hit) {
           A.hits.add(e);
           if (A.critT) { critHit(e, A); continue; }
-          hitEnemy(e, A.parts, A.poise * (A.kind === 'heavy' && hasTal('ramhorn') ? 1.3 : 1) * (p.buffs.warcry > 0 ? 1.4 : 1), p.x, p.y, A.kind === 'skill' ? 'heavy' : A.kind, { bleed: (A.bleed || 0) + (hasTal('venomfang') ? 7 : 0) || undefined });
+          hitEnemy(e, A.parts, A.poise * (A.kind === 'heavy' && hasTal('ramhorn') ? 1.3 : 1) * (p.buffs.warcry > 0 ? 1.4 : 1), p.x, p.y, A.kind === 'skill' ? 'heavy' : A.kind === 'left' || A.kind === 'dual' ? 'light' : A.kind, { bleed: (A.bleed || 0) + (hasTal('venomfang') ? 7 : 0) || undefined });
         }
       }
     } else {
       if (t > A.wind + A.act + A.rec * 0.35) {
         const a = peekBuf();
         if (a === 'light' && A.kind === 'light' && A.combo < A.maxCombo && !p.mounted && !critTarget()) { takeBuf(); if (p.st <= 0) return; startAttack('light', A.combo + 1, moving, mx, my); return; }
-        if (a === 'roll' || a === 'heavy' || a === 'light' || a === 'item' || a === 'skill' || a === 'spell') { takeBuf(); p.state = 'idle'; p.atk = null; doAction(a, moving, mx, my); return; }
+        if (a === 'left' && (A.kind === 'left' || A.kind === 'dual') && A.combo < A.maxCombo && !p.mounted) { takeBuf(); if (p.st <= 0) return; startOff(A.combo + 1, moving, mx, my); return; }
+        if (a === 'roll' || a === 'heavy' || a === 'light' || a === 'item' || a === 'skill' || a === 'spell' || a === 'left') { takeBuf(); p.state = 'idle'; p.atk = null; doAction(a, moving, mx, my); return; }
       }
       if (t >= A.wind + A.act + A.rec) { p.state = 'idle'; p.t = 0; p.atk = null; }
     }
@@ -486,7 +569,7 @@ function hurtPlayer(dmg, fx, fy, heavy, src = null, kind = 'melee', dt = 'phys')
   const from = Math.atan2(fy - p.y, fx - p.x);
   if (p.state === 'guard' && (dist(fx, fy, p.x, p.y) < 4 || Math.abs(angDiff(p.face, from)) < 1.5)) {
     // cầm khiên: chặn tốt và phản đòn được; cầm vũ khí hai tay: đỡ bằng thân vũ khí, chặn kém và không phản đòn được
-    const th = twoHanded(), gd = th ? { chip: 2.2, st: 1.45 } : offDef().guard || { chip: 2.2, st: 1.45 }, gt = hasTal('guard') ? 0.65 : 1;
+    const th = twoHanded(), gd = th ? { chip: 2.2, st: 1.45 * (hasTal('gripseal') ? 0.75 : 1) } : offDef().guard || { chip: 2.2, st: 1.45 }, gt = hasTal('guard') ? 0.65 : 1;
     if (kind === 'melee' && src && !src.noParry && p.parryOk && p.t < parryWin()) { parry(src); return false; }
     const chip = Math.round(dmg * (kind === 'melee' ? (heavy ? 0.3 : 0.15) : kind === 'proj' ? 0.2 : 0.5) * gd.chip * gt);
     p.hp -= chip; p.ghostDelay = 0.6; p.st -= dmg * 0.9 * gd.st * gt; p.stDelay = 0.7; p.blockedAt = G.clock;

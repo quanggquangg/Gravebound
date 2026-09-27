@@ -48,6 +48,30 @@ const WFORM = {
     ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(b0 + 2 * s, -hw * 0.3, e - b0 - 6 * s, hw * 0.3);
     swordHilt(s, hw, '#7a6a50');
   },
+  // kiếm cong: lưỡi một mép cong dần về mũi, bản rộng ra ở đầu, sống lưng sáng
+  scimitar(L, s, len) {
+    const b0 = 6 * s;
+    if (L.glow) { ctx.shadowColor = typeof L.glow === 'string' ? L.glow : '#ffd76a'; ctx.shadowBlur = 10; }
+    ctx.fillStyle = litGrad(L.wcol, len * 0.6, -4 * s, len * 0.6); ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(b0, -1.8 * s); ctx.quadraticCurveTo(len * 0.62, -3.2 * s, len, -7.5 * s);
+    ctx.quadraticCurveTo(len - 2 * s, -1 * s, len * 0.72, 2.6 * s); ctx.quadraticCurveTo(len * 0.4, 2.8 * s, b0, 1.8 * s); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.65)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(b0 + 2 * s, 1.2 * s); ctx.quadraticCurveTo(len * 0.5, 2 * s, len * 0.74, 1.6 * s); ctx.quadraticCurveTo(len - 3 * s, -1 * s, len - 1 * s, -6.4 * s); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(b0 + 2 * s, -1 * s); ctx.quadraticCurveTo(len * 0.6, -2.2 * s, len - 3 * s, -5.6 * s); ctx.stroke();
+    // chắn tay cong hai đầu và chuôi quấn da
+    ctx.fillStyle = '#b08d4c'; ctx.strokeStyle = OL; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(b0 - 1 * s, -4.4 * s); ctx.quadraticCurveTo(b0 + 1.6 * s, 0, b0 - 1 * s, 4.4 * s); ctx.lineTo(b0 - 2.6 * s, 4 * s); ctx.quadraticCurveTo(b0 - 0.6 * s, 0, b0 - 2.6 * s, -4 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4a3326'; ctx.fillRect(-3 * s, -1.2 * s, b0 - 1.6 * s + 3 * s, 2.4 * s);
+    ctx.fillStyle = '#b08d4c'; ctx.beginPath(); ctx.arc(-3.4 * s, 0.4 * s, 1.7 * s, 0, TAU); ctx.fill(); ctx.stroke();
+  },
+  // kiếm bản rộng: lưỡi dày, mũi tù, chắn tay thẳng nặng
+  broad(L, s, len) {
+    const hw = 2.7 * s, b0 = 6 * s, tip = 4 * s;
+    ctx.fillStyle = litGrad(L.wcol, len * 0.5, -2 * s, len * 0.6); ctx.strokeStyle = OL; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(b0, -hw); ctx.lineTo(len - tip, -hw); ctx.quadraticCurveTo(len, -hw * 0.6, len, 0); ctx.quadraticCurveTo(len, hw * 0.6, len - tip, hw); ctx.lineTo(b0, hw); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(b0 + 2 * s, -0.5 * s, len - tip - b0 - 4 * s, 1 * s);
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(b0 + 2 * s, -hw + 0.8 * s); ctx.lineTo(len - tip, -hw + 0.8 * s); ctx.stroke();
+    swordHilt(s, hw, '#8a7a5a', 2.6);
+  },
   // dao găm: lưỡi lá ngắn, gốc rộng, chuôi có vòng tròn
   dagger(L, s, len) {
     const b0 = 5 * s, hw = 2.5 * s;
@@ -311,6 +335,15 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
   if (BF && BF.offhand) BF.offhand(L, s, o, wave);
   if (o.trail) smear(3 * s, 8 * s, (L.wlen + 4) * s, o.trail[0], o.trail[1], (L.wlen * (o.hot ? 0.62 : 0.5) + 4) * s, o.trailCol || 'rgba(255,244,210,.35)', o.hot);
   drawWeapon(L, s, wAng, o);
+  if (o.left) {
+    // vũ khí tay trái: vẽ đối xứng qua trục thân, có vệt chém và vệt đâm riêng
+    const Q = o.left, LL = Object.assign({}, L, Q.L);
+    ctx.save(); ctx.scale(1, -1);
+    if (Q.trail) smear(3 * s, 8 * s, (LL.wlen + 4) * s, Q.trail[0], Q.trail[1], (LL.wlen * (o.hot ? 0.62 : 0.5) + 4) * s, o.trailCol || 'rgba(255,244,210,.35)', o.hot);
+    drawWeapon(LL, s, Q.wAng, { thrust: Q.thrust });
+    if (Q.stab) { ctx.strokeStyle = 'rgba(255,244,210,.45)'; ctx.lineWidth = 4 * s; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo((LL.wlen + 20) * s, 7 * s); ctx.lineTo((LL.wlen + 52) * s, 3 * s); ctx.stroke(); ctx.lineCap = 'butt'; }
+    ctx.restore();
+  }
   if (o.stab) {
     ctx.strokeStyle = 'rgba(255,244,210,.45)'; ctx.lineWidth = 4 * s; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo((L.wlen + 20) * s, 7 * s); ctx.lineTo((L.wlen + 52) * s, 3 * s); ctx.stroke(); ctx.lineCap = 'butt';
@@ -491,8 +524,18 @@ function drawPlayer() {
   else if (p.state === 'deflect') wAng = -0.95 + Math.min(1, p.t / 0.08) * 0.35;
   const th = twoHanded(), cat = catalyst(), off = offDef();
   if (th && p.state === 'guard') wAng = -1.1;
-  const o = { anim: p.walk, trail, thrust, stab, charge, z: p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
-  if (trail) { const hv = p.atk && p.atk.kind === 'heavy'; o.trailCol = playerTrailCol(hv); o.hot = hv || P.buffs.flame > 0 || P.buffs.holy > 0; }
+  // tay trái cầm vũ khí: đòn tay trái chỉ vung tay trái, đòn song kiếm vung cả hai tay đối xứng
+  const lwId = leftWeapon() ? S.off : pairedW() ? S.equipped : null;
+  let left = null;
+  if (lwId && !p.mounted) {
+    left = { L: WEAPONS[lwId].look, wAng, trail: null, thrust: 0, stab: false };
+    const side = p.state === 'attack' && p.atk ? p.atk.side : null;
+    if (side === 'left') { Object.assign(left, { trail, thrust, stab }); wAng = 0.6; trail = null; thrust = 0; stab = false; }
+    else if (side === 'dual') Object.assign(left, { trail, thrust, stab });
+    else if (p.state === 'attack' || p.state === 'deflect') left.wAng = 0.6;
+  }
+  const o = { anim: p.walk, trail, thrust, stab, charge, left, z: p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat || lwId ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
+  if (trail || (left && left.trail)) { const hv = p.atk && p.atk.kind === 'heavy'; o.trailCol = playerTrailCol(hv); o.hot = hv || P.buffs.flame > 0 || P.buffs.holy > 0; }
   if (p.state === 'roll' && p.roll.back) {
     // nhảy lùi: không lộn người, chỉ hơi thu mình
     const k = p.t / p.roll.dur, s = 1 - Math.sin(k * Math.PI) * 0.08;

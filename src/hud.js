@@ -149,6 +149,13 @@ function drawWeaponIcon(id, cx, cy, box) {
   } else if (L.weapon === 'scythe') {
     shaft(-16, 14, '#3a3a4a');
     ctx.shadowColor = c; ctx.shadowBlur = 6; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(14, -1); ctx.quadraticCurveTo(12, -12, -2, -13); ctx.quadraticCurveTo(9, -8, 11, -1); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+  } else if (L.form === 'scimitar') {
+    ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, -1.4); ctx.quadraticCurveTo(10, -2.4, 17, -6); ctx.quadraticCurveTo(15.5, -0.5, 11, 1.8); ctx.quadraticCurveTo(6, 2.2, 0, 1.4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(1, 0.9); ctx.quadraticCurveTo(9, 1.5, 15, -4.8); ctx.stroke(); ctx.strokeStyle = ol; ctx.lineWidth = 1.4;
+    hilt(0, 3.6);
+  } else if (W.paired) {
+    // vũ khí đôi: hai lưỡi bắt chéo
+    for (const r of [0.34, -0.34]) { ctx.save(); ctx.rotate(r); ctx.translate(-2, 0); blade(0, 15, 1.7, 4, c); hilt(0, 4); ctx.restore(); }
   } else if (id === 'broken') {
     ctx.fillStyle = c; iconPath([[0, -2], [9, -2], [11, -0.5], [9.5, 0.6], [12, 2], [0, 2]]); ctx.fill(); ctx.stroke(); hilt(0, 4.5, '#7a6a52');
   } else if (L.weapon === 'greatsword') {
@@ -254,9 +261,12 @@ function greatRuneGem(x, y, col, on) {
   } else { ctx.strokeStyle = 'rgba(214,178,94,.25)'; ctx.beginPath(); for (let k = 0; k < 6; k++) { const a = k / 6 * TAU - Math.PI / 2; ctx.lineTo(Math.cos(a) * 4.5, Math.sin(a) * 4.5); } ctx.closePath(); ctx.stroke(); }
   ctx.restore();
 }
+let guardLbl = '';
 function drawHUD() {
   const x = 20, y = 20, maxW = CW - 40;
   HUD_TIPS.length = 0;
+  // nút Đỡ trên màn cảm ứng đổi tên khi tay trái cầm vũ khí
+  if (G.touch) { const l = offAttack() ? (powerStance() ? 'Song kiếm' : 'Tay trái') : 'Đỡ'; if (l !== guardLbl) { guardLbl = l; const b = document.querySelector('#touch [data-hold="guard"]'); if (b) b.textContent = l; } }
   bar(x, y, Math.min(maxW * 0.7, P.maxHp * 1.1), 11, P.hp / P.maxHp, P.ghost / P.maxHp, P.poisonT > 0 ? '#86408f' : '#a3201c');
   const fpW = Math.min(maxW * 0.6, P.maxFp * 1.5);
   bar(x, y + 19, fpW, 6, P.fp / P.maxFp, null, '#3d5fc6');
@@ -286,8 +296,18 @@ function drawHUD() {
   hudTip(wx, fy, fs, fs, () => { const W = WEAPONS[S.equipped]; return [W.name + (upLv(S.equipped) ? ' +' + upLv(S.equipped) : ''), W.sp ? 'Sức mạnh phép ' + Math.round(spellPower(S.equipped)) : 'Công ' + Math.round(weaponAR(S.equipped, upLv(S.equipped))) + ' · ' + DT_NAME[W.dt], 'Đổi vũ khí: ' + keyOf('eqprev') + ' ' + keyOf('eqnext')]; });
   const ox = wx + fs + 6, os = 26;
   box(ox, fy + fs - os, os);
-  if (Wp.twoHanded) { ctx.strokeStyle = 'rgba(236,227,204,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ox + 6, fy + fs - 6); ctx.lineTo(ox + os - 6, fy + fs - os + 6); ctx.stroke(); }
+  const lw = leftWeapon();
+  if (pairedW()) { ctx.globalAlpha = 0.75; drawWeaponIcon(S.equipped, ox + os / 2, fy + fs - os / 2, os); ctx.globalAlpha = 1; }
+  else if (twoHanded()) {
+    ctx.strokeStyle = 'rgba(236,227,204,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ox + 6, fy + fs - 6); ctx.lineTo(ox + os - 6, fy + fs - os + 6); ctx.stroke();
+    if (gripTwo()) { ctx.font = `700 10px ${FONT_U}`; ctx.fillStyle = '#f2dc97'; ctx.textAlign = 'center'; ctx.fillText('2H', ox + os / 2, fy + fs - os - 4); ctx.textAlign = 'left'; }
+  } else if (lw) drawWeaponIcon(S.off, ox + os / 2, fy + fs - os / 2, os);
   else drawOffIcon(off, ox + os / 2, fy + fs - os / 2, os);
+  hudTip(ox, fy + fs - os, os, os, () => pairedW() ? ['Vũ khí đôi · luôn song kiếm', 'Nút Đỡ (' + keyOf('guard') + '): chuỗi đòn bằng cả hai lưỡi']
+    : gripTwo() ? ['Đang cầm hai tay', 'Sức Mạnh ×1.5 · đỡ đòn bằng thân vũ khí', 'Cầm lại một tay: ' + keyOf('twohand')]
+    : Wp.twoHanded ? ['Tay trái bị khóa', 'Vũ khí tay phải cần cả hai tay']
+    : lw ? [lw.name + (upLv(S.off) ? ' +' + upLv(S.off) : '') + (powerStance() ? ' · song kiếm' : ''), 'Nút Đỡ (' + keyOf('guard') + '): ' + (powerStance() ? 'chuỗi đòn song kiếm' : 'đòn tay trái'), 'Cầm hai tay vũ khí phải: ' + keyOf('twohand')]
+    : [off.name, off.type === 'shield' ? 'Giữ ' + keyOf('guard') + ' để đỡ; giơ đúng lúc để phản đòn' : 'Chất xúc tác để niệm phép', 'Cầm hai tay vũ khí phải: ' + keyOf('twohand')]);
   const tx = ox + os + 8;
   ctx.font = `500 12px ${FONT_U}`; ctx.fillStyle = reqMet(Wp.req) ? '#ece3cc' : '#f0a58f';
   ctx.fillText(Wp.name + (upLv(S.equipped) ? ' +' + upLv(S.equipped) : ''), tx, fy + 13);
@@ -299,6 +319,8 @@ function drawHUD() {
   ctx.fillStyle = line2c; ctx.fillText(line2, tx, fy + 28);
   let l3 = '';
   if (Wp.type === 'bow') l3 = 'Tên ' + S.arrows + '/' + S.arrowMax;
+  else if (gripTwo()) l3 = 'Cầm hai tay';
+  else if (powerStance()) l3 = 'Tư thế song kiếm';
   const bf = [];
   if (P.buffs.flame > 0) bf.push('Lửa ' + Math.ceil(P.buffs.flame) + 's');
   if (P.buffs.holy > 0) bf.push('Thánh ' + Math.ceil(P.buffs.holy) + 's');
@@ -837,9 +859,9 @@ function renderShop() {
   $('shopName').textContent = sh.name; $('shopLine').textContent = sh.line;
   // Nữ Tu Seraphine còn nhận tái sinh: tẩy điểm để thử lối chơi khác
   const rs = id === 'priestess' ? (() => {
-    const free = respecFree(), can = S.level > 1 && (free || invN('larval') > 0), arm = G.respecArm && can;
+    const free = respecFree(), can = S.level > clsBaseLv() && (free || invN('larval') > 0), arm = G.respecArm && can;
     const cost = free ? 'Lần đầu miễn phí' : 'Cần 1 Nước Mắt Ấu Trùng (có ' + invN('larval') + ')';
-    return `<li><button data-respec="1" class="${arm ? 'arm' : 'hub'}" ${can ? '' : 'disabled'}><span>Tái Sinh${arm ? ' · bấm lần nữa để xác nhận' : ''}<br><small>Chỉ số về như lúc mới chọn xuất thân, nhận lại ${respecRefund().toLocaleString(numLoc())} rune đã dùng để lên cấp rồi phân lại tùy ý. ${cost}</small></span><small>${S.level > 1 ? 'Cấp ' + S.level + ' → 1' : 'Cấp 1'}</small></button></li>`;
+    return `<li><button data-respec="1" class="${arm ? 'arm' : 'hub'}" ${can ? '' : 'disabled'}><span>Tái Sinh${arm ? ' · bấm lần nữa để xác nhận' : ''}<br><small>Chỉ số về như lúc mới chọn xuất thân, nhận lại ${respecRefund().toLocaleString(numLoc())} rune đã dùng để lên cấp rồi phân lại tùy ý. ${cost}</small></span><small>${S.level > clsBaseLv() ? 'Cấp ' + S.level + ' → ' + clsBaseLv() : 'Cấp ' + S.level}</small></button></li>`;
   })() : '';
   $('shopList').innerHTML = rs + sh.stock.map((r, i) => {
     const info = shopRow(r), can = !info.sold && !info.locked && S.runes >= r.price;
@@ -910,6 +932,10 @@ const HINTS = [
     'Nhấn <kbd data-k="skill">C</kbd> (Shift+chuột phải) để dùng kỹ năng riêng của vũ khí; tốn FP', 'Chạm nút Kỹ năng để dùng kỹ năng riêng của vũ khí; tốn FP'],
   ['spell', () => !!catalyst() && S.att.length > 0 && enemies.some(e => !e.dead && e.state === 'chase' && dist(e.x, e.y, P.x, P.y) < 320), 'Niệm phép',
     'Nhấn <kbd data-k="spell">L</kbd> hoặc giữ chuột phải để niệm phép; <kbd data-k="spellnext">↑</kbd> đổi phép. Hết FP thì uống Bình FP', 'Giữ nút Đỡ để niệm phép bằng gậy hoặc ấn'],
+  ['dual', () => offAttack() && S.time > 5, 'Vũ khí ở tay trái',
+    'Bấm <kbd data-k="guard">X</kbd> (chuột phải) để đánh bằng tay trái. Hai vũ khí cùng loại vào tư thế song kiếm: nút này ra chuỗi đòn bằng cả hai lưỡi. Không có khiên nên hãy lăn né', 'Nút Đỡ giờ là đòn tay trái; hai vũ khí cùng loại thì ra chuỗi đòn song kiếm. Không có khiên nên hãy lăn né'],
+  ['grip', () => { const W = WEAPONS[S.equipped]; return canGrip2() && !gripTwo() && !reqMet(W.req) && reqMet(W.req, wStats(S.equipped, true)); }, 'Cầm hai tay',
+    'Thiếu Sức Mạnh cho vũ khí này. Nhấn <kbd data-k="twohand">H</kbd> để cầm hai tay: Sức Mạnh được tính ×1.5', 'Thiếu Sức Mạnh cho vũ khí này. Chạm nút 2 tay để cầm hai tay: Sức Mạnh được tính ×1.5'],
   ['sprint', () => S.tips.fight && P.state === 'idle' && Math.hypot(P.mvx || 0, P.mvy || 0) > 20 && S.time > 90, 'Chạy nhanh',
     'Giữ <kbd data-k="roll">Space</kbd> khi di chuyển để chạy nhanh (tốn thể lực)', 'Giữ nút Lăn khi di chuyển để chạy nhanh'],
   ['horse', () => !!S.horse && !P.mounted, 'Có ngựa', 'Nhấn <kbd data-k="mount">F</kbd> để gọi ngựa. Ngựa chạy nhanh và băng qua ao độc an toàn', 'Chạm nút Ngựa để gọi ngựa'],

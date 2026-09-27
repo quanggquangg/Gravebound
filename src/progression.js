@@ -130,19 +130,28 @@ function buyRow(npc, i) {
 // ───────────────────────── tái sinh (tẩy điểm) ─────────────────────────
 // như Rennala trong Elden Ring: chỉ số về như lúc mới chọn xuất thân, rune đã dùng để lên cấp được trả lại để phân bổ lại.
 // Lần đầu miễn phí, các lần sau cần một Nước Mắt Ấu Trùng.
+// xuất thân của bản lưu: bản lưu cũ (trước khi đổi sang mười xuất thân kiểu Elden Ring) giữ chỉ số gốc cũ và cấp 1
+const LEGACY_CLS = { knight: { vig: 12, mnd: 8, end: 11, str: 13, dex: 10, int: 8, fai: 8 }, samurai: { vig: 11, mnd: 8, end: 11, str: 9, dex: 15, int: 8, fai: 8 },
+  mage: { vig: 9, mnd: 13, end: 9, str: 8, dex: 9, int: 15, fai: 7 }, cleric: { vig: 10, mnd: 13, end: 9, str: 10, dex: 8, int: 7, fai: 13 }, hunter: { vig: 11, mnd: 9, end: 12, str: 9, dex: 13, int: 8, fai: 8 } };
+function clsBase() {
+  const C = CLASSES.find(c => c.id === S.cls) || CLASSES[0];
+  if (S.clsV !== 2 && LEGACY_CLS[S.cls]) return { stats: LEGACY_CLS[S.cls], lv: 1 };
+  return { stats: C.stats, lv: C.lv };
+}
+const clsBaseLv = () => clsBase().lv;
 function respecRefund() {
   const L0 = S.level; let n = 0;
-  for (let l = 1; l < L0; l++) { S.level = l; n += levelCost(); }
+  for (let l = clsBaseLv(); l < L0; l++) { S.level = l; n += levelCost(); }
   S.level = L0;
   return n;
 }
 const respecFree = () => !S.respecs;
 function doRespec() {
-  if (S.level <= 1) { toast('Chưa lên cấp lần nào, không cần tái sinh'); return false; }
+  if (S.level <= clsBaseLv()) { toast('Chưa lên cấp lần nào, không cần tái sinh'); return false; }
   if (!respecFree() && invN('larval') < 1) { toast('Cần một Nước Mắt Ấu Trùng'); return false; }
   if (!respecFree()) { S.inv.larval--; if (!S.inv.larval) delete S.inv.larval; }
-  const C = CLASSES.find(c => c.id === S.cls) || CLASSES[0], refund = respecRefund();
-  S.stats = Object.assign({}, C.stats); S.level = 1; S.runes += refund; S.respecs = (S.respecs || 0) + 1;
+  const C = clsBase(), refund = respecRefund();
+  S.stats = Object.assign({}, C.stats); S.level = C.lv; S.runes += refund; S.respecs = (S.respecs || 0) + 1;
   applyStats(true); save(); SFX.grace();
   burst(P.x, P.y, 40, '#bfe4ff', 140, 3, 'mote', 1.2);
   banner('grace', 'TÁI SINH', 'Nhận lại ' + refund.toLocaleString(numLoc()) + ' rune · lên cấp lại ở Ân Điển', 4);
@@ -177,7 +186,7 @@ function flaskAlloc(d) {
 }
 function applyClass(id) {
   const c = CLASSES.find(q => q.id === id) || CLASSES[0];
-  S.cls = c.id; S.stats = Object.assign({}, c.stats); S.level = 1;
+  S.cls = c.id; S.clsV = 2; S.stats = Object.assign({}, c.stats); S.level = c.lv; S.twoH = false;
   S.weapons = [...new Set([...c.weapons, 'shield', c.off])];
   S.equipped = c.equipped; S.off = c.off; S.armor = c.armor; S.armors = [...new Set(['rags', c.armor])];
   S.spells = [...c.spells]; S.att = [...c.spells]; S.flaskFp = c.flaskFp;

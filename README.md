@@ -40,7 +40,8 @@ And **Varek**, the masked gatekeeper, swore that no Gravebound would ever touch 
   - Ripostes, backstabs and guard counters.
   - Stamina management, lock-on and mounted combat.
 - **Enemies that think.** Foes see ahead of them and hear your noise, grow suspicious before they attack, call nearby packmates, and take turns attacking instead of mobbing you. Sneak up and stab them in the back, and never drink a flask in front of them.
-- **Build your character.** 5 origins, 7 stats, swords, katanas, spears, axes, greatswords, hammers, scythes and bows, sorceries and incantations, armor, over 30 talismans and weapon upgrades.
+- **Build your character.** 10 origins modelled on Elden Ring (Vagabond, Warrior, Hero, Bandit, Astrologer, Prophet, Samurai, Prisoner, Confessor, Wretch), each with its own starting level and gear. 7 stats; straight, curved and thrusting swords, katanas, daggers, spears, halberds, axes, clubs, paired blades, greatswords, hammers, scythes and bows; sorceries and incantations, armor, over 30 talismans and weapon upgrades.
+- **Two-handing and dual wielding.** Two-hand any one-handed weapon for ×1.5 Strength. Put a weapon in the left hand and the guard button becomes a left-hand attack; two weapons of the same class enter power stance, chaining attacks with both blades. Paired weapons are always in power stance.
 - **Every creature drops something of its own.** Each enemy type has a rare drop: a talisman with a unique effect, a weapon, a shield or armor.
 - **Bosses.** Varek, the dragon Ignarth, Dornach, Selvara, the Wraith Queen Seluna, Karkos the Crystal Crab King, Veyl the Drowned Admiral, Aurion the Goldhorn Patriarch, the Hidden King, and the final battle in the Aurum Realm.
 - **Readable, souls-style menus.** Equipment slots with icons, a compact item grid and a detail card that appears on hover and compares against what you wear; category filters in the bag; hover tooltips on the HUD; a pickup feed on the right for minor loot; a How to Play sheet that shows keyboard, controller or touch buttons, plus a log of every hint seen. The origin screen compares playstyle, stats, strengths and starting gear.
@@ -88,6 +89,8 @@ Every key can be changed in **Settings**. On phones, a virtual stick and buttons
 
 - **Roll:** you roll the way you are moving. The afterimage behind you is your invincibility window. Roll while standing still to backstep.
 - **Parry:** raise your shield just as the blow lands, and the enemy loses their footing. Small shields have the widest window, medium shields a narrower one, and greatshields cannot parry but hit harder with guard counters. Light blades can learn the Deflect skill to parry without a shield.
+- **Two-handing:** press H (hold Y + R1 on a controller) to grip the right-hand weapon with both hands. Strength counts ×1.5 for requirements and scaling and attacks break stance harder, but you guard with the weapon itself and cannot parry or cast.
+- **Dual wielding and power stance:** with a weapon in the left hand, right mouse / guard attacks with it. Two weapons of the same class (two curved swords, two katanas, two daggers...) enter power stance: each press chains a dual attack that cuts with both blades. There is no shield, so you have to dodge.
 - **Riposte:** press light attack on an enemy who has lost their footing for a critical hit.
 - **Backstab:** walk up behind an enemy that is not attacking and press light attack. Walking is quiet; sprinting, rolling, swinging and riding are loud.
 - **Guard counter:** press heavy attack right after blocking a hit.
@@ -140,7 +143,8 @@ Và **Varek**, kẻ gác cổng đeo mặt nạ, đã thề không một Gravebo
   - Kết liễu, đâm lưng, phản công sau khi đỡ.
   - Quản lý thể lực, khóa mục tiêu, cưỡi ngựa.
 - **Kẻ địch biết suy nghĩ.** Quái nhìn về phía trước và nghe tiếng động của ngươi, nghi ngờ dần trước khi tấn công, gọi đồng bọn gần đó, và thay phiên ra đòn thay vì cùng lao vào. Hãy lén ra sau lưng mà đâm, và đừng uống bình ngay trước mặt chúng.
-- **Tự xây nhân vật.** 5 xuất thân, 7 chỉ số, kiếm, katana, giáo, rìu, đại kiếm, búa, lưỡi hái, cung, phép Trí Tuệ và Đức Tin, giáp, hơn 30 loại bùa hộ mệnh và cường hóa vũ khí.
+- **Tự xây nhân vật.** 10 xuất thân theo Elden Ring (Kẻ Lang Bạt, Chiến Binh, Anh Hùng, Kẻ Cướp, Chiêm Tinh Sư, Nhà Tiên Tri, Võ Sĩ, Tù Nhân, Kẻ Xưng Tội, Kẻ Khốn Cùng), mỗi xuất thân có cấp và trang bị khởi đầu riêng. 7 chỉ số; kiếm thẳng, kiếm cong, kiếm đâm, katana, dao găm, giáo, kích, rìu, chùy, vũ khí đôi, đại kiếm, búa, lưỡi hái, cung; phép Trí Tuệ và Đức Tin, giáp, hơn 30 loại bùa hộ mệnh và cường hóa vũ khí.
+- **Cầm hai tay và song kiếm.** Cầm hai tay mọi vũ khí một tay để Sức Mạnh tính ×1.5. Cầm vũ khí ở tay trái thì nút Đỡ thành đòn tay trái; hai vũ khí cùng loại vào tư thế song kiếm, ra chuỗi đòn bằng cả hai lưỡi. Vũ khí đôi luôn ở tư thế song kiếm.
 - **Mỗi loại quái rơi đồ riêng.** Mỗi loại kẻ địch có một món đồ hiếm của riêng nó: bùa có hiệu ứng riêng, vũ khí, khiên hoặc giáp.
 - **Boss.** Varek, rồng Ignarth, Dornach, Selvara, Nữ Vương Hồn Ma Seluna, Vua Cua Pha Lê Karkos, Đô Đốc Chết Đuối Veyl, Dê Chúa Sừng Vàng Aurion, Vua Ẩn Mặt và trận cuối trong Cõi Aurum.
 - **Menu dễ đọc kiểu souls.** Ô trang bị có biểu tượng, lưới vật phẩm gọn và thẻ chi tiết hiện khi rê chuột, so sánh với đồ đang dùng; lọc túi đồ theo loại; chú thích khi rê chuột lên HUD; dòng nhặt đồ bên phải cho đồ vặt; bảng Cách chơi hiện nút theo bàn phím, tay cầm hoặc cảm ứng, kèm nhật ký gợi ý đã gặp. Màn chọn xuất thân so sánh lối chơi, chỉ số, ưu nhược điểm và trang bị ban đầu.
@@ -188,6 +192,8 @@ Mọi phím đều đổi được trong **Cài đặt**. Trên điện thoại,
 
 - **Lăn:** lăn theo hướng đang di chuyển. Bóng mờ phía sau nhân vật là lúc bất tử. Đứng yên mà bấm lăn thì nhảy lùi.
 - **Phản đòn:** giơ khiên đúng lúc đòn chạm tới, kẻ địch sẽ mất thế. Khiên nhỏ có cửa sổ rộng nhất, khiên vừa hẹp hơn, khiên lớn không phản đòn được nhưng đòn phản công sau khi đỡ mạnh hơn. Vũ khí nhẹ học được kỹ năng Gạt Đòn để phản đòn không cần khiên.
+- **Cầm hai tay:** bấm H (tay cầm: giữ Y rồi bấm R1) để nắm vũ khí tay phải bằng cả hai tay. Sức Mạnh tính ×1.5 cho yêu cầu và hệ số, đòn phá thế mạnh hơn; đổi lại chỉ đỡ đòn bằng thân vũ khí, không phản đòn hay niệm phép được.
+- **Song kiếm:** tay trái cầm vũ khí thì chuột phải / nút Đỡ là đòn tay trái. Hai vũ khí cùng loại (hai kiếm cong, hai katana, hai dao găm...) vào tư thế song kiếm: mỗi lần bấm ra một nhịp chuỗi đòn chém bằng cả hai lưỡi. Không có khiên nên phải lăn né.
 - **Kết liễu:** bấm đánh thường trước kẻ địch đang mất thế để ra đòn chí mạng.
 - **Đâm lưng:** đi bộ tới sau lưng kẻ địch chưa ra đòn rồi bấm đánh thường. Đi bộ rất êm; chạy nhanh, lăn, vung vũ khí hay cưỡi ngựa thì gây tiếng động.
 - **Phản công:** vừa đỡ trúng một đòn thì bấm đánh mạnh ngay.
