@@ -280,6 +280,13 @@ kbd{font:600 11px/1 var(--ui);padding:3px 6px;border:1px solid var(--line);borde
 .scroll{scrollbar-width:thin;scrollbar-color:rgba(214,178,94,.45) transparent}
 .scroll::-webkit-scrollbar{width:6px}
 .scroll::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--gold-dim),var(--gold),var(--gold-dim));border-radius:3px}
+.tut:not([hidden]){animation:tutIn .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes tutIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+/* bàn phím / chuột: khung gợi ý nằm bên trái dưới thanh máu, không che giữa màn hình nơi đang đánh nhau */
+@media (hover:hover) and (pointer:fine){
+  .tut{top:calc(132px * var(--uiz,1) + 18px);left:20px;transform:none;width:min(340px,calc(100% - 40px));text-align:left;border-left:3px solid var(--gold)}
+  @keyframes tutIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+}
 .tut{background:linear-gradient(180deg,rgba(26,21,14,.92),rgba(10,9,7,.9));box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 0 0 3px rgba(10,9,7,.8),inset 0 0 0 4px rgba(214,178,94,.18)}
 .tut::before{content:"";position:absolute;left:50%;top:0;width:7px;height:7px;background:#15120c;border:1px solid var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
 /* nút cảm ứng: đĩa tối có hai vòng viền vàng, ấn vào thì sáng lên */
@@ -452,7 +459,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 <div id="app">
   <canvas id="game" aria-label="Màn chơi"></canvas>
 
-  <div id="tut" class="tut" hidden><small>Gợi ý</small><b id="tutText"></b><span id="tutKeys"></span></div>
+  <div id="tut" class="tut" hidden role="status" aria-live="polite"><small>Gợi ý</small><b id="tutText"></b><span id="tutKeys"></span></div>
   <div id="touch" hidden>
     <div id="stickZone"><div id="stickBase" hidden><div id="knob"></div></div></div>
     <button class="tb big" data-act="light" style="--x:62px;--y:124px;--s:78px">Đánh</button>

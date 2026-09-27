@@ -987,19 +987,24 @@ const HINTS = [
   ['map', () => S.frags.length > 0, 'Bản đồ', 'Nhấn <kbd data-k="map">G</kbd> để xem bản đồ; bấm lên bản đồ để đặt dấu', 'Chạm nút Bản đồ để xem; chạm lên bản đồ để đặt dấu'],
 ];
 let hintCur = null, hintT = 0;
+const COMBAT_HINTS = new Set(['fight', 'lock', 'guard', 'riposte', 'backstab', 'skill', 'spell', 'heal', 'stamina', 'dual']);
 function updateHints(dt) {
   if (hintCur && hintCur !== 'heal' && !S.tips.heal && P.hp < P.maxHp * 0.5 && P.flasks > 0) { hintCur = null; hintT = 0; } // máu thấp thì ưu tiên gợi ý uống bình
   if (hintCur) {
+    // gợi ý không dùng được trong trận thì tắt sớm khi bắt đầu đánh nhau
+    if (!COMBAT_HINTS.has(hintCur) && hintT > 0.6 && inCombat()) hintT = 0.6;
     hintT -= dt;
     if (hintT <= 0 || G.mode !== 'play') { hintCur = null; $('tut').hidden = true; }
     return;
   }
   if (G.mode !== 'play' || G.hintT < 3 || P.state === 'dead') return;
+  // đang giao chiến thì chỉ nhắc những gì dùng được ngay trong trận; gợi ý khác chờ tới lúc yên
+  const fighting = inCombat();
   for (const [id, test, title, pc, touch] of HINTS) {
-    if (S.tips[id]) continue;
+    if (S.tips[id] || (fighting && !COMBAT_HINTS.has(id))) continue;
     let ok = false; try { ok = test(); } catch (e) { ok = false; }
     if (!ok) continue;
-    S.tips[id] = 1; hintCur = id; hintT = 8;
+    S.tips[id] = 1; hintCur = id; hintT = fighting ? 5.5 : 8;
     $('tutText').textContent = title; $('tutKeys').innerHTML = G.touch ? touch : pc; refreshKbd($('tutKeys')); $('tut').hidden = false;
     SFX.glint(); return;
   }
@@ -1148,11 +1153,13 @@ function startGame(data, cls) {
   G.endingShown = S.treeReached && S.finalDead; G.hintT = data ? 99 : 0; G.region = null; G.timers.length = 0;
   respawnAt(S.lastGrace); setMode('play');
   if (!data) {
+    // bảng Cách chơi mở ngay khi vừa tỉnh dậy ở nhà nguyện (chưa có quái nào gần), game dừng trong lúc đọc;
+    // lời dẫn mở đầu chạy tiếp sau khi đóng bảng
+    later(0.7, maybeShowHowto);
     // phần mở đầu kể trong game, không giải thích trước ở màn hình tiêu đề
     later(1.2, () => subtitle('“...Tỉnh dậy đi, Gravebound.”', 3.2));
     later(4.8, () => subtitle('“Vòng Aurum đã vỡ. Người chết không còn đường về, chỉ biết bò lên từ nấm mồ như ngươi. Vùng đất đang mục rữa từ gốc rễ.”', 5));
     later(10.4, () => subtitle('“Ân Điển gọi ngươi trở về vì một lẽ. Hãy đi về phương bắc... câu trả lời đang chờ ở đó.”', 5));
-    later(16, maybeShowHowto);
   }
   save();
 }

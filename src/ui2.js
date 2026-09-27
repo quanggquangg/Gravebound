@@ -324,8 +324,12 @@ function closeHowto() { $('howto').hidden = true; S.tips.howto = 1; if (howtoBac
 $('btnHowtoOk').onclick = closeHowto;
 $('btnHowto').onclick = () => openHowto('pause');
 // lần đầu vào game của một hành trình mới: mở bảng Cách chơi sau khi màn hình hiện lên
+// chỉ mở khi yên ổn: không giao chiến, không quái nào đang đuổi gần, nhân vật đang đứng / đi; chưa yên thì chờ rồi thử lại
 function maybeShowHowto() { if (window.__T) return; // bản thử tự động không cần bảng này
-  if (S && S.tips && !S.tips.howto && S.level <= clsBaseLv() && G.mode === 'play') openHowto(); }
+  if (!S || !S.tips || S.tips.howto || S.level > clsBaseLv()) return;
+  const calm = G.mode === 'play' && P.state === 'idle' && !inCombat() && !enemies.some(e => !e.dead && e.state !== 'idle' && e.state !== 'return' && dist(e.x, e.y, P.x, P.y) < 700);
+  if (calm) openHowto(); else later(1.5, maybeShowHowto);
+}
 
 // ───────────────────────── chú thích khi rê chuột lên HUD ─────────────────────────
 const HUD_TIPS = [];
