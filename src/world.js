@@ -425,7 +425,7 @@ const CHESTS = [
   { id: 'c_katana', x: 700, y: 1760, loot: { weapon: 'katana' } },
   { id: 'c_spear', x: 2300, y: 3390, loot: { weapon: 'spear' } },
   { id: 'c_keep1', x: 785, y: 1280, loot: { items: { stone1: 2, cure: 2 } } },
-  { id: 'c_keep2', x: 1625, y: 922, loot: { runes: 800, items: { stone2: 1 } } },
+  { id: 'c_keep2', x: 1625, y: 922, loot: { runes: 800, ash: 'deflect', items: { stone2: 1 } } },
   { id: 'c_keep3', x: 2025, y: 925, loot: { items: { firepot: 3, stone1: 2 } } },
   { id: 'c_keep4', x: 1950, y: 770, loot: { seed: 1, items: { somber1: 1 } } },
   { id: 'c_north', x: 2600, y: 900, loot: { runes: 300, items: { stone1: 2 } } },

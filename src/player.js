@@ -74,6 +74,12 @@ function startSkill(moving, mx, my) {
   if (P.fp < A.fp) { toast('Không đủ FP'); G.fpWarn = 1; return; }
   if (Wp.type === 'bow' && S.arrows <= 0) { toast('Hết tên'); return; }
   P.fp -= A.fp; P.face = aimFace(moving, mx, my);
+  if (id === 'deflect') {
+    if (twoHanded() || !DEFLECT_WIN[S.equipped]) { P.fp += A.fp; toast('Chỉ gạt đòn được bằng vũ khí nhẹ một tay'); return; }
+    if (P.st <= 0) return;
+    spendSt(9, 0.5); P.state = 'deflect'; P.t = 0; P.atk = null; SFX.swing();
+    return;
+  }
   if (id === 'warcry') {
     P.buffs.warcry = 20; P.state = 'cast'; P.t = 0; P.cast = true; P.spell = null;
     burst(P.x, P.y, 30, '#ff8a5a', 160, 3, 'dot', 0.6); aoes.push({ kind: 'ring', x: P.x, y: P.y, r0: 20, r1: 140, dur: 0.4, t: 0, dmg: 0, hit: true });
@@ -258,7 +264,7 @@ function doAction(a, moving, mx, my) {
       startAttack(P.mounted ? 'mounted' : a, 0, moving, mx, my);
       if (counter && P.atk) {
         // phản công sau khi đỡ (Guard Counter): ra đòn nhanh hơn, mạnh hơn, phá thế tốt hơn
-        P.atk.parts = scaleParts(P.atk.parts, 1.4); P.atk.poise *= 2; P.atk.wind *= 0.55; P.atk.hyper = true; P.blockedAt = -9;
+        P.atk.parts = scaleParts(P.atk.parts, 1.4 * (offDef().counter || 1)); P.atk.poise *= 2 * (offDef().counter || 1); P.atk.wind *= 0.55; P.atk.hyper = true; P.blockedAt = -9;
         floatText(P.x, P.y - 34, 'PHẢN CÔNG', '#f2dc97', true);
       }
       break;
@@ -357,8 +363,11 @@ function updatePlayer(dt) {
     // tay trái cầm gậy / ấn: giữ nút đỡ để niệm phép liên tục (như Elden Ring); cầm khiên: đỡ đòn
     if (p.state === 'idle' && !p.mounted && guardHeld()) {
       if (catalyst()) { if (p.fp >= 1) doAction('spell', moving, mx, my); }
-      else { p.state = 'guard'; p.t = 0; p.parryOk = !twoHanded() && offDef().type === 'shield' && G.clock - p.lastGuardAt > 0.45; p.lastGuardAt = G.clock; }
+      else { p.state = 'guard'; p.t = 0; p.parryOk = parryWin() > 0 && G.clock - p.lastGuardAt > 0.45; p.lastGuardAt = G.clock; }
     }
+  } else if (p.state === 'deflect') {
+    p.face = desiredFace(false, mx, my, dt);
+    if (p.t > 0.42) { p.state = 'idle'; p.t = 0; }
   } else if (p.state === 'guard') {
     if (moving) moveCircle(p, mx * 75 * slow * dt, my * 75 * slow * dt, false);
     p.face = desiredFace(moving, mx, my, dt);
@@ -472,11 +481,13 @@ function hurtPlayer(dmg, fx, fy, heavy, src = null, kind = 'melee', dt = 'phys')
   noteFoe(src || (G.caster && G.clock - G.caster.t < 5 ? G.caster.e : null));
   dmg *= DIFF.dmg * regionMul(P.x, P.y) * absorb(dt) * (src && src.dm ? src.dm : 1);
   if (p.state === 'roll' && p.t > p.roll.iframe[0] && p.t < p.roll.iframe[1] + (hasTal('spectral') ? 0.06 : 0)) return false; // khung bất tử khi lăn
+  // Gạt Đòn: đòn cận chiến chạm tới trong cửa sổ ngắn thì gạt được, hụt thì ăn trọn
+  if (p.state === 'deflect' && kind === 'melee' && src && !src.noParry && p.t > 0.03 && p.t < 0.03 + (DEFLECT_WIN[S.equipped] || 0.15)) { parry(src, true); return false; }
   const from = Math.atan2(fy - p.y, fx - p.x);
   if (p.state === 'guard' && (dist(fx, fy, p.x, p.y) < 4 || Math.abs(angDiff(p.face, from)) < 1.5)) {
     // cầm khiên: chặn tốt và phản đòn được; cầm vũ khí hai tay: đỡ bằng thân vũ khí, chặn kém và không phản đòn được
     const th = twoHanded(), gd = th ? { chip: 2.2, st: 1.45 } : offDef().guard || { chip: 2.2, st: 1.45 }, gt = hasTal('guard') ? 0.65 : 1;
-    if (!th && offDef().type === 'shield' && kind === 'melee' && src && !src.noParry && p.parryOk && p.t < 0.22) { parry(src); return false; }
+    if (kind === 'melee' && src && !src.noParry && p.parryOk && p.t < parryWin()) { parry(src); return false; }
     const chip = Math.round(dmg * (kind === 'melee' ? (heavy ? 0.3 : 0.15) : kind === 'proj' ? 0.2 : 0.5) * gd.chip * gt);
     p.hp -= chip; p.ghostDelay = 0.6; p.st -= dmg * 0.9 * gd.st * gt; p.stDelay = 0.7; p.blockedAt = G.clock;
     SFX.block(); shake(3); if (kind !== 'fire') G.hitStop = 0.04;
@@ -522,19 +533,21 @@ function revealIllusory(p, A) {
     }
   }
 }
-function parry(src) {
+function parry(src, deflect) {
   S.parries = (S.parries || 0) + 1;
   const p = P;
   src.state = 'broken'; src.t = 0; src.atk = null; src.poiseAcc = 0; if (src.z) src.z = 0;
-  SFX.parry(); G.hitStop = 0.2; G.slow = 0.45; shake(7);
+  SFX.parry(); G.hitStop = 0.2; G.slow = 0.45; shake(7); G.punch = 1;
+  aoes.push({ kind: 'ring', x: (p.x + src.x) / 2, y: (p.y + src.y) / 2, r0: 10, r1: 90, dur: 0.3, t: 0, dmg: 0, hit: true });
   if (src.t !== undefined && src.state === 'broken') src.t = 0;
   aoes.push({ kind: 'flash', x: (p.x + src.x) / 2, y: (p.y + src.y) / 2, r: 60, t: 0, dur: 0.3 });
   const mx = (p.x + src.x) / 2, my = (p.y + src.y) / 2;
   burst(mx, my, 18, '#fff1c4', 280, 2.5, 'spark', 0.3);
   impact(mx, my, Math.atan2(src.y - p.y, src.x - p.x), '200,225,255', true);
   addPart(mx, my - 6, 0, 0, 0.4, 18, '#fff6d8', 'glint');
-  floatText(p.x, p.y - 34, 'PHẢN ĐÒN', '#f2dc97', true);
-  p.st = Math.min(p.maxSt, p.st + 10);
+  floatText(p.x, p.y - 34, deflect ? 'GẠT ĐÒN' : 'PHẢN ĐÒN', '#f2dc97', true);
+  p.st = Math.min(p.maxSt, p.st + (deflect ? 18 : 10));
+  if (deflect) { p.state = 'idle'; p.t = 0; }
 }
 // ───────────────────────── đòn chí mạng: kết liễu sau phản đòn / phá thế, và đâm lưng ─────────────────────────
 // Như game souls: bấm đánh thường khi đứng trước kẻ địch đang mất thế, hoặc sau lưng kẻ địch chưa phát hiện,
@@ -626,7 +639,7 @@ function hitEnemy(e, dmgIn, poise, fx, fy, kind, opt = {}) {
     if (bc && e.T && !(e.T.look && e.T.look.bones)) splat(e.x + Math.cos(a) * 6, e.y + Math.sin(a) * 6 + 4, a, bc, crit ? 8 : kind === 'heavy' ? 6 : 4);
   }
   floatText(e.x, e.y - e.r - 12, String(dmg), crit ? '#ffd36b' : '#f1e6c8', crit);
-  if (crit) { SFX.crit(); floatText(e.x, e.y - e.r - 40, label, '#ffd36b', true); } else if (!quiet) SFX.hit();
+  if (crit) { SFX.crit(); G.punch = Math.max(G.punch || 0, 0.8); FX.push({ k: 'critline', x: e.x, y: e.y, a: Math.atan2(e.y - fy, e.x - fx), t: 0, dur: 0.28 }); floatText(e.x, e.y - e.r - 40, label, '#ffd36b', true); } else if (!quiet) SFX.hit();
   if (e.isDragon && (e.state === 'sleep' || e.state === 'return')) wakeDragon();
   if (!e.isBoss && !e.isDragon && !e.isFinal && !e.ally) provoke(e, opt.ally ? fx : P.x, opt.ally ? fy : P.y);
   if (!e.isBoss && !e.isDragon && !e.isFinal && !quiet) { const kb = e.elite ? 40 : kind === 'heavy' ? 240 : 120; e.vx += Math.cos(a) * kb; e.vy += Math.sin(a) * kb; }

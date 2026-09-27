@@ -87,7 +87,7 @@ Every key can be changed in **Settings**. On phones, a virtual stick and buttons
 #### Combat
 
 - **Roll:** you roll the way you are moving. The afterimage behind you is your invincibility window. Roll while standing still to backstep.
-- **Parry:** raise your shield just as the blow lands, and the enemy loses their footing.
+- **Parry:** raise your shield just as the blow lands, and the enemy loses their footing. Small shields have the widest window, medium shields a narrower one, and greatshields cannot parry but hit harder with guard counters. Light blades can learn the Deflect skill to parry without a shield.
 - **Riposte:** press light attack on an enemy who has lost their footing for a critical hit.
 - **Backstab:** walk up behind an enemy that is not attacking and press light attack. Walking is quiet; sprinting, rolling, swinging and riding are loud.
 - **Guard counter:** press heavy attack right after blocking a hit.
@@ -187,7 +187,7 @@ Mọi phím đều đổi được trong **Cài đặt**. Trên điện thoại,
 #### Chiến đấu
 
 - **Lăn:** lăn theo hướng đang di chuyển. Bóng mờ phía sau nhân vật là lúc bất tử. Đứng yên mà bấm lăn thì nhảy lùi.
-- **Phản đòn:** giơ khiên đúng lúc đòn chạm tới, kẻ địch sẽ mất thế.
+- **Phản đòn:** giơ khiên đúng lúc đòn chạm tới, kẻ địch sẽ mất thế. Khiên nhỏ có cửa sổ rộng nhất, khiên vừa hẹp hơn, khiên lớn không phản đòn được nhưng đòn phản công sau khi đỡ mạnh hơn. Vũ khí nhẹ học được kỹ năng Gạt Đòn để phản đòn không cần khiên.
 - **Kết liễu:** bấm đánh thường trước kẻ địch đang mất thế để ra đòn chí mạng.
 - **Đâm lưng:** đi bộ tới sau lưng kẻ địch chưa ra đòn rồi bấm đánh thường. Đi bộ rất êm; chạy nhanh, lăn, vung vũ khí hay cưỡi ngựa thì gây tiếng động.
 - **Phản công:** vừa đỡ trúng một đòn thì bấm đánh mạnh ngay.

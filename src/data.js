@@ -140,9 +140,9 @@ const WEAPONS = {
   longbow: { name: "Ashwood Longbow", desc: 'Cung hai tay. Mũi tên bay xa và mạnh', type: 'bow', dt: 'phys', base: 21, sc: { str: 'D', dex: 'B' }, req: { str: 10, dex: 14 }, wt: 4, twoHanded: true, ash: 'barrage', look: { weapon: 'bow', wlen: 30, wcol: '#5a4430' }, cost: [7, 16], speed: 760, range: 0.95 },
   goldbow: { name: "Royal Goldbow", desc: 'Cung hai tay của đội cung thủ hoàng gia, tên mang sức mạnh thánh', type: 'bow', dt: 'holy', base: 27, sc: { dex: 'B', fai: 'D' }, req: { dex: 18, fai: 10 }, wt: 5, twoHanded: true, ash: 'barrage', look: { weapon: 'bow', wlen: 30, wcol: '#d8b45a' }, cost: [7, 16], speed: 820, range: 1 },
   // tay trái: khiên và chất xúc tác phép
-  shield: { name: "Oakplank Shield", desc: 'Tay trái. Đỡ đòn và phản đòn', hand: 'off', type: 'shield', guard: { chip: 1, st: 1 }, wt: 3 },
-  crabshield: { name: "Crabshell Shield", desc: 'Tay trái. Mai cua pha lê, chặn cực tốt nhưng nặng', hand: 'off', type: 'shield', guard: { chip: 0.35, st: 0.8 }, wt: 7, req: { str: 14 } },
-  kite: { name: "Knight's Kite Shield", desc: 'Tay trái. Khiên sắt chặn tốt hơn nhiều', hand: 'off', type: 'shield', guard: { chip: 0.5, st: 0.72 }, wt: 6, req: { str: 12 } },
+  shield: { name: "Oakplank Shield", desc: 'Tay trái. Khiên nhỏ: chặn kém nhưng cửa sổ phản đòn rộng nhất', hand: 'off', type: 'shield', parry: 0.26, guard: { chip: 1, st: 1 }, wt: 3 },
+  crabshield: { name: "Crabshell Shield", desc: 'Tay trái. Khiên lớn bằng mai cua: chặn cực tốt, không phản đòn được nhưng đòn phản công sau khi đỡ mạnh hơn', hand: 'off', type: 'shield', parry: 0, counter: 1.35, guard: { chip: 0.35, st: 0.8 }, wt: 7, req: { str: 14 } },
+  kite: { name: "Knight's Kite Shield", desc: 'Tay trái. Khiên sắt vừa: chặn tốt hơn nhiều, cửa sổ phản đòn hẹp hơn khiên nhỏ', hand: 'off', type: 'shield', parry: 0.19, guard: { chip: 0.5, st: 0.72 }, wt: 6, req: { str: 12 } },
   staff0: { name: "Rotwood Staff", desc: 'Tay trái. Chất xúc tác để thi triển phép Trí Tuệ', hand: 'off', type: 'staff', sp: 90, sc: { int: 'D' }, req: { int: 10 }, wt: 2 },
   staff1: { name: "Starhollow Staff", desc: 'Tay trái. Gậy chuẩn của học viên, tăng mạnh theo Trí Tuệ', hand: 'off', type: 'staff', sp: 100, sc: { int: 'B' }, req: { int: 14 }, wt: 3 },
   staff3: { name: "Starstone Staff", desc: 'Tay trái. Khảm đá sao từ mỏ pha lê', hand: 'off', type: 'staff', sp: 108, sc: { int: 'A' }, req: { int: 20 }, wt: 3, somber: true },
@@ -239,6 +239,7 @@ const ASHES = {
   unsheathe: { name: 'Rút Kiếm', fp: 10, desc: 'Thủ thế rồi chém một nhát cực nhanh' },
   wave: { name: 'Sóng Ánh Vàng', fp: 12, desc: 'Chém ra một làn sóng ánh vàng', unique: true },
   crystal: { name: 'Sóng Pha Lê', fp: 12, desc: 'Chém ra một làn sóng pha lê', unique: true },
+  deflect: { name: 'Gạt Đòn', fp: 0, desc: 'Thế gạt bằng lưỡi vũ khí nhẹ (kiếm, katana, dao, kiếm liễu). Gạt đúng lúc đòn chạm tới làm kẻ địch mất thế; hụt thì trúng đòn. Tốn thể lực, không tốn FP', light: true },
   barrage: { name: 'Mưa Tên', fp: 10, desc: 'Bắn liền năm mũi tên tỏa quạt', bow: true },
   // kỹ năng riêng theo từng loại vũ khí
   flurry: { name: 'Liên Hoàn Đâm', fp: 8, desc: 'Đâm liền bốn nhát cực nhanh, mỗi nhát đều gây chảy máu', unique: true },

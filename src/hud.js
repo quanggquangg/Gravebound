@@ -699,6 +699,9 @@ function commitLevels() {
   if (!n || S.runes < pendCost()) return;
   for (const k in pend) for (let i = 0; i < pend[k]; i++) levelUp(k);
   pend = {}; SFX.felled(); toast('Đã lên cấp ' + S.level); renderGrace();
+  // cột sáng vàng và vòng tỏa quanh người khi lên cấp
+  burst(P.x, P.y, 50, '#ffe39a', 90, 3, 'mote', 1.6); aoes.push({ kind: 'ring', x: P.x, y: P.y, r0: 10, r1: 120, dur: 0.6, t: 0, dmg: 0, hit: true });
+  for (let i = 0; i < 24; i++) addPart(P.x + rand(-10, 10), P.y + rand(-4, 4), 0, rand(-160, -80), rand(0.8, 1.4), rand(2, 3.5), '#fff0c0', 'mote');
   $('btnLeave').focus({ preventScroll: true });
 }
 // ── nhật ký mục tiêu ──

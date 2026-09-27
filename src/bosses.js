@@ -176,6 +176,7 @@ function startBossFight() {
   subtitle(boss.v === 2 ? '“Lại là ngươi... Lần này, ta sẽ không giấu mặt nữa.”' : '“Gravebound... ngươi không xứng đáng chạm tới Cây Aurum.”');
 }
 function bossDefeated() {
+  G.punch = 1.2;
   recordKill(boss.v === 2 ? 'varek2' : 'varek');
   const b = boss;
   G.bossFight = false; clearShades();

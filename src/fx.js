@@ -1,5 +1,6 @@
 'use strict';
 // Gravebound — Hiệu ứng: vệt chém, tia va chạm, vết máu, tan thành tro, rune bay về, bụi và gợn nước, mưa, sét, hiệu ứng màn hình
+const FOOTS = [];  // dấu chân trên cát và bùn, mờ dần
 const FX = [];      // hiệu ứng trong thế giới có thời hạn: tia va chạm, gợn nước, vòng hồi máu, quái tan biến
 const SPLATS = [];  // vết máu vương trên mặt đất, nhạt dần rồi biến mất
 const RAIN = { k: 0, drops: [], rip: [], bolt: 0, boltT: 14, px: 0, py: 0 };
@@ -109,11 +110,21 @@ function updateFx(dt) {
     if (f.t >= f.dur) FX.splice(i, 1);
   }
   for (let i = SPLATS.length - 1; i >= 0; i--) if ((SPLATS[i].t += dt) > SPLATS[i].life) SPLATS.splice(i, 1);
+  for (let i = FOOTS.length - 1; i >= 0; i--) if ((FOOTS[i].t += dt) > 14) FOOTS.splice(i, 1);
   // bước chân: bụi khi chạy nhanh, gợn nước khi lội
   if (P.state !== 'dead' && !P.mounted) {
     const moving = dt > 0 && Math.hypot(P.x - RAIN.px, P.y - RAIN.py) / dt > 40;
     stepAcc += dt;
     const wet = inWater(P.x, P.y);
+    if (moving && !wet && (P.footT = (P.footT || 0) + dt) > (P.sprinting ? 0.2 : 0.3)) {
+      P.footT = 0; P.footSide = -(P.footSide || 1);
+      const reg = G.region;
+      if (reg === 'Bờ Biển Saltreach' || reg === 'Đầm Lầy Ashmire' || reg === 'Đấu Trường Bloodsand') {
+        const a = Math.atan2(P.y - RAIN.py, P.x - RAIN.px), n = a + Math.PI / 2;
+        FOOTS.push({ x: P.x + Math.cos(n) * 4 * P.footSide, y: P.y + 6 + Math.sin(n) * 4 * P.footSide, a, t: 0, col: reg === 'Đầm Lầy Ashmire' ? '40,34,26' : '90,76,52' });
+        if (FOOTS.length > 90) FOOTS.shift();
+      }
+    }
     if (P.sprinting && stepAcc > 0.13) { stepAcc = 0; puff(P.x - Math.cos(P.face) * 6, P.y + 6, 2); }
     else if (wet && moving && stepAcc > 0.28) { stepAcc = 0; ripple(P.x, P.y + 4, 10, 0.4); }
   }
@@ -188,6 +199,11 @@ function drawFxGround() {
       ctx.stroke();
     }
   }
+  for (const f of FOOTS) {
+    if (!inView(f.x, f.y, 10)) continue;
+    ctx.fillStyle = `rgba(${f.col},${0.32 * Math.min(1, (14 - f.t) / 4)})`;
+    ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.a); ctx.beginPath(); ctx.ellipse(0, 0, 3.6, 1.8, 0, 0, TAU); ctx.ellipse(-4.2, 0, 1.6, 1.4, 0, 0, TAU); ctx.fill(); ctx.restore();
+  }
   for (const f of FX) {
     if (f.k !== 'ripple' && f.k !== 'ring') continue;
     if (!inView(f.x, f.y, 40)) continue;
@@ -204,6 +220,13 @@ function drawFxGround() {
 // lớp trên cùng: tia va chạm (cộng sáng) và mưa
 function drawFxTop() {
   ctx.globalCompositeOperation = 'lighter';
+  for (const f of FX) {
+    if (f.k !== 'critline' || !inView(f.x, f.y, 80)) continue;
+    const k = f.t / f.dur, L = 30 + k * 60, w = 5 * (1 - k);
+    ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.a + 0.5);
+    const g = ctx.createLinearGradient(-L, 0, L, 0); g.addColorStop(0, 'rgba(255,240,200,0)'); g.addColorStop(0.5, `rgba(255,252,235,${1 - k})`); g.addColorStop(1, 'rgba(255,240,200,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-L, 0); ctx.quadraticCurveTo(0, -w, L, 0); ctx.quadraticCurveTo(0, w, -L, 0); ctx.fill(); ctx.restore();
+  }
   for (const f of FX) {
     if (f.k !== 'impact' || !inView(f.x, f.y, 60)) continue;
     const k = f.t / f.dur, e = 1 - Math.pow(1 - k, 3), al = 1 - k, s = (f.big ? 38 : 22) * (0.55 + 0.7 * e);

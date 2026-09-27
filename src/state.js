@@ -58,6 +58,10 @@ function spellPower(id, lv = upLv(id)) {
 }
 const twoHanded = () => !!WEAPONS[S.equipped].twoHanded;
 const offDef = () => WEAPONS[S.off] || WEAPONS.shield;
+// cửa sổ phản đòn theo khiên (giây kể từ lúc giơ): khiên nhỏ rộng, khiên vừa hẹp, khiên lớn không phản đòn được
+const parryWin = () => (twoHanded() || offDef().type !== 'shield' ? 0 : offDef().parry ?? 0.22);
+// vũ khí nhẹ gạt được đòn bằng kỹ năng Gạt Đòn; cửa sổ theo loại: dao và kiếm liễu nhanh nhất
+const DEFLECT_WIN = { dagger: 0.2, tuskdagger: 0.2, rapier: 0.2, katana: 0.17, sword: 0.16, broken: 0.15, crystalsword: 0.16, royalsword: 0.16 };
 // chất xúc tác ở tay trái chỉ dùng được khi tay phải không cầm vũ khí hai tay
 const catalyst = () => { const o = offDef(); return !twoHanded() && (o.type === 'staff' || o.type === 'seal') ? o : null; };
 const maxLoad = () => (25 + 1.4 * (S.stats.end - 10)) * (hasTal('feather') ? 1.2 : 1);

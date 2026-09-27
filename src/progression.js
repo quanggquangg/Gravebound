@@ -181,5 +181,6 @@ function applyClass(id) {
   S.weapons = [...new Set([...c.weapons, 'shield', c.off])];
   S.equipped = c.equipped; S.off = c.off; S.armor = c.armor; S.armors = [...new Set(['rags', c.armor])];
   S.spells = [...c.spells]; S.att = [...c.spells]; S.flaskFp = c.flaskFp;
+  if (c.id === 'samurai') S.ashes = [...new Set([...(S.ashes || []), 'deflect'])];
   S.arrows = S.arrowMax;
 }
