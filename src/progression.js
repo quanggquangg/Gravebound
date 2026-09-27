@@ -20,12 +20,12 @@ const isNew = (k, id) => !!(S.newGear && S.newGear.includes(k + ':' + id));
 const tabHasNew = tab => (S.newGear || []).some(key => NEW_TAB[key[0]] === tab);
 function seenTab(tab) { if (S.newGear && S.newGear.length) S.newGear = S.newGear.filter(key => NEW_TAB[key[0]] !== tab); }
 function grant(L, x = P.x, y = P.y, quiet = false) {
-  const got = [];
+  const got = [], fd = [];
   let big = null;
   if (L.runes) { gainRunes(L.runes, x, y); got.push('+' + L.runes.toLocaleString(numLoc()) + ' rune'); }
   for (const [id, n] of Object.entries(L.items || {})) {
     if (id === 'arrows') { S.arrows = Math.min(S.arrowMax, S.arrows + n); got.push(n + ' mũi tên'); continue; }
-    invAdd(id, n); got.push(ITEMDEF[id].name + (n > 1 ? ' ×' + n : ''));
+    invAdd(id, n); got.push(ITEMDEF[id].name + (n > 1 ? ' ×' + n : '')); fd.push([ITEMDEF[id].name + (n > 1 ? ' ×' + n : ''), 'i', id]);
     if (ITEMDEF[id].kind === 'key') big = [ITEMDEF[id].name, ITEMDEF[id].desc];
   }
   const own = (list, id, def, tail) => {
@@ -66,6 +66,8 @@ function grant(L, x = P.x, y = P.y, quiet = false) {
     return got;
   }
   if (!quiet && got.length) {
+    // đồ vặt (nguyên liệu, đồ dùng, rune) hiện thành dòng nhỏ bên phải; bảng giữa màn hình để dành cho đồ quan trọng
+    if (!big) { if (fd.length) fd.forEach(f => feedPush(...f)); else got.forEach(g => feedPush(g)); SFX.pickup(); save(); return got; }
     if (big && got.length === 1) banner('item', big[0], big[1], 4.2);
     else banner('item', big ? big[0] : 'Nhận được', got.join(' · '), 4);
     SFX.pickup();

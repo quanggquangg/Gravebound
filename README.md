@@ -43,6 +43,7 @@ And **Varek**, the masked gatekeeper, swore that no Gravebound would ever touch 
 - **Build your character.** 5 origins, 7 stats, swords, katanas, spears, axes, greatswords, hammers, scythes and bows, sorceries and incantations, armor, over 30 talismans and weapon upgrades.
 - **Every creature drops something of its own.** Each enemy type has a rare drop: a talisman with a unique effect, a weapon, a shield or armor.
 - **Bosses.** Varek, the dragon Ignarth, Dornach, Selvara, the Wraith Queen Seluna, Karkos the Crystal Crab King, Veyl the Drowned Admiral, Aurion the Goldhorn Patriarch, the Hidden King, and the final battle in the Aurum Realm.
+- **Readable, souls-style menus.** Equipment slots with icons, a compact item grid and a detail card that appears on hover and compares against what you wear; category filters in the bag; hover tooltips on the HUD; a pickup feed on the right for minor loot; a How to Play sheet that shows keyboard, controller or touch buttons, plus a log of every hint seen. The origin screen compares playstyle, stats, strengths and starting gear.
 - **Side content.** 4 dungeons with puzzles and traps (multi-room layouts with lever shortcuts, locked gates, hidden walls and side vaults), the Bloodsand Arena, illusory walls, and Hearthhold Hall with a smith, a merchant, a scholar and a sister of faith.
 - **A map that fills in as you go.** Read the glowing blue Map Steles to sketch each region, place markers, and fast travel between Sites of Grace.
 - **4 difficulties.** Easy and Normal are open from the start. **Hard** and **Expert** unlock after your first clear:
@@ -142,6 +143,7 @@ Và **Varek**, kẻ gác cổng đeo mặt nạ, đã thề không một Gravebo
 - **Tự xây nhân vật.** 5 xuất thân, 7 chỉ số, kiếm, katana, giáo, rìu, đại kiếm, búa, lưỡi hái, cung, phép Trí Tuệ và Đức Tin, giáp, hơn 30 loại bùa hộ mệnh và cường hóa vũ khí.
 - **Mỗi loại quái rơi đồ riêng.** Mỗi loại kẻ địch có một món đồ hiếm của riêng nó: bùa có hiệu ứng riêng, vũ khí, khiên hoặc giáp.
 - **Boss.** Varek, rồng Ignarth, Dornach, Selvara, Nữ Vương Hồn Ma Seluna, Vua Cua Pha Lê Karkos, Đô Đốc Chết Đuối Veyl, Dê Chúa Sừng Vàng Aurion, Vua Ẩn Mặt và trận cuối trong Cõi Aurum.
+- **Menu dễ đọc kiểu souls.** Ô trang bị có biểu tượng, lưới vật phẩm gọn và thẻ chi tiết hiện khi rê chuột, so sánh với đồ đang dùng; lọc túi đồ theo loại; chú thích khi rê chuột lên HUD; dòng nhặt đồ bên phải cho đồ vặt; bảng Cách chơi hiện nút theo bàn phím, tay cầm hoặc cảm ứng, kèm nhật ký gợi ý đã gặp. Màn chọn xuất thân so sánh lối chơi, chỉ số, ưu nhược điểm và trang bị ban đầu.
 - **Nội dung phụ.** 4 hầm ngục có câu đố và bẫy (nhiều phòng, có cần gạt mở lối tắt, cổng khóa, tường ảo và gian bí mật), Đấu Trường Bloodsand, tường ảo giấu bí mật, và Sảnh Hearthhold có thợ rèn, lái buôn, học giả, nữ tu.
 - **Bản đồ mở dần.** Tìm Bia Bản Đồ phát sáng xanh để vẽ từng vùng. Đặt dấu trên bản đồ, dịch chuyển nhanh giữa các Ân Điển.
 - **4 độ khó.** Dễ và Thường chọn được ngay. **Khó** và **Chuyên gia** mở sau lần phá đảo đầu tiên, gồm:

@@ -256,6 +256,7 @@ function greatRuneGem(x, y, col, on) {
 }
 function drawHUD() {
   const x = 20, y = 20, maxW = CW - 40;
+  HUD_TIPS.length = 0;
   bar(x, y, Math.min(maxW * 0.7, P.maxHp * 1.1), 11, P.hp / P.maxHp, P.ghost / P.maxHp, P.poisonT > 0 ? '#86408f' : '#a3201c');
   const fpW = Math.min(maxW * 0.6, P.maxFp * 1.5);
   bar(x, y + 19, fpW, 6, P.fp / P.maxFp, null, '#3d5fc6');
@@ -267,8 +268,12 @@ function drawHUD() {
     ctx.fillStyle = '#b07ac4'; ctx.fillRect(x, y + 41, stW * (P.poisonT > 0 ? P.poisonT / 14 : P.poisonB / 100), 4);
     ctx.font = `500 11px ${FONT_U}`; ctx.fillStyle = '#c99ad8'; ctx.fillText(P.poisonT > 0 ? 'Trúng độc' : 'Độc tích tụ', x + stW + 10, y + 40);
   }
+  hudTip(x, y - 2, Math.min(maxW * 0.7, P.maxHp * 1.1), 14, () => ['Máu ' + Math.ceil(P.hp) + ' / ' + P.maxHp, 'Tăng bằng Sinh Lực; uống Bình Máu để hồi']);
+  hudTip(x, y + 17, fpW, 10, () => ['FP ' + Math.floor(P.fp) + ' / ' + P.maxFp, 'Dùng cho phép và kỹ năng vũ khí; tăng bằng Tâm Trí']);
+  hudTip(x, y + 29, stW, 10, () => ['Thể lực ' + Math.floor(P.st) + ' / ' + P.maxSt, 'Đánh, lăn, đỡ đều tốn; hồi khi đứng nghỉ. Tăng bằng Bền Bỉ']);
   // ô đồ dùng nhanh
   const fx = x, fy = y + 50, fs = 40, q = curQuick();
+  hudTip(fx, fy, fs, fs, () => { const n = q === 'flask' ? 'Bình Máu' : q === 'fpflask' ? 'Bình FP' : ITEMDEF[q].name; return [n + ' · ' + (q === 'flask' ? P.flasks : q === 'fpflask' ? P.fpflasks : invN(q)), 'Dùng: ' + keyOf('item') + ' · đổi món: ' + keyOf('itemnext')]; });
   box(fx, fy, fs); drawQuickIcon(q, fx + fs / 2, fy + fs / 2);
   const qn = q === 'flask' ? P.flasks : q === 'fpflask' ? P.fpflasks : S.inv[q] || 0;
   ctx.font = `700 13px ${FONT_U}`; ctx.textAlign = 'right'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineWidth = 3;
@@ -278,6 +283,7 @@ function drawHUD() {
   const wx = fx + fs + 10, Wp = WEAPONS[S.equipped], off = offDef(), cat = catalyst();
   box(wx, fy, fs);
   drawWeaponIcon(S.equipped, wx + fs / 2, fy + fs / 2, fs);
+  hudTip(wx, fy, fs, fs, () => { const W = WEAPONS[S.equipped]; return [W.name + (upLv(S.equipped) ? ' +' + upLv(S.equipped) : ''), W.sp ? 'Sức mạnh phép ' + Math.round(spellPower(S.equipped)) : 'Công ' + Math.round(weaponAR(S.equipped, upLv(S.equipped))) + ' · ' + DT_NAME[W.dt], 'Đổi vũ khí: ' + keyOf('eqprev') + ' ' + keyOf('eqnext')]; });
   const ox = wx + fs + 6, os = 26;
   box(ox, fy + fs - os, os);
   if (Wp.twoHanded) { ctx.strokeStyle = 'rgba(236,227,204,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ox + 6, fy + fs - 6); ctx.lineTo(ox + os - 6, fy + fs - os + 6); ctx.stroke(); }
@@ -311,9 +317,11 @@ function drawHUD() {
     ctx.fillStyle = l; ctx.fillRect(rx + 12 - bw, dy - 15, bw, 1); ctx.fillRect(rx + 12 - bw, dy + 14, bw, 1); }
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillText(rstr, rx + 1, ry + 2); ctx.fillStyle = '#f4ead0'; ctx.fillText(rstr, rx, ry);
   runeGlyph(dx, dy, 7.5);
+  hudTip(dx - 12, dy - 15, rx - dx + 24, 30, () => ['Rune: ' + S.runes.toLocaleString(numLoc()), 'Cấp tiếp theo cần ' + levelCost().toLocaleString(numLoc()) + ' · nghỉ ở Ân Điển để lên cấp']);
   if (G.runeGain > 0) { ctx.font = `600 14px ${FONT_U}`; ctx.fillStyle = `rgba(242,220,151,${Math.min(1, G.runeGainT)})`; ctx.fillText('+' + G.runeGain.toLocaleString(numLoc()), rx, ry + (G.touch ? 26 : -26)); }
   ctx.textAlign = 'left';
   ['east', 'swamp', 'west'].forEach((id, i) => greatRuneGem(dx - 30 - (2 - i) * 19, dy, GREAT_RUNES[id].col, S.gr.includes(id)));
+  hudTip(dx - 30 - 2 * 19 - 8, dy - 9, 2 * 19 + 16, 18, () => ['Đại Ấn ' + S.gr.length + ' / 3', ...['east', 'swamp', 'west'].map(id => (S.gr.includes(id) ? '◆ ' : '◇ ') + GREAT_RUNES[id].name)]);
   if (P.x < INST_X) drawSkyDial(dx - 30 - 2 * 19 - 26, dy);
   // lời nhắc tương tác: khung tối viền vàng, hai hạt kim cương hai đầu, phím dạng nắp phím
   if (G.prompt && G.mode === 'play') {
@@ -374,8 +382,10 @@ function drawHUD() {
     ctx.globalAlpha = 1;
   }
   drawMarkerGuide();
+  drawFeed();
   if (G.banner) drawBanner(G.banner);
   if (G.mode === 'dead') drawDeath();
+  drawHudTip();
 }
 // ───────────────────────── bản đồ ─────────────────────────
 const maskCanvas = document.createElement('canvas');
@@ -696,9 +706,9 @@ function renderJournal() {
   // chỉ hiện những mục tiêu người chơi đã nghe nói tới; phần còn lại lộ dần theo hành trình
   const runesKnown = S.bossDead || S.gr.length > 0;
   const main = [
-    [S.bossDead, 'Hạ Varek, Kẻ Canh Cổng', 'Đấu trường ở cuối con đường phía bắc Nhà Nguyện Dawnrest.'],
+    [S.bossDead, 'Hạ Varek, Kẻ Canh Cổng', 'Pháo Đài Thornwall ở cuối con đường phía bắc Nhà Nguyện Dawnrest. Cổng chính bị chặn: tìm cửa sau phía tây hoặc bức tường sập phía đông.'],
     [hasGR('east'), 'Đại Ấn Greystone', 'Dornach trong Pháo Đài Greystone (phía đông). Thắp ba lò lửa theo đường đi của mặt trời để mở cổng.'],
-    [hasGR('swamp'), 'Đại Ấn Rồng Tro', 'Rồng Ignarth ngủ giữa Đầm Lầy Ashmire. Cưỡi ngựa để băng qua ao độc.'],
+    [hasGR('swamp'), 'Đại Ấn Rồng Tro', 'Rồng Ignarth ngủ giữa Đầm Lầy Ashmire, trong vòng bụi gai; lối vào ở phía đông bắc. Cưỡi ngựa để băng qua ao độc.'],
     [S.acadOpen || invN('crystalkey') > 0, 'Chìa Khóa Pha Lê', 'Trên hòn đảo phía tây bắc Hồ Crystalmere. Lối vào miền tây ở cạnh Tàn Tích Hollowmere.'],
     [hasGR('west'), 'Đại Ấn Trăng Pha Lê', 'Nữ hoàng Selvara trong Học Viện Starhollow, bờ bắc Hồ Crystalmere.'],
     [S.greatOpen, 'Mở cổng Kinh Thành Aurumhold', 'Mang đủ ba Đại Ấn tới cổng lớn trên Cao Nguyên Aurelia.'],
@@ -713,53 +723,14 @@ function renderJournal() {
     `<p class="note">Độ khó: ${DIFF.name}${DIFF.inv ? ' · Kẻ Xâm Nhập ' + INVADERS.slice(0, DIFF.inv).filter(v => S.inv[v.id]).length + '/' + Math.min(DIFF.inv, INVADERS.length) : ''}<br>Phụ: hầm ngục ${dg}/${DUNGEONS.length} · Đấu Trường Bloodsand ${S.coloDone ? '✓' : '—'} · Rừng Wraithwood ${S.mb.wraith ? '✓' : '—'} · Bia bản đồ ${S.frags.length}/${MAP_FRAGS.length} · Ân Điển ${S.discovered.length}/${GRACES.length} · Số lần chết ${S.deaths}</p>`;
 }
 // ── túi đồ ──
-function renderInv() {
-  const q = quickList(), cur = curQuick();
-  const row = (id, n, desc, act) => `<li><div class="it"><span>${esc(id)}${n !== '' ? ' <small class="tag">×' + n + '</small>' : ''}<br><small>${desc}</small></span>${act}</div></li>`;
-  let h = '<h3 class="sec">Đồ dùng · đang chọn trong ô nhanh: ' + (cur === 'flask' ? 'Bình Máu' : cur === 'fpflask' ? 'Bình FP' : ITEMDEF[cur].name) + '</h3><ul class="travel">';
-  h += row('Bình Máu', P.flasks + '/' + (S.flaskMax - S.flaskFp), 'Hồi ' + flaskHeal() + ' máu. Nạp lại khi nghỉ ở Ân Điển.', `<button class="mini" data-quick="flask" ${cur === 'flask' ? 'disabled' : ''}>Chọn</button>`);
-  h += row('Bình FP', P.fpflasks + '/' + S.flaskFp, 'Hồi ' + fpFlaskAmt() + ' FP.', `<button class="mini" data-quick="fpflask" ${cur === 'fpflask' ? 'disabled' : ''}>Chọn</button>`);
-  if (S.bell) h += row(ITEMDEF.bell.name, '', ITEMDEF.bell.desc + '.', `<button class="mini" data-quick="bell" ${cur === 'bell' ? 'disabled' : ''}>Chọn</button>`);
-  for (const id of USE_ORDER) if (invN(id)) {
-    const usable = id === 'cure' || id === 'grease' || id.startsWith('grune');
-    h += row(ITEMDEF[id].name, invN(id), ITEMDEF[id].desc, (usable ? `<button class="mini" data-use="${id}">Dùng</button>` : '') + `<button class="mini" data-quick="${id}" ${cur === id ? 'disabled' : ''}>Chọn</button>`);
-  }
-  h += '</ul>';
-  // tro triệu hồi: chọn loại hồn mà chuông sẽ gọi
-  const sps = SPIRIT_ORDER.filter(k => (S.spirits || []).includes(k));
-  if (sps.length) {
-    h += '<h3 class="sec">Tro Triệu Hồi' + (S.bell ? '' : ' · cần Chuông Gọi Hồn') + '</h3><ul class="travel">';
-    for (const k of sps) { const sp = SPIRITS[k]; h += row(sp.name + (isNew('p', k) ? ' ★' : ''), '', sp.desc + ' · ' + sp.fp + ' FP', `<button class="mini" data-spirit="${k}" ${S.spiritSel === k ? 'disabled' : ''}>${S.spiritSel === k ? 'Đang chọn' : 'Chọn'}</button>`); }
-    h += '</ul>';
-  }
-  const mats = Object.keys(ITEMDEF).filter(k => ITEMDEF[k].kind !== 'use' && ITEMDEF[k].kind !== 'bell' && invN(k));
-  h += '<h3 class="sec">Nguyên liệu và vật phẩm quan trọng</h3>' + (mats.length ? '<ul class="travel">' + mats.map(k => row(ITEMDEF[k].name, invN(k), ITEMDEF[k].desc, '')).join('') + '</ul>' : '<p class="note">Chưa có.</p>');
-  h += `<p class="note">Mũi tên ${S.arrows}/${S.arrowMax} · Nước Mắt Thánh ${S.tears}/${TEAR_CAP} · Hạt Vàng: ${S.flaskMax}/${FLASK_CAP} bình · Ô phép ${S.slots} · Ô bùa ${S.talSlots}</p>`;
-  $('invWrap').innerHTML = h;
-}
+function renderInv() { renderBag(); }
 function renderGrace() {
   const g = atGrace();
   $('tabLevel').textContent = g ? 'Lên cấp' : 'Trạng thái';
   $('tabFlask').hidden = !g;
   if (!g && graceTab === 'flask') graceTab = 'gear';
   renderLevel(); renderInv();
-  // trang bị
-  const ownR = ownedRight(), ownO = OFF_ORDER.filter(w => S.weapons.includes(w)), Wp = WEAPONS[S.equipped];
-  let h = '<h3 class="sec">Tay phải</h3><ul class="travel">' + ownR.map(w => `<li><button data-weapon="${w}" class="${w === S.equipped ? 'on' : ''}${isNew('w', w) ? ' new' : ''}"><span>${esc(WEAPONS[w].name)}${NB('w', w)}${upLv(w) ? ' +' + upLv(w) : ''}<br><small>${weaponLine(w)}</small></span><small>${w === S.equipped ? 'Đang cầm' : 'Cầm'}</small></button></li>`).join('') + '</ul>';
-  h += '<h3 class="sec">Tay trái' + (Wp.twoHanded ? ' · bị khóa vì tay phải cầm vũ khí hai tay' : '') + '</h3><ul class="travel">' + ownO.map(w => `<li><button data-off="${w}" class="${w === S.off ? 'on' : ''}${isNew('w', w) ? ' new' : ''}"><span>${esc(WEAPONS[w].name)}${NB('w', w)}${upLv(w) ? ' +' + upLv(w) : ''}<br><small>${WEAPONS[w].desc} · ${weaponLine(w)}</small></span><small>${w === S.off ? 'Đang cầm' : 'Cầm'}</small></button></li>`).join('') + '</ul>';
-  if (Wp.type === 'melee') {
-    const cur = ashOf(S.equipped), list = Wp.unique ? [Wp.ash] : [...new Set([Wp.ash, ...S.ashes.filter(a => !ASHES[a].unique && !ASHES[a].bow)])];
-    const lock = Wp.unique || !g, why = Wp.unique ? ' · kỹ năng riêng, không đổi được' : !g ? ' · chỉ đổi được khi nghỉ ở Ân Điển' : '';
-    h += `<h3 class="sec">Kỹ năng của ${esc(Wp.name)}${why}</h3><ul class="travel">` + list.map(a => `<li><button data-ash="${a}" class="${a === cur ? 'on' : ''}${isNew('x', a) ? ' new' : ''}" ${lock ? 'disabled' : ''}><span>${ASHES[a].name}${NB('x', a)}<br><small>${ASHES[a].desc} · ${ASHES[a].fp} FP</small></span><small>${a === cur ? 'Đang gắn' : 'Gắn'}</small></button></li>`).join('') + '</ul>';
-  }
-  h += `<h3 class="sec">Giáp · tải trọng ${equipLoad().toFixed(1)} / ${maxLoad().toFixed(1)} (${ROLLS[rollType()].name})</h3><ul class="travel">` + ARMOR_ORDER.filter(a => S.armors.includes(a)).map(a => { const A = ARMORS[a]; return `<li><button data-armor="${a}" class="${a === S.armor ? 'on' : ''}${isNew('a', a) ? ' new' : ''}"><span>${A.name}${NB('a', a)}<br><small>${A.desc} · giảm ${Math.round(A.abs * 100)}% · trụ ${A.poise} · nặng ${A.wt}</small></span><small>${a === S.armor ? 'Đang mặc' : 'Mặc'}</small></button></li>`; }).join('') + '</ul>';
-  h += `<h3 class="sec">Bùa hộ mệnh · ${S.tal.length}/${S.talSlots} ô</h3>` + (S.tals.length ? '<ul class="travel">' + TAL_ORDER.filter(t => S.tals.includes(t)).map(t => `<li><button data-tal="${t}" class="${S.tal.includes(t) ? 'on' : ''}${isNew('t', t) ? ' new' : ''}"><span>${TALISMANS[t].name}${NB('t', t)}<br><small>${TALISMANS[t].desc}</small></span><small>${S.tal.includes(t) ? 'Đang đeo' : 'Đeo'}</small></button></li>`).join('') + '</ul>' : '<p class="note">Chưa có bùa nào. Tìm trong rương và hầm ngục.</p>');
-  $('gearWrap').innerHTML = h;
-  // phép: ghi nhớ ở Ân Điển, ở ngoài chỉ chọn phép đang dùng
-  const own = SPELL_ORDER.filter(s => S.spells.includes(s)), cs = curSpell();
-  $('spellWrap').innerHTML = (g ? `<p class="note">Ghi nhớ ${S.att.length}/${S.slots} ô. Phép Trí Tuệ cần gậy, phép Đức Tin cần ấn ở tay trái. Giữ chuột phải (hoặc X) để niệm, ↑ để đổi phép.</p>`
-    : `<p class="note">Đang ghi nhớ ${S.att.length}/${S.slots} ô. Bấm để chọn phép dùng tiếp theo; ghi nhớ phép mới khi nghỉ ở Ân Điển.</p>`) +
-    (own.length ? '<ul class="travel">' + own.filter(s => g || S.att.includes(s)).map(s => { const sp = SPELLS[s], on = S.att.includes(s); return `<li><button data-spell="${s}" class="${on ? 'on' : ''}${isNew('s', s) ? ' new' : ''}"><span>${sp.name}${NB('s', s)} <small class="tag">${sp.school === 'sorc' ? 'Trí Tuệ' : 'Đức Tin'}</small><br><small>${sp.desc} · ${sp.fp} FP · cần ${reqText(sp.req)}</small></span><small>${g ? (on ? 'Đã nhớ' : 'Ghi nhớ') : s === cs ? 'Đang dùng' : 'Dùng'}</small></button></li>`; }).join('') + '</ul>' : '<p class="note">Chưa học phép nào. Học Giả Lyra và Nữ Tu Seraphine ở Sảnh Hearthhold có bán phép.</p>');
+  renderGear(); renderSpells();
   // bình
   const hpF = S.flaskMax - S.flaskFp;
   $('flaskWrap').innerHTML = `<p class="note">Tổng ${S.flaskMax} bình (Hạt Vàng tăng số bình, Nước Mắt Thánh tăng lượng hồi). Chia số bình giữa máu và FP.</p>
@@ -923,11 +894,24 @@ $('btnLore').onclick = () => openInfo(UI.lore, UI.title);
 // [mã, điều kiện, tiêu đề, phím trên máy tính, cách làm trên điện thoại]
 const HINTS = [
   ['fight', () => enemies.some(e => !e.dead && e.state === 'chase' && dist(e.x, e.y, P.x, P.y) < 260), 'Kẻ địch đang lao tới',
-    '<kbd>Chuột trái</kbd> đánh · <kbd>Shift</kbd>+<kbd>Chuột trái</kbd> đánh mạnh · <kbd data-k="roll">Space</kbd> lăn né', 'Chạm nút Đánh để tấn công, nút Lăn để né'],
+    '<kbd data-k="light">J</kbd> (chuột trái) đánh · <kbd data-k="heavy">K</kbd> (Shift+chuột trái) đánh mạnh · <kbd data-k="roll">Space</kbd> lăn né', 'Chạm nút Đánh để tấn công, nút Lăn để né'],
+  ['lock', () => S.tips.fight && !P.lock && enemies.some(e => !e.dead && (e.state === 'chase' || e.state === 'atk') && dist(e.x, e.y, P.x, P.y) < 220), 'Khóa mục tiêu',
+    'Nhấn <kbd data-k="lock">Q</kbd> để khóa vào kẻ địch gần nhất: ngươi luôn quay mặt về phía nó, lăn né dễ hơn', 'Chạm nút Khóa để luôn quay mặt về phía kẻ địch'],
   ['guard', () => S.tips.fight && enemies.some(e => !e.dead && e.state === 'atk' && dist(e.x, e.y, P.x, P.y) < 130), 'Đỡ đòn',
-    'Giữ <kbd>Chuột phải</kbd> để giơ khiên; giơ đúng lúc đòn chạm tới sẽ phản đòn', 'Giữ nút Đỡ để chặn đòn'],
+    'Giữ <kbd data-k="guard">X</kbd> (chuột phải) để giơ khiên; giơ đúng lúc đòn chạm tới sẽ phản đòn', 'Giữ nút Đỡ để chặn đòn'],
   ['riposte', () => enemies.some(e => !e.dead && e.state === 'broken' && dist(e.x, e.y, P.x, P.y) < 140), 'Kẻ địch mất thế',
-    'Lại gần và bấm <kbd>Chuột trái</kbd> để tung đòn chí mạng', 'Lại gần và chạm nút Đánh để tung đòn chí mạng'],
+    'Lại gần và bấm <kbd data-k="light">J</kbd> để tung đòn chí mạng', 'Lại gần và chạm nút Đánh để tung đòn chí mạng'],
+  ['backstab', () => S.tips.fight && enemies.some(e => !e.dead && e.state === 'idle' && dist(e.x, e.y, P.x, P.y) < 170 && Math.abs(angDiff(e.face, Math.atan2(P.y - e.y, P.x - e.x))) > 2.2), 'Đâm lưng',
+    'Kẻ địch chưa thấy ngươi. Đi chậm tới sau lưng rồi bấm <kbd data-k="light">J</kbd> để đâm lưng, gây sát thương gấp ba', 'Kẻ địch chưa thấy ngươi. Đi chậm tới sau lưng rồi chạm Đánh để đâm lưng'],
+  ['skill', () => S.tips.fight && P.fp >= 15 && WEAPONS[S.equipped].type === 'melee' && enemies.some(e => !e.dead && e.state === 'chase' && dist(e.x, e.y, P.x, P.y) < 200), 'Kỹ năng vũ khí',
+    'Nhấn <kbd data-k="skill">C</kbd> (Shift+chuột phải) để dùng kỹ năng riêng của vũ khí; tốn FP', 'Chạm nút Kỹ năng để dùng kỹ năng riêng của vũ khí; tốn FP'],
+  ['spell', () => !!catalyst() && S.att.length > 0 && enemies.some(e => !e.dead && e.state === 'chase' && dist(e.x, e.y, P.x, P.y) < 320), 'Niệm phép',
+    'Nhấn <kbd data-k="spell">L</kbd> hoặc giữ chuột phải để niệm phép; <kbd data-k="spellnext">↑</kbd> đổi phép. Hết FP thì uống Bình FP', 'Giữ nút Đỡ để niệm phép bằng gậy hoặc ấn'],
+  ['sprint', () => S.tips.fight && P.state === 'idle' && Math.hypot(P.mvx || 0, P.mvy || 0) > 20 && S.time > 90, 'Chạy nhanh',
+    'Giữ <kbd data-k="roll">Space</kbd> khi di chuyển để chạy nhanh (tốn thể lực)', 'Giữ nút Lăn khi di chuyển để chạy nhanh'],
+  ['horse', () => !!S.horse && !P.mounted, 'Có ngựa', 'Nhấn <kbd data-k="mount">F</kbd> để gọi ngựa. Ngựa chạy nhanh và băng qua ao độc an toàn', 'Chạm nút Ngựa để gọi ngựa'],
+  ['swap', () => S.weapons.filter(w => !WEAPONS[w].hand).length >= 2, 'Đổi vũ khí nhanh', 'Nhấn <kbd data-k="eqprev">←</kbd> <kbd data-k="eqnext">→</kbd> để đổi vũ khí đang cầm mà không cần mở hành trang', 'Chạm nút Vũ khí để đổi vũ khí đang cầm'],
+  ['note', () => NOTES.some(n => dist(n.x, n.y, P.x, P.y) < 90), 'Lời nhắn', 'Những dấu cam trên mặt đất là lời nhắn của kẻ đi trước. Nhấn <kbd data-k="interact">E</kbd> để đọc', 'Chạm nút Dùng để đọc lời nhắn trên mặt đất'],
   ['heal', () => P.hp < P.maxHp * 0.5 && P.flasks > 0, 'Máu còn một nửa', 'Nhấn <kbd data-k="item">R</kbd> để uống Bình Máu', 'Chạm nút Dùng đồ để uống Bình Máu'],
   ['stamina', () => P.st < P.maxSt * 0.2, 'Sắp hết thể lực', 'Hết thể lực thì không lăn hay đánh được. Lùi lại một nhịp cho thể lực hồi', 'Hết thể lực thì không lăn hay đánh được. Lùi lại một nhịp cho thể lực hồi'],
   ['grace', () => !!nearGrace() && S.discovered.length >= 2, 'Ân Điển', 'Nhấn <kbd data-k="interact">E</kbd> để nghỉ: hồi máu, nạp bình và lên cấp', 'Chạm nút Tương tác để nghỉ: hồi máu, nạp bình và lên cấp'],
@@ -950,7 +934,7 @@ function updateHints(dt) {
     if (S.tips[id]) continue;
     let ok = false; try { ok = test(); } catch (e) { ok = false; }
     if (!ok) continue;
-    S.tips[id] = 1; hintCur = id; hintT = 6;
+    S.tips[id] = 1; hintCur = id; hintT = 8;
     $('tutText').textContent = title; $('tutKeys').innerHTML = G.touch ? touch : pc; refreshKbd($('tutKeys')); $('tut').hidden = false;
     SFX.glint(); return;
   }
@@ -1103,19 +1087,10 @@ function startGame(data, cls) {
     later(1.2, () => subtitle('“...Tỉnh dậy đi, Gravebound.”', 3.2));
     later(4.8, () => subtitle('“Vòng Aurum đã vỡ. Người chết không còn đường về, chỉ biết bò lên từ nấm mồ như ngươi. Vùng đất đang mục rữa từ gốc rễ.”', 5));
     later(10.4, () => subtitle('“Ân Điển gọi ngươi trở về vì một lẽ. Hãy đi về phương bắc... câu trả lời đang chờ ở đó.”', 5));
+    later(16, maybeShowHowto);
   }
   save();
 }
-function openClassSelect() {
-  UI.title.hidden = true; UI.cls.hidden = false;
-  $('clsEyebrow').textContent = 'Hành trình mới · Độ khó ' + DIFFS[pendingDiff].name;
-  $('clsList').innerHTML = CLASSES.map(c => {
-    const st = Object.entries(c.stats).map(([k, v]) => `<span>${STAT_SHORT[k] || STAT_NAME[k].split(' ')[0]} <b>${v}</b></span>`).join('');
-    return `<li><button data-cls="${c.id}"><span class="cn">${c.name}</span><span class="cd">${c.desc}</span><span class="cs">${st}</span></button></li>`;
-  }).join('');
-  setTimeout(() => { const b = $('clsList').querySelector('button'); if (b) b.focus({ preventScroll: true }); }, 30);
-}
-$('clsList').addEventListener('click', e => { const b = e.target.closest('[data-cls]'); if (b) { audioInit(); startGame(null, b.dataset.cls); } });
 $('btnClsBack').onclick = () => { UI.cls.hidden = true; openDiffSelect(); };
 // ── chọn độ khó: chỉ một lần mỗi hành trình; Khó và Chuyên gia mở sau lần phá đảo đầu tiên ──
 let pendingDiff = 'normal';
