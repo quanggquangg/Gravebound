@@ -66,7 +66,7 @@ body.rot #topBtns button{height:28px;min-width:36px;font-size:11px}
   radial-gradient(ellipse 70% 55% at 50% -8%,rgba(226,186,96,.34),rgba(226,186,96,0) 70%),
   linear-gradient(rgba(8,7,5,.35),rgba(8,7,5,.88) 70%)}
 .title-inner{width:100%;max-width:640px;text-align:center;display:grid;gap:clamp(8px,1.8vh,16px);justify-items:center}
-.ring{width:clamp(60px,11vh,104px);height:clamp(60px,11vh,104px);color:var(--gold);filter:drop-shadow(0 0 14px rgba(226,186,96,.45))}
+.ring{width:clamp(84px,17vh,150px);height:clamp(84px,17vh,150px);color:var(--gold);filter:drop-shadow(0 0 16px rgba(226,186,96,.4)) drop-shadow(0 2px 3px rgba(0,0,0,.7))}
 .eyebrow{margin:0;font:600 12px/1.2 var(--ui);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
 h1{margin:0;font:700 clamp(44px,min(11vw,13vh),112px)/.95 var(--display);letter-spacing:.04em;text-wrap:balance;
   background:linear-gradient(180deg,#fff3c9 0%,var(--gold) 55%,#9b7b3c 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -294,7 +294,7 @@ kbd{font:600 11px/1 var(--ui);padding:3px 6px;border:1px solid var(--line);borde
 #topBtns button:active{background:linear-gradient(180deg,rgba(226,186,96,.5),rgba(120,90,40,.5))}
 /* màn hình tiêu đề: hào quang sau vòng, đường hoa văn giữa tên game và menu */
 .ring{animation:ringGlow 4s ease-in-out infinite}
-@keyframes ringGlow{50%{filter:drop-shadow(0 0 22px rgba(226,186,96,.75))}}
+@keyframes ringGlow{50%{filter:drop-shadow(0 0 26px rgba(226,186,96,.7)) drop-shadow(0 2px 3px rgba(0,0,0,.7))}}
 h1{filter:drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 0 24px rgba(226,186,96,.25))}
 .title-inner .actions::before{content:"";display:block;width:min(320px,70vw);height:9px;margin:0 auto 6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='9'%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='150'%3E%3Cstop offset='0' stop-color='%23d6b25e' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23d6b25e'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='320' x2='170'%3E%3Cstop offset='0' stop-color='%23d6b25e' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23d6b25e'/%3E%3C/linearGradient%3E%3Cpath d='M0 4.5h152' stroke='url(%23a)'/%3E%3Cpath d='M320 4.5H168' stroke='url(%23b)'/%3E%3Cpath d='M160 .5 164 4.5 160 8.5 156 4.5Z' fill='%2315120c' stroke='%23f2dc97'/%3E%3C/svg%3E") center/100% 9px no-repeat}
 .sbtn{border-top:0;position:relative}
@@ -449,13 +449,45 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   <section id="title" class="overlay title">
     <div class="langsel" data-notr role="group" aria-label="Language"><button type="button" data-lang="vi">Tiếng Việt</button><button type="button" data-lang="en">English</button></div>
     <div class="title-inner">
-      <svg class="ring" viewBox="0 0 120 120" aria-hidden="true" fill="none" stroke="currentColor">
-        <path d="M60 14 A46 46 0 0 1 102 42" stroke-width="3"/>
-        <path d="M105 54 A46 46 0 0 1 78 102" stroke-width="3"/>
-        <path d="M66 106 A46 46 0 0 1 17 76" stroke-width="3"/>
-        <path d="M14 62 A46 46 0 0 1 49 15" stroke-width="3"/>
-        <path d="M60 30 A30 30 0 1 1 59.9 30" stroke-width="1.2" opacity=".6"/>
-        <path d="M60 4 V116 M26 36 L94 84" stroke-width="1" opacity=".55"/>
+      <svg class="ring emblem" viewBox="0 0 240 240" aria-hidden="true">
+      <defs>
+      <linearGradient id="lg-g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4d6"/><stop offset=".42" stop-color="#e9c96c"/><stop offset="1" stop-color="#9a7430"/>
+      </linearGradient>
+      <linearGradient id="lg-blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a88238"/><stop offset=".48" stop-color="#fff2c8"/><stop offset=".52" stop-color="#e2c070"/><stop offset="1" stop-color="#8a6a2a"/>
+      </linearGradient>
+      <linearGradient id="lg-mound" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a3c26"/><stop offset=".5" stop-color="#241d12"/><stop offset="1" stop-color="#120f0a"/>
+      </linearGradient>
+      <radialGradient id="lg-halo" cx="120" cy="86" r="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe7a8" stop-opacity=".62"/><stop offset=".55" stop-color="#ffd98a" stop-opacity=".16"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/>
+      </radialGradient>
+      <clipPath id="lg-in"><circle cx="120" cy="120" r="92"/></clipPath>
+      </defs>
+      <circle cx="120" cy="120" r="92" fill="#0f0d09" opacity=".55"/>
+      <circle cx="120" cy="86" r="80" fill="url(#lg-halo)" clip-path="url(#lg-in)"/>
+      <g stroke="#f3d98c" stroke-linecap="round" opacity=".5" stroke-width="2.2" clip-path="url(#lg-in)">
+      <path d="M120 86 L76 48 M120 86 L164 48 M120 86 L58 78 M120 86 L182 78 M120 86 L92 32 M120 86 L148 32"/>
+      </g>
+      <g clip-path="url(#lg-in)">
+      <path d="M20 240 L20 190 Q120 138 220 190 L220 240 Z" fill="url(#lg-mound)"/>
+      <path d="M20 190 Q120 138 220 190" fill="none" stroke="url(#lg-g)" stroke-width="4"/>
+      <path d="M86 186 l7 -3 M146 182 l7 2 M108 176 l5 -2 M70 198 l6 -1 M162 196 l6 1" stroke="#b08d4c" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+      </g>
+      <g fill="none" stroke="url(#lg-g)" stroke-width="11">
+      <path d="M135.3 23.2 A98 98 0 0 1 215.9 140.4"/>
+      <path d="M209.5 159.9 A98 98 0 0 1 30.5 159.9"/>
+      <path d="M24.1 140.4 A98 98 0 0 1 104.7 23.2"/>
+      </g>
+      <g fill="url(#lg-g)"><path d="M226.5 150.1 l4.5 4.5 l-4.5 4.5 l-4.5 -4.5 z"/><path d="M13.5 150.1 l4.5 4.5 l-4.5 4.5 l-4.5 -4.5 z"/></g>
+      <path d="M110 98 L130 98 L128.5 172 L111.5 172 Z" fill="url(#lg-blade)" stroke="#2a1f0e" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M120 102 V170" stroke="#7a5a24" stroke-width="2"/>
+      <path d="M84 88 Q120 98 156 88 L158 98 Q120 110 82 98 Z" fill="url(#lg-g)" stroke="#2a1f0e" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="114" y="52" width="12" height="36" rx="3" fill="#5a3e1e" stroke="#2a1f0e" stroke-width="2"/>
+      <path d="M114 60 L126 64 M114 68 L126 72 M114 76 L126 80" stroke="#c9a44e" stroke-width="2"/>
+      <path d="M120 20 L131 37 L120 54 L109 37 Z" fill="url(#lg-g)" stroke="#2a1f0e" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="120" cy="37" r="3.6" fill="#fff8e4"/>
       </svg>
       <p class="eyebrow">Một trường ca souls-like</p>
       <h1>Gravebound</h1>
