@@ -274,7 +274,11 @@ function drawHUD() {
   bar(x, y + 19, fpW, 6, P.fp / P.maxFp, null, '#3d5fc6');
   if (G.fpWarn > 0 && Math.sin(G.fpWarn * 30) > 0) { ctx.strokeStyle = '#e0503c'; ctx.lineWidth = 2; ctx.strokeRect(x - 3, y + 16, fpW + 6, 12); ctx.lineWidth = 1; }
   const stW = Math.min(maxW * 0.6, P.maxSt * 1.8);
-  bar(x, y + 31, stW, 6, P.st / P.maxSt, null, '#4f8f3e');
+  // thể lực: cạn sạch thì nền thanh ửng đỏ theo nhịp thở; bấm hành động lúc cạn thì nháy đỏ và rung
+  const sf = G.stFail || 0, ss = sf > 0 ? Math.sin(G.clock * 60) * 2.5 * sf : 0, empty = P.st < 1;
+  bar(x + ss, y + 31, stW, 6, P.st / P.maxSt, null, sf > 0.5 ? '#c8503c' : '#4f8f3e');
+  if (empty || sf > 0) { ctx.fillStyle = `rgba(220,70,50,${Math.max(sf * 0.55, empty ? 0.18 + Math.sin(G.clock * 7) * 0.1 : 0)})`; ctx.fillRect(x + ss, y + 31, stW, 6); }
+  if (sf > 0) { ctx.strokeStyle = `rgba(255,120,90,${sf})`; ctx.lineWidth = 1.5; ctx.strokeRect(x + ss - 3.5, y + 27.5, stW + 7, 13); ctx.lineWidth = 1; }
   if (P.poisonB > 0 || P.poisonT > 0) {
     ctx.fillStyle = 'rgba(8,7,5,.7)'; ctx.fillRect(x, y + 41, stW, 4);
     ctx.fillStyle = '#b07ac4'; ctx.fillRect(x, y + 41, stW * (P.poisonT > 0 ? P.poisonT / 14 : P.poisonB / 100), 4);

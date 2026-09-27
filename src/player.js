@@ -139,7 +139,13 @@ function toggleTwoHand(side = 'R') {
 function spendSt(n, delay) {
   P.st = Math.max(0, P.st - n);
   P.stDelay = P.st <= 0 ? ST_EXHAUST : delay;
-  if (P.st <= 0) SFX.exhaust();
+  if (P.st <= 0) { SFX.exhaust(); P.exhaustAt = G.clock; }
+}
+// bấm hành động khi đã cạn thể lực: không làm gì được, nên báo rõ để không giống lỗi —
+// thanh thể lực nháy đỏ và rung, tiếng thở hắt, chữ nổi trên đầu (tối đa một lần mỗi 1,2 giây)
+function staminaFail() {
+  G.stFail = 1;
+  if (G.clock - (P.stFailAt ?? -9) > 1.2) { P.stFailAt = G.clock; floatText(P.x, P.y - 34, 'HẾT THỂ LỰC', '#b8e08a'); SFX.stfail(); }
 }
 function startAttack(kind, combo, moving, mx, my) {
   if (WEAPONS[S.equipped].type === 'bow' && !P.mounted && S.arrows <= 0) { toast('Hết tên. Nghỉ tại Ân Điển để lấy lại'); return; }
@@ -341,7 +347,8 @@ function cycleSpell() {
 function doAction(a, moving, mx, my) {
   switch (a) {
     case 'roll': {
-      if (P.mounted || P.st <= 0) return;
+      if (P.mounted) return;
+      if (P.st <= 0) { staminaFail(); return; }
       const rt = rollType();
       if (rt === 'over') { toast('Quá tải! Không thể lăn'); return; }
       P.roll = moving ? ROLLS[rt] : ROLLS.back;
@@ -350,7 +357,7 @@ function doAction(a, moving, mx, my) {
       break;
     }
     case 'light': case 'heavy': {
-      if (P.st <= 0) return;
+      if (P.st <= 0) { staminaFail(); return; }
       const ct = a === 'light' && !P.mounted ? critTarget() : null;
       if (ct) { startCrit(ct.e, ct.type); break; }
       const counter = a === 'heavy' && !P.mounted && G.clock - P.blockedAt < 0.8;
@@ -362,8 +369,8 @@ function doAction(a, moving, mx, my) {
       }
       break;
     }
-    case 'left': if (!P.mounted && P.st > 0) startOff(0, moving, mx, my); break;
-    case 'skill': if (!P.mounted && P.st > 0) startSkill(moving, mx, my); break;
+    case 'left': if (!P.mounted) { if (P.st > 0) startOff(0, moving, mx, my); else staminaFail(); } break;
+    case 'skill': if (!P.mounted) { if (P.st > 0) startSkill(moving, mx, my); else staminaFail(); } break;
     case 'spell': if (!P.mounted) startSpell(moving, mx, my); break;
     case 'item': useQuick(moving, mx, my); break;
     case 'interact': interact(); break;
@@ -538,8 +545,8 @@ function updatePlayer(dt) {
     } else {
       if (t > A.wind + A.act + A.rec * 0.35) {
         const a = peekBuf();
-        if (a === 'light' && A.kind === 'light' && A.combo < A.maxCombo && !p.mounted && !critTarget()) { takeBuf(); if (p.st <= 0) return; startAttack('light', A.combo + 1, moving, mx, my); return; }
-        if (a === 'left' && (A.kind === 'left' || A.kind === 'dual') && A.combo < A.maxCombo && !p.mounted) { takeBuf(); if (p.st <= 0) return; startOff(A.combo + 1, moving, mx, my); return; }
+        if (a === 'light' && A.kind === 'light' && A.combo < A.maxCombo && !p.mounted && !critTarget()) { takeBuf(); if (p.st <= 0) { staminaFail(); return; } startAttack('light', A.combo + 1, moving, mx, my); return; }
+        if (a === 'left' && (A.kind === 'left' || A.kind === 'dual') && A.combo < A.maxCombo && !p.mounted) { takeBuf(); if (p.st <= 0) { staminaFail(); return; } startOff(A.combo + 1, moving, mx, my); return; }
         if (a === 'roll' || a === 'heavy' || a === 'light' || a === 'item' || a === 'skill' || a === 'spell' || a === 'left') { takeBuf(); p.state = 'idle'; p.atk = null; doAction(a, moving, mx, my); return; }
       }
       if (t >= A.wind + A.act + A.rec) { p.state = 'idle'; p.t = 0; p.atk = null; }

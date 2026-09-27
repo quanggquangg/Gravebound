@@ -352,6 +352,12 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 
 /* ── hành trang kiểu souls: ô trang bị, lưới vật phẩm, thẻ chi tiết ── */
 .panel.inv{max-width:1000px}
+/* bảng có nội dung thay đổi theo thẻ / món đang xem: khóa cứng chiều cao, chỉ phần giữa cuộn,
+   để bấm qua lại không làm khung co giãn và nhảy vị trí */
+.panel.fixed{display:flex;flex-direction:column;height:min(680px,calc((100vh - 48px) / var(--uiz,1)))}
+.panel.fixed.inv{height:min(780px,calc((100vh - 48px) / var(--uiz,1)))}
+.panel.fixed>.scroll{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;align-content:start}
+.panel.fixed>:not(.scroll){flex:none}
 .inv2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
 @media (max-width:780px){.inv2{grid-template-columns:1fr}}
 .slots{display:flex;flex-wrap:wrap;gap:6px}
@@ -546,7 +552,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="lore" class="overlay title" hidden>
-    <div class="panel wide lorepanel">
+    <div class="panel wide lorepanel fixed">
       <header><p class="eyebrow" id="loreEyebrow">Truyền thuyết</p><h2>Vòng Aurum</h2></header>
       <div class="scroll lore">
         <h3>I. Thuở Ánh Vàng</h3>
@@ -565,7 +571,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="achBox" class="overlay title" hidden>
-    <div class="panel wide">
+    <div class="panel wide fixed">
       <header><p class="eyebrow" id="achCount">Thành tựu</p><h2>Thành tựu</h2><p class="note">Thành tựu lưu trên trình duyệt này và giữ nguyên qua mọi hành trình.</p></header>
       <div class="scroll"><ul class="ach" id="achList"></ul></div>
       <div class="row"><button id="btnAchClose" class="pbtn">Đóng</button></div>
@@ -573,7 +579,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="controlsBox" class="overlay title" hidden>
-    <div class="panel wide">
+    <div class="panel wide fixed">
       <header><p class="eyebrow">Hướng dẫn</p><h2>Điều khiển</h2></header>
       <div class="scroll">
       <dl class="controls">
@@ -645,7 +651,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="settings" class="overlay title" hidden>
-    <div class="panel wide">
+    <div class="panel wide fixed">
       <header><p class="eyebrow">Tùy chỉnh</p><h2>Cài đặt</h2></header>
       <div class="scroll">
         <h3 class="sec">Âm thanh</h3>
@@ -664,7 +670,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="howto" class="overlay" hidden>
-    <div class="panel wide inv">
+    <div class="panel wide inv fixed">
       <header><p class="eyebrow">Hướng dẫn</p><h2>Cách chơi</h2><p class="note">Nút hiển thị theo thiết bị ngươi đang dùng: bàn phím, tay cầm hay cảm ứng. Đổi phím trong Cài đặt.</p></header>
       <div class="scroll" style="display:grid;gap:14px">
         <dl class="howto" id="howtoList"></dl>
@@ -676,7 +682,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="grace" class="overlay" hidden>
-    <div class="panel wide inv">
+    <div class="panel wide inv fixed">
       <header><p class="eyebrow" id="graceEyebrow">Ân Điển</p><h2 id="graceTitle">Nghỉ ngơi</h2></header>
       <p class="hubcall" id="hubCall" hidden><b>Melyra thì thầm:</b> “Kẻ Gravebound, ngươi cần một chốn nương thân. Ở Sảnh Hearthhold có thợ rèn cường hóa vũ khí, lái buôn, học giả bán phép và nữ tu. Bất cứ khi nào không giao chiến, hãy bấm <em>Về Sảnh Hearthhold</em> ở dưới, trong Hành trang hay menu tạm dừng.”</p>
       <div class="tabs" role="tablist">
@@ -702,7 +708,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
       <div id="paneGear" class="scroll" hidden><div id="gearWrap"></div></div>
       <div id="paneInv" class="scroll" hidden><div id="invWrap"></div></div>
       <div id="paneSpell" class="scroll" hidden><div id="spellWrap"></div></div>
-      <div id="paneFlask" hidden><div id="flaskWrap"></div></div>
+      <div id="paneFlask" class="scroll" hidden><div id="flaskWrap"></div></div>
       <div id="paneBeast" class="scroll" hidden>
         <p class="note" id="beastNote"></p>
         <ul class="beasts" id="beastList"></ul>
@@ -716,7 +722,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="shop" class="overlay" hidden>
-    <div class="panel wide">
+    <div class="panel wide fixed">
       <header><p class="eyebrow">Sảnh Hearthhold</p><h2 id="shopName">Cửa hàng</h2><p class="note" id="shopLine"></p></header>
       <div class="lvtop"><div><span class="k">Rune đang có</span><b id="shopRunes">0</b></div></div>
       <div class="scroll"><ul class="travel" id="shopList"></ul></div>
@@ -737,7 +743,7 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
   </section>
 
   <section id="board" class="overlay title" hidden>
-    <div class="panel wide">
+    <div class="panel wide fixed">
       <header><p class="eyebrow">Những Gravebound đã chạm tới Cây Aurum</p><h2>Bảng xếp hạng</h2><p class="note" id="boardNote"></p><div class="btabs" id="boardTabs"></div></header>
       <div class="scroll"><table class="board"><thead><tr><th>#</th><th>Tên</th><th>Chết</th><th>Thời gian</th><th>Cấp</th><th>Xuất thân</th></tr></thead><tbody id="boardBody"></tbody></table></div>
       <div class="row"><button id="btnBoardClose" class="pbtn">Đóng</button></div>

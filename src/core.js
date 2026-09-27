@@ -177,6 +177,7 @@ const SFX = {
   uiOpen: () => { whoosh(0.22, 0.05, 700, 2400, 1); tone(880, 0.25, 'sine', 0.025, 0, 0.05); },
   uiClose: () => whoosh(0.18, 0.04, 2000, 600, 1),
   lock: () => { tone(1100, 0.06, 'triangle', 0.03); tone(1650, 0.06, 'triangle', 0.02, 0, 0.04); },
+  stfail: () => { if (sfxOnce('stfail', 0.5)) { noise(0.22, 0.07, 600, 0.8, 0, 'lowpass'); tone(150, 0.14, 'sine', 0.035, -50); } },
   exhaust: () => { if (sfxOnce('exhaust', 1)) { noise(0.45, 0.06, 700, 0.8, 0, 'lowpass'); noise(0.35, 0.05, 900, 0.8, 0.5, 'lowpass'); } },
   heart: () => { tone(58, 0.14, 'sine', 0.16, -12); tone(52, 0.16, 'sine', 0.12, -10, 0.2); },
   summon: () => { [440, 554.37, 659.25, 880].forEach((f, i) => tone(f, 1.4, 'sine', 0.035, 0, i * 0.05)); whoosh(1.2, 0.05, 300, 2600, 0.8); },

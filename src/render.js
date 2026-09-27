@@ -615,6 +615,13 @@ function drawPlayer() {
   const offW = WEAPONS[S.off], sheath = th && !p.mounted && offW && S.off !== S.equipped ? { type: offW.type, look: offW.type === 'shield' ? null : offW.look || (offW.type === 'staff' ? { weapon: 'staff', wlen: 26, wcol: '#6b5a3e', orb: '#aee4ff' } : null), kite: S.off === 'kite' } : null;
   // tư thế toàn thân theo trạng thái: nghiêng khi chạy, vặn thân khi chém, giật lùi khi trúng đòn, trụ chân khi đỡ
   let pose = motion.pose, wide = motion.wide;
+  // thở hổn hển khi thể lực gần cạn: vai nhô lên hạ xuống, cúi người, hơi thở phả ra
+  const tired = !p.mounted && (p.st < p.maxSt * 0.12 || G.clock - (p.exhaustAt ?? -9) < 1.6) && (p.state === 'idle' || p.state === 'guard');
+  if (tired) {
+    const h = Math.sin(G.clock * 9);
+    pose.sq = [(pose.sq ? pose.sq[0] : 1) * (1 - 0.035 * h), (pose.sq ? pose.sq[1] : 1) * (1 + 0.05 * h)]; pose.lean += 1.2;
+    if (!FX_LOW && Math.random() < 0.06) addPart(p.x + Math.cos(p.face) * 11, p.y + Math.sin(p.face) * 11 - 4, Math.cos(p.face) * 14, -10, 0.6, rand(2, 3.2), 'rgba(230,236,240,.4)', 'dot');
+  }
   if (resting) { pose = { lean: -1, twist: 0.1, sq: null, step: 0 }; wAng = 1.5; }
   const o = { playerRig: true, gaitDir: motion.gaitDir, cape: motion.cape, headTurn: -pose.twist * 0.55, flask: p.state === 'drink' ? motion.flask : null, anim: p.walk, kneel: resting, move: p.state === 'roll' ? 0 : mv * (p.state === 'attack' ? 0.3 : 1), stride: motion.stride, lean: pose.lean, twist: pose.twist, sq: pose.sq, step: pose.step, wide, noFeet: p.mounted || (p.state === 'roll' && !p.roll.back),
     trail, thrust, stab, charge, left, sheath, z: p.state === 'mount' ? Math.sin(animSmooth(p.t / 0.3) * Math.PI) * 12 : p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat || lwId ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted && p.state !== 'drink' };
