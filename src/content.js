@@ -49,7 +49,7 @@ const nearDoor = () => DOORS.find(d => dist(P.x, P.y, d.x, d.y) < 56);
 const nearNpc = () => NPCS.find(n => dist(P.x, P.y, n.x, n.y) < 62);
 const nearLoot = () => loot.find(l => dist(P.x, P.y, l.x, l.y) < 42);
 function pullLever(l) {
-  S.levers.push(l.id); SFX.lever(); shake(6);
+  S.levers.push(l.id); l.pulledAt = G.clock; SFX.lever(); shake(6);
   burst(l.x, l.y - 10, 18, 'rgba(160,150,130,.8)', 90, 3, 'dot', 0.7);
   banner('grace', 'CÁNH CỬA ĐÃ MỞ', l.name, 3); save();
 }

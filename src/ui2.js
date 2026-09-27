@@ -129,7 +129,7 @@ function cardFor(key) {
   return k === 'w' ? weaponCard(id) : k === 'a' ? armorCard(id) : k === 't' ? talCard(id) : k === 'x' ? ashCard(id) : k === 's' ? spellCard(id) : k === 'p' ? spiritCard(id) : itemCard(id);
 }
 function tilesHTML(list) {
-  return '<ul class="tiles">' + list.map(t => `<li><button class="tile${t.eq ? ' eq' : ''}${t.k === detailKey ? ' sel' : ''}" data-key="${t.k}" ${t.act || ''} ${t.dis ? 'disabled' : ''} title="${esc(t.name)}">${img(t.kind, t.id)}<span class="nm">${esc(t.name)}</span>${t.n !== undefined && t.n !== '' ? `<span class="n">${t.n}</span>` : ''}${t.nw ? '<em class="newb">MỚI</em>' : ''}</button></li>`).join('') + '</ul>';
+  return '<ul class="tiles">' + list.map((t, i) => `<li style="--i:${Math.min(i, 16)}"><button class="tile${t.eq ? ' eq' : ''}${t.k === detailKey ? ' sel' : ''}" data-key="${t.k}" ${t.act || ''} ${t.dis ? 'disabled' : ''} title="${esc(t.name)}">${img(t.kind, t.id)}<span class="nm">${esc(t.name)}</span>${t.n !== undefined && t.n !== '' ? `<span class="n">${t.n}</span>` : ''}${t.nw ? '<em class="newb">MỚI</em>' : ''}</button></li>`).join('') + '</ul>';
 }
 function renderGear() {
   const Wp = WEAPONS[S.equipped], ash = Wp.type === 'melee' ? ashOf(S.equipped) : null;

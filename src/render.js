@@ -12,6 +12,8 @@ function weaponAngle(phase, k, swing) {
   return 0.6;
 }
 const OL = 'rgba(10,8,6,.85)';
+// gió thổi theo từng đợt: cỏ, tán cây, áo choàng, cờ cùng lay mạnh lên rồi dịu lại
+const gust = () => 1 + 1.1 * Math.pow(Math.max(0, Math.sin(G.clock * 0.23)), 4) + 0.15 * Math.sin(G.clock * 0.9);
 // nét có viền tối: vẽ nét đen dày hơn trước rồi nét màu lên trên, kèm một vệt sáng mảnh
 function olLine(x0, y0, x1, y1, w, col) {
   ctx.lineCap = 'round';
@@ -202,7 +204,7 @@ function swordHilt(s, hw, col, grip = 2.4) {
   ctx.fillStyle = col; ctx.beginPath(); ctx.arc(-2.6 * s - (grip - 2.4) * 2 * s, 0, 1.9 * s, 0, TAU); ctx.fill(); ctx.stroke();
 }
 function drawWeapon(L, s, wAng, o) {
-  const ox = 3 * s + (o.thrust || 0) * 14 * s, oy = 8 * s, len = L.wlen * s;
+  const ox = 3 * s + (o.thrust || 0) * 14 * s + (o.armX || 0) * s, oy = 8 * s, len = L.wlen * s;
   if (o.twoHand) {
     const g = L.weapon === 'bow' ? 6 * s + Math.cos(1.25) * 13 * s - 3 * s - (o.charge || 0) * 10 * s : L.weapon === 'spear' || L.weapon === 'scythe' || L.weapon === 'staff' ? len * 0.42 : -3.2 * s;
     HAND2 = [ox + Math.cos(wAng) * g, oy + Math.sin(wAng) * g];
@@ -292,6 +294,61 @@ function drawWeapon(L, s, wAng, o) {
   ctx.beginPath(); ctx.arc(1.5 * s, 0, 2.8 * s, 0, TAU); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
+// ───────────────────────── khung chuyển động dùng chung cho mọi nhân vật hình người ─────────────────────────
+const easeO = k => 1 - (1 - k) * (1 - k);
+// tốc độ di chuyển (0 đứng yên, 1 đi, >1 chạy) và pha bước chân tính theo quãng đường thật, để chân không trượt trên đất
+function moveK(o, ref = 120) {
+  const t = G.clock, dt = t - (o._ct ?? t);
+  if (o._ax === undefined || Math.abs(o.x - o._ax) + Math.abs(o.y - o._ay) > 200) { o._ax = o.x; o._ay = o.y; }
+  const d = Math.hypot(o.x - o._ax, o.y - o._ay);
+  if (dt > 0) { o._mv = lerp(o._mv || 0, clamp(d / dt / ref, 0, 1.5), Math.min(1, dt * 12)); o._st = (o._st || 0) + d / 5; }
+  o._ax = o.x; o._ay = o.y; o._ct = t;
+  return o._mv || 0;
+}
+// tư thế theo nhịp đòn (0 lấy đà, 1 ra đòn, 2 thu về): nghiêng người, vặn thân trên, bước chân trụ, nén-giãn
+function atkPose(anim, ph, k, sw = 1, hv = 1) {
+  const P = { lean: 0, twist: 0, sq: null, step: 0 };
+  k = clamp(k, 0, 1);
+  if (anim === 'spin') { P.lean = ph === 1 ? 2 : 0; return P; }
+  if (anim === 'bow' || anim === 'cast') { P.lean = ph === 0 ? -1.5 * k : ph === 1 ? 1.5 : 1.5 * (1 - k); P.sq = ph === 1 ? [1.04, 0.97] : null; return P; }
+  if (anim === 'thrust') {
+    P.lean = ph === 0 ? -3 * easeO(k) : ph === 1 ? 6 : 6 * (1 - easeO(k)); P.twist = ph === 0 ? 0.22 * k : ph === 1 ? -0.12 : -0.12 * (1 - k);
+    P.step = ph === 0 ? 0 : ph === 1 ? 1 : 1 - k; if (ph === 1) P.sq = [1.07, 0.95];
+  } else if (anim === 'overhead') {
+    P.lean = ph === 0 ? -3.5 * easeO(k) : ph === 1 ? 7 : 7 * (1 - easeO(k)); P.step = ph === 0 ? 0 : ph === 1 ? 1 : 1 - k;
+    P.sq = ph === 0 ? [1 - 0.07 * k, 1 + 0.05 * k] : ph === 1 ? [1.12, 0.91] : [1 + 0.12 * (1 - k), 1 - 0.09 * (1 - k)];
+  } else if (anim === 'dash') {
+    P.lean = ph === 0 ? -2.5 * k : ph === 1 ? 7 : 7 * (1 - k); if (ph === 1) P.sq = [1.12, 0.93]; P.step = ph === 1 ? 1 : 0;
+    P.twist = ph === 0 ? 0.3 * sw * k : ph === 1 ? -0.3 * sw : -0.3 * sw * (1 - k);
+  } else {
+    // chém ngang: vặn thân về phía lấy đà, quật mạnh sang bên kia rồi trả về
+    const w = ph === 0 ? easeO(k) : ph === 1 ? 1 - 2 * easeO(k) : -(1 - easeO(k));
+    P.twist = 0.38 * sw * w; P.lean = ph === 0 ? -2 * k : ph === 1 ? 4 : 4 * (1 - k); P.step = ph === 1 ? 1 : ph === 2 ? 1 - k : 0;
+  }
+  P.lean *= hv; P.twist *= Math.min(1.3, hv);
+  if (P.sq && hv > 1) P.sq = [1 + (P.sq[0] - 1) * hv, 1 + (P.sq[1] - 1) * hv];
+  return P;
+}
+// trúng đòn: giật người ra sau, co lại một chút
+const hurtPose = (k, side = 1) => ({ lean: -4.5 * k, twist: 0.22 * k * side, sq: [1 - 0.09 * k, 1 + 0.06 * k] });
+// hai bàn chân: đứng thì hơi lệch nhau, đi thì so le theo pha bước, lao đòn thì bước chân phải lên trước
+function drawFeet(L, s, o, mv, st, fall) {
+  const col = L.boot || '#5a4330', m = Math.min(1.4, mv);
+  for (const side of [-1, 1]) {
+    const sw = Math.sin(st) * side;
+    let fx = (o.kneel ? (side > 0 ? 8 : -5) : side > 0 ? 5 : 3) * s + sw * 9.5 * s * m + (o.step || 0) * (side > 0 ? 7 : -3) * s;
+    const fy = side * (5.2 + (o.wide || 0) * 2.6) * s;
+    if (fall) fx = fx * (1 - fall) - 9 * s * fall;
+    const lift = m ? Math.max(0, Math.cos(st) * side) * Math.min(1, m) : 0, len = (5 + lift * 0.8) * s;
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(fx - 0.5 * s, fy + 1 * s, 5 * s, 2.6 * s, 0, 0, TAU); ctx.fill();
+    // ống chân nối từ hông tới bàn chân, rồi chiếc ủng có mũi sáng
+    ctx.lineCap = 'round'; ctx.strokeStyle = OL; ctx.lineWidth = 4.4 * s; ctx.beginPath(); ctx.moveTo(0, fy * 0.8); ctx.lineTo(fx - 1.5 * s, fy); ctx.stroke();
+    ctx.strokeStyle = tint(L.body, 0.7); ctx.lineWidth = 2.8 * s; ctx.stroke(); ctx.lineCap = 'butt';
+    ctx.fillStyle = litGrad(col, fx + 2 * s, fy - 1 * s, 6 * s); ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(fx + lift * 0.8 * s, fy, len, 3.2 * s, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,245,220,.35)'; ctx.beginPath(); ctx.ellipse(fx + len * 0.55, fy - 0.8 * s, 1.4 * s, 0.9 * s, 0, 0, TAU); ctx.fill();
+  }
+}
 function drawHumanoid(x, y, face, L, wAng, o = {}) {
   const s = L.scale || 1, z = o.z || 0;
   shadow(x, y + 4 * s, 13 * s * (1 - z / 200), 8 * s * (1 - z / 200), 0.35);
@@ -305,9 +362,19 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
   ctx.rotate(face);
   if (o.kneel) ctx.scale(0.86, 1.04);
   else { const br = Math.sin(G.clock * 2.3 + x * 0.013) * 0.022; ctx.scale(1 - br * 0.4, 1 + br); } // thở
-  const wave = Math.sin((o.anim || 0) * 6) * 2 * s;
+  const mv = o.move || 0, st = o.stride || 0, fall = o.fall || 0;
+  const wave = Math.sin((o.anim || 0) * 6) * 2 * s * (1 + Math.min(1, mv) * 0.7);
   // boss có dáng riêng (bossart.js): áo choàng, thân, đầu và đồ ở tay trái được vẽ theo từng boss
   const BF = L.bform && typeof BFORM !== 'undefined' ? BFORM[L.bform] : null;
+  // chân đứng trên đất (không xoay theo thân trên), rồi thân trên nghiêng, vặn, nén-giãn theo tư thế
+  if (!o.noFeet && !L.wings && !L.noFeet && z < 30 && !(BF && BF.noFeet)) drawFeet(L, s, o, mv, st, fall);
+  if (fall) { ctx.translate(fall * 9 * s, 0); ctx.scale(1 + fall * 0.32, 1 - fall * 0.06); }
+  if (mv) { const m = Math.min(1, mv), b = Math.abs(Math.sin(st)) * 0.03 * m; ctx.translate(0, Math.sin(st) * 0.9 * s * m); ctx.scale(1 + b, 1 + b); }
+  if (o.lean) ctx.translate(o.lean * s, 0);
+  if (o.twist) ctx.rotate(o.twist);
+  if (o.sq) ctx.scale(o.sq[0], o.sq[1]);
+  // tay vung theo nhịp bước (ngược chiều chân cùng bên)
+  o.armX = mv && !o.twoHand ? -Math.sin(st) * 2.4 * Math.min(1, mv) : 0;
   if (BF && BF.back) BF.back(L, s, o, wave);
   if (L.wings) {
     // cánh đá có xương ngón: khép khi đứng, dang rộng khi bay vồ
@@ -352,7 +419,7 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
     const Q = o.left, LL = Object.assign({}, L, Q.L);
     ctx.save(); ctx.scale(1, -1);
     if (Q.trail) smear(3 * s, 8 * s, (LL.wlen + 4) * s, Q.trail[0], Q.trail[1], (LL.wlen * (o.hot ? 0.62 : 0.5) + 4) * s, o.trailCol || 'rgba(255,244,210,.35)', o.hot);
-    drawWeapon(LL, s, Q.wAng, { thrust: Q.thrust });
+    drawWeapon(LL, s, Q.wAng, { thrust: Q.thrust, armX: -(o.armX || 0) });
     if (Q.stab) { ctx.strokeStyle = 'rgba(255,244,210,.45)'; ctx.lineWidth = 4 * s; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo((LL.wlen + 20) * s, 7 * s); ctx.lineTo((LL.wlen + 52) * s, 3 * s); ctx.stroke(); ctx.lineCap = 'butt'; }
     ctx.restore();
   }
@@ -422,7 +489,7 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
   } else if (o.shield) {
     const up = o.shield === 2;
     ctx.fillStyle = o.kite ? '#5a5f68' : '#6b5638'; ctx.strokeStyle = o.kite ? '#c8ccd2' : '#b9b29c'; ctx.lineWidth = 1.6 * s;
-    ctx.beginPath(); ctx.arc(up ? 10 * s : 2 * s, up ? -6 * s : -12 * s, (up ? 7.5 : 6) * s, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(up ? 10 * s : 2 * s - (o.armX || 0) * s, up ? -6 * s : -12 * s, (up ? 7.5 : 6) * s, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.strokeStyle = 'rgba(10,8,6,.75)'; ctx.lineWidth = 1.4;
   }
   // đầu / mũ giáp
@@ -500,10 +567,14 @@ function drawHorse(x, y, face, anim, V) {
 function drawPlayer() {
   const p = P, LOOK = playerLook();
   if (p.state === 'dead') {
-    const k = Math.min(1, G.deathT / 1.2);
-    drawHumanoid(p.x, p.y, p.face, LOOK, 1.2, { alpha: 1 - k * 0.7, kneel: true, shield: 1 });
+    // chết: khựng lại, khuỵu gối, rồi đổ sấp về phía trước, vũ khí tuột khỏi tay
+    const k = Math.min(1, G.deathT / 1.6), fall = easeO(clamp((G.deathT - 0.35) / 0.55, 0, 1)), jolt = clamp(1 - G.deathT / 0.35, 0, 1);
+    drawHumanoid(p.x, p.y, p.face, LOOK, 1.2 + fall * 0.9, { alpha: 1 - k * 0.55, kneel: true, shield: 1, fall, lean: -3 * jolt, twist: 0.25 * jolt });
     return;
   }
+  const mv = p.mounted ? 0 : moveK(p, 145);
+  // nghỉ ở Ân Điển: quỳ một gối, vũ khí hạ xuống cạnh người (như ngồi bên Ân Điển trong Elden Ring)
+  const resting = G.mode === 'menu' && !UI.grace.hidden && menuAt === 'grace';
   if (p.mounted) drawHorse(p.x, p.y, p.face, p.walk);
   let wAng = 0.6, trail = null, thrust = 0, stab = false, spinRot = 0, fx = null, charge = 0, castK = 0;
   if (p.state === 'attack' && p.atk) {
@@ -547,7 +618,22 @@ function drawPlayer() {
     else if (p.state === 'attack' || p.state === 'deflect') left.wAng = 0.6;
   }
   const offW = WEAPONS[S.off], sheath = th && !p.mounted && offW && S.off !== S.equipped ? { type: offW.type, look: offW.type === 'shield' ? null : offW.look || (offW.type === 'staff' ? { weapon: 'staff', wlen: 26, wcol: '#6b5a3e', orb: '#aee4ff' } : null), kite: S.off === 'kite' } : null;
-  const o = { anim: p.walk, trail, thrust, stab, charge, left, sheath, z: p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat || lwId ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
+  // tư thế toàn thân theo trạng thái: nghiêng khi chạy, vặn thân khi chém, giật lùi khi trúng đòn, trụ chân khi đỡ
+  let pose = { lean: p.sprinting ? 3 : 0, twist: 0, sq: null, step: 0 }, wide = 0;
+  if (p.state === 'attack' && p.atk) {
+    const A = p.atk, t = p.t, ph = t < A.wind ? 0 : t < A.wind + A.act ? 1 : 2, k = ph === 0 ? t / A.wind : ph === 1 ? (t - A.wind) / A.act : (t - A.wind - A.act) / A.rec;
+    const an = A.anim === 'dash' && A.thrust ? 'thrust' : A.anim || (A.thrust ? 'thrust' : 'slash');
+    pose = atkPose(an, ph, k, A.side === 'left' ? -(A.swing || 1) : A.swing || 1, A.kind === 'heavy' || A.kind === 'skill' || A.kind === 'crit' ? 1.35 : 1);
+    if (A.side === 'dual') pose.twist *= 0.4;
+  } else if (p.state === 'hurt') pose = Object.assign({ step: 0 }, hurtPose(1 - p.t / (p.hurtDur || 0.3)));
+  else if (p.state === 'guard') { pose.lean = -1.2; wide = 1; }
+  else if (p.state === 'cast') { pose.lean = -1 + castK * 2.5; pose.sq = castK > 0.9 ? [1.04, 0.97] : null; }
+  else if (p.state === 'drink') { const k = Math.min(1, p.t / 0.6); pose.lean = -1.5 * Math.sin(k * Math.PI); pose.sq = [1 - 0.04 * Math.sin(k * Math.PI), 1 + 0.03 * Math.sin(k * Math.PI)]; }
+  else if (p.state === 'deflect') { pose.twist = -0.3 * (1 - p.t / 0.42); pose.lean = -1.5; wide = 1; }
+  else if (p.state === 'throw') { const k = Math.min(1, p.t / 0.4); pose.twist = k < 0.35 ? 0.35 * (k / 0.35) : 0.35 - 0.7 * (k - 0.35) / 0.65; pose.lean = k < 0.35 ? -2 : 3; }
+  if (resting) { pose = { lean: -1, twist: 0.1, sq: null, step: 0 }; wAng = 1.5; }
+  const o = { anim: p.walk, kneel: resting, move: p.state === 'roll' ? 0 : mv, stride: p._st || 0, lean: pose.lean, twist: pose.twist, sq: pose.sq, step: pose.step, wide, noFeet: p.mounted || (p.state === 'roll' && !p.roll.back),
+    trail, thrust, stab, charge, left, sheath, z: p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat || lwId ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
   if (trail || (left && left.trail)) { const hv = p.atk && p.atk.kind === 'heavy'; o.trailCol = playerTrailCol(hv); o.hot = hv || P.buffs.flame > 0 || P.buffs.holy > 0; }
   if (p.state === 'roll' && p.roll.back) {
     // nhảy lùi: không lộn người, chỉ hơi thu mình
@@ -561,7 +647,10 @@ function drawPlayer() {
     if (p.t > p.roll.iframe[0] && p.t < p.roll.iframe[1]) {
       ctx.globalAlpha = 0.22; drawHumanoid(p.x - Math.cos(p.rollDir) * 14, p.y - Math.sin(p.rollDir) * 14, p.rollDir, LOOK, wAng, o); ctx.globalAlpha = 1;
     }
-    ctx.save(); ctx.translate(p.x, p.y); ctx.scale(1 - Math.sin(k * Math.PI) * 0.22, 1 - Math.sin(k * Math.PI) * 0.22); ctx.translate(-p.x, -p.y);
+    // lộn người: co tròn lại theo hướng lăn, áo choàng cuộn qua, thân hơi xoay như đang lộn
+    const sn = Math.sin(k * Math.PI);
+    o.sq = [1 - 0.34 * sn, 1 + 0.04 * sn]; o.twist = Math.sin(k * TAU) * 0.35; o.lean = -2 * sn;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.scale(1 - sn * 0.12, 1 - sn * 0.12); ctx.translate(-p.x, -p.y);
     drawHumanoid(p.x, p.y, p.rollDir, LOOK, wAng, o);
     ctx.restore();
   } else {
@@ -631,8 +720,9 @@ function drawFinal() {
       else wAng = -0.3;
     }
     if (f.charge > 0) { const gr = ctx.createRadialGradient(f.x, f.y - 30, 2, f.x, f.y - 30, 60); gr.addColorStop(0, `rgba(255,230,150,${0.6 * f.charge})`); gr.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(f.x, f.y - 30, 60, 0, TAU); ctx.fill(); }
+    const fp = bossPose(f);
     drawHumanoid(f.x, f.y, f.face, f.look, wAng, {
-      anim: f.anim, trail, trailCol: 'rgba(255,220,130,.5)', flash: f.hurtFlash > 0, z: f.z, aura: true, twoHand: true,
+      anim: f.anim, move: moveK(f, 160), stride: f._st || 0, lean: fp.lean, twist: fp.twist, sq: fp.sq, step: fp.step, trail, trailCol: 'rgba(255,220,130,.5)', flash: f.hurtFlash > 0, z: f.z, aura: true, twoHand: true,
       kneel: f.state === 'transform' || f.state === 'broken', eyes: '#fff3c0',
       alpha: f.state === 'transform' ? Math.max(0.05, 1 - f.t / 1.8) : alpha,
     });
@@ -754,11 +844,11 @@ function drawTelegraph(x, y, face, range, arc, k, col = '200,40,30') {
 function shade(hex, k) { const n = parseInt(hex.slice(1), 16), f = c => clamp(Math.round(c * k), 0, 255); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; }
 // thú bốn chân: sói, chó hồ, sư tử vàng
 function drawBeast(e) {
-  const alpha = e.dead ? Math.max(0, 1 - e.t / 1.2) : 1;
+  const alpha = e.dead ? Math.max(0, 1 - Math.max(0, e.t - 0.45) / 0.85) : 1;
   if (alpha <= 0) return;
   const B = e.T.beast || { col: '#6d6b64' }, sc = B.scale || 1, z = e.z || 0;
   shadow(e.x, e.y + 4 * sc, 18 * sc * (1 - z / 200), 8 * sc, 0.3 * alpha);
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x, e.y - z); ctx.rotate(e.face); ctx.scale(sc, sc);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x, e.y - z); ctx.rotate(e.face); ctx.scale(sc, sc); mobJuice(e);
   const windup = e.state === 'atk' && e.atk && e.t < e.atk.wind, wk = windup ? Math.min(1, e.t / e.atk.wind) : 0;
   const lunging = e.state === 'atk' && e.atk && e.t >= e.atk.wind && e.t < e.atk.wind + (e.atk.act || 0.15);
   // lấy đà: thu người về sau, rung nhẹ, rồi vươn dài khi vồ
@@ -807,12 +897,12 @@ function drawBeast(e) {
   ctx.restore();
 }
 function drawBat(e) {
-  const alpha = e.dead ? Math.max(0, 1 - e.t / 1.2) : 1;
+  const alpha = e.dead ? Math.max(0, 1 - Math.max(0, e.t - 0.45) / 0.85) : 1;
   if (alpha <= 0) return;
   shadow(e.x, e.y + 14, 8, 4, 0.25 * alpha);
   // lấy đà: bay vọt lên, dang rộng cánh, mắt sáng lên rồi mới lao xuống
   const bw = e.state === 'atk' && e.atk && e.t < e.atk.wind ? Math.min(1, e.t / e.atk.wind) : 0;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x - Math.cos(e.face) * bw * 8, e.y - 12 - bw * 12 - Math.sin(e.face) * bw * 8); ctx.rotate(e.face);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x - Math.cos(e.face) * bw * 8, e.y - 12 - bw * 12 - Math.sin(e.face) * bw * 8); ctx.rotate(e.face); mobJuice(e);
   const f = bw ? 0.9 : Math.sin(e.anim * 24);
   ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
   for (const s of [-1, 1]) {
@@ -828,12 +918,12 @@ function drawBat(e) {
   ctx.restore();
 }
 function drawSpider(e) {
-  const alpha = e.dead ? Math.max(0, 1 - e.t / 1.2) : 1;
+  const alpha = e.dead ? Math.max(0, 1 - Math.max(0, e.t - 0.45) / 0.85) : 1;
   if (alpha <= 0) return;
   shadow(e.x, e.y + 4, 18, 10, 0.3 * alpha);
   // lấy đà: rướn người lùi lại, giơ hai chân trước và nanh lên
   const sw0 = e.state === 'atk' && e.atk && e.t < e.atk.wind ? Math.min(1, e.t / e.atk.wind) : 0;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x - Math.cos(e.face) * sw0 * 6, e.y - Math.sin(e.face) * sw0 * 6); ctx.rotate(e.face);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x - Math.cos(e.face) * sw0 * 6, e.y - Math.sin(e.face) * sw0 * 6); ctx.rotate(e.face); mobJuice(e);
   if (sw0) { ctx.strokeStyle = '#2a2622'; ctx.lineWidth = 2.6; for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(6, s * 4); ctx.lineTo(14 + sw0 * 6, s * (10 + sw0 * 6)); ctx.lineTo(22 + sw0 * 4, s * (6 + sw0 * 4)); ctx.stroke(); } }
   ctx.strokeStyle = '#2a2622'; ctx.lineWidth = 2.2;
   for (const s of [-1, 1]) for (let i = 0; i < 4; i++) {
@@ -858,12 +948,22 @@ function drawSpider(e) {
 // lấy đà (0..1) và lúc đang ra đòn, để mỗi con có tư thế báo trước dễ đọc
 const eWind = e => (e.state === 'atk' && e.atk && e.t < e.atk.wind ? Math.min(1, e.t / e.atk.wind) : 0);
 const eAct = e => e.state === 'atk' && e.atk && e.t >= e.atk.wind && e.t < e.atk.wind + (e.atk.act || e.atk.dur || e.atk.air || 0.2);
+// thú và quái không hình người: nén-giãn khi trúng đòn, nhún theo bước chạy, rung khi choáng, lật nghiêng rồi xẹp xuống khi chết
+function mobJuice(e) {
+  let sx = 1, sy = 1;
+  const h = e.dead ? 0 : Math.min(1, Math.max(0, e.hurtFlash || 0) / 0.12);
+  if (h > 0) { sx -= 0.16 * h; sy += 0.12 * h; ctx.translate(-3 * h, 0); }
+  if (!e.dead) { const mv = moveK(e, (e.T.speed || 100) * 0.9); if (mv > 0.1) { const b = Math.sin((e._st || 0) * 0.9) * 0.045 * Math.min(1, mv); sx += b; sy -= b * 0.6; } }
+  if (e.state === 'stagger' || e.state === 'broken') ctx.rotate(Math.sin(e.t * 26) * (e.state === 'broken' ? 0.05 : 0.1));
+  if (e.dead) { const k = easeO(clamp(e.t / 0.6, 0, 1)); if (e._ds === undefined) e._ds = Math.random() < 0.5 ? 1 : -1; ctx.rotate(k * 0.55 * e._ds); sx *= 1 + k * 0.1; sy *= 1 - k * 0.38; }
+  if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
+}
 function mobBegin(e, rx, ry, lift = 0) {
-  const alpha = e.dead ? Math.max(0, 1 - e.t / 1.2) : 1;
+  const alpha = e.dead ? Math.max(0, 1 - Math.max(0, e.t - 0.45) / 0.85) : 1;
   if (alpha <= 0) return 0;
   const z = e.z || 0, sc = e.T.scale || 1;
   shadow(e.x, e.y + 4 * sc, rx * sc * (1 - Math.min(0.5, (z + lift) / 200)), ry * sc * (1 - Math.min(0.5, (z + lift) / 200)), 0.32 * alpha);
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x, e.y - z - lift); ctx.rotate(e.face); if (sc !== 1) ctx.scale(sc, sc);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(e.x, e.y - z - lift); ctx.rotate(e.face); if (sc !== 1) ctx.scale(sc, sc); mobJuice(e);
   // boss giai đoạn hai: hào quang theo màu vết máu của nó
   if (e.p2 && !e.dead) { const g = ctx.createRadialGradient(0, 0, 4, 0, 0, rx * 1.6); g.addColorStop(0, 'rgba(255,214,110,.28)'); g.addColorStop(1, 'rgba(255,214,110,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx * 1.6, 0, TAU); ctx.fill(); }
   return alpha;
@@ -1195,15 +1295,29 @@ function drawEnemy(e) {
     else wAng = weaponAngle('rec', (t - A.wind - A.act) / A.rec, A.swing);
   } else if (e.state === 'broken') wAng = 1.3;
   const jitter = e.state === 'stagger' ? rand(-2, 2) : 0;
-  let alpha = e.dead ? Math.max(0, 1 - e.t / 1.2) : undefined;
+  let alpha = e.dead ? Math.max(0, 1 - Math.max(0, e.t - 0.45) / 0.85) : undefined;
   if (e.T.ghost) alpha = (alpha ?? 1) * (0.62 + Math.sin(e.anim * 5) * 0.08) * (1 - (e.fade || 0) * 0.85);
   else if (e.fade) alpha = (alpha ?? 1) * (1 - e.fade * 0.85);
   const z = (e.z || 0) + (e.T.floats && !e.dead ? 10 + Math.sin(e.anim * 2) * 4 : 0);
   if (e.T.mount) { ctx.save(); if (alpha !== undefined) ctx.globalAlpha = Math.max(0, alpha); drawHorse(e.x, e.y, e.face, e.anim * 2, Object.assign({ moving: e.moving || e.state === 'atk' }, NIGHT_HORSE)); ctx.restore(); }
   if (e.state === 'phase') { const gr = ctx.createRadialGradient(e.x, e.y, 4, e.x, e.y, 90); gr.addColorStop(0, 'rgba(255,240,200,.35)'); gr.addColorStop(1, 'rgba(255,240,200,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(e.x, e.y, 90, 0, TAU); ctx.fill(); }
+  // tư thế quái hình người: bước theo quãng đường, lấy đà / ra đòn / thu về như người chơi, giật lùi khi trúng đòn, đổ gục khi chết
+  const mvE = e.dead ? 0 : moveK(e, (e.T.speed || 90) * 0.9);
+  let pose = { lean: 0, twist: 0, sq: null, step: 0 };
+  if (e.state === 'atk' && e.atk) {
+    const A = e.atk, t = e.t, k0 = A.kind || 'melee', act = A.act || 0.18, rec = A.rec || 0.35;
+    const ph = t < A.wind ? 0 : t < A.wind + act ? 1 : 2, kk = ph === 0 ? t / A.wind : ph === 1 ? (t - A.wind) / act : (t - A.wind - act) / rec;
+    const an = A.spin ? 'spin' : A.thrust || A.bash ? 'thrust' : k0 === 'slam' || k0 === 'leap' ? 'overhead' : k0 === 'charge' ? 'dash'
+      : k0 === 'melee' ? 'slash' : 'cast';
+    pose = atkPose(an, ph, kk, A.swing || 1, e.elite || e.T.miniboss ? 1.2 : 1);
+  } else if (e.state === 'stagger') pose = { lean: -2.5, twist: Math.sin(e.t * 28) * 0.14, sq: null, step: 0 };
+  else if (e.state === 'search') pose.twist = Math.sin(e.t * 1.6) * 0.35;
+  if (e.hurtFlash > 0 && !e.dead) { const h = hurtPose(Math.min(1, e.hurtFlash / 0.12)); pose.lean += h.lean; pose.twist += h.twist; pose.sq = h.sq; }
+  const fallE = e.dead ? easeO(clamp(e.t / 0.55, 0, 1)) : 0;
   const spinA = e.state === 'atk' && e.atk && e.atk.spin ? (e.t < e.atk.wind ? -0.6 * e.t / e.atk.wind : e.t < e.atk.wind + e.atk.act ? -0.6 + (TAU + 0.6) * (e.t - e.atk.wind) / e.atk.act : 0) : 0;
   drawHumanoid(e.x + jitter, e.y, e.face + spinA, L, wAng, {
-    anim: e.anim, guard: e.state === 'atk' && e.atk && e.atk.bash, trail, thrust, z, aura: e.p2, trailCol: e.T.ghost ? 'rgba(200,240,255,.4)' : 'rgba(255,200,170,.3)', flash: e.hurtFlash > 0, charge, kneel: e.state === 'broken' || e.dead,
+    anim: e.anim, move: mvE, stride: e._st || 0, lean: pose.lean, twist: pose.twist, sq: pose.sq, step: pose.step, fall: fallE, noFeet: !!e.T.mount || !!e.T.floats || !!e.T.ghost,
+    guard: e.state === 'atk' && e.atk && e.atk.bash, trail, thrust, z, aura: e.p2, trailCol: e.T.ghost ? 'rgba(200,240,255,.4)' : 'rgba(255,200,170,.3)', flash: e.hurtFlash > 0, charge, kneel: e.state === 'broken' || e.dead,
     alpha, eyes: e.elite && !e.dead ? (e.T.ghost ? '#bff5ff' : '#ff7a4a') : null, shield: e.T.shield ? (e.state === 'atk' ? 1 : 3) : 0,
     twoHand: !e.T.shield && TWO_HAND.has(L.weapon),
   });
@@ -1261,6 +1375,20 @@ function drawEnemyBar(e) {
   if (e.state === 'broken') { ctx.fillStyle = '#f2dc97'; ctx.shadowColor = '#f2dc97'; ctx.shadowBlur = 6; ctx.fillRect(x, y + h + 2, w, 1.5); ctx.shadowBlur = 0; }
   if (e.bleed > 0) { ctx.fillStyle = 'rgba(8,7,5,.8)'; ctx.fillRect(x, y + h + 4, w, 2.5); ctx.fillStyle = '#e0503c'; ctx.fillRect(x, y + h + 4, w * Math.min(1, e.bleed / (e.elite ? 110 : 60)), 2.5); }
 }
+// tư thế boss theo bước đòn đang ra (chém, nện búa, ném, nhảy bổ)
+function bossPose(b) {
+  let P = { lean: 0, twist: 0, sq: null, step: 0 };
+  if (b.state === 'atk' && b.atk) {
+    const s = b.atk.steps[b.atk.i], t = b.atk.t;
+    if (s) {
+      const act = s.act || 0.2, rec = s.rec || 0.4, ph = t < s.wind ? 0 : t < s.wind + act ? 1 : 2, k = ph === 0 ? t / s.wind : ph === 1 ? (t - s.wind) / act : (t - s.wind - act) / rec;
+      const an = s.k === 'swing' ? 'slash' : s.k === 'hammer' || s.k === 'slam' || s.k === 'leap' ? 'overhead' : s.k === 'throw' ? 'thrust' : s.k === 'charge' || s.k === 'dash' ? 'dash' : 'cast';
+      P = atkPose(an, ph, k, s.swing || 1, 1.3);
+    }
+  } else if (b.state === 'broken' || b.state === 'stagger') P.lean = -2;
+  if (b.hurtFlash > 0 && !b.dead) { const h = hurtPose(Math.min(1, b.hurtFlash / 0.12) * 0.6); P.lean += h.lean; P.twist += h.twist; P.sq = P.sq || h.sq; }
+  return P;
+}
 function drawBoss() {
   const b = boss;
   if (!b || !inView(b.x, b.y, 200)) return;
@@ -1281,8 +1409,9 @@ function drawBoss() {
     else if (s.k === 'throw') wAng = t < s.wind ? 2.2 : -0.6;
     else if (s.k === 'leap') wAng = 2.6;
   } else if (b.state === 'broken') wAng = 1.3;
+  const bp = bossPose(b);
   drawHumanoid(b.x, b.y, b.face, b.look, wAng, {
-    anim: b.anim, trail, trailCol: 'rgba(255,214,120,.45)', flash: b.hurtFlash > 0, z: b.z, hammer, twoHand: true,
+    anim: b.anim, move: b.dead ? 0 : moveK(b, 150), stride: b._st || 0, lean: bp.lean, twist: bp.twist, sq: bp.sq, step: bp.step, fall: b.dead ? easeO(clamp((b.t - 0.3) / 0.9, 0, 1)) : 0, trail, trailCol: 'rgba(255,214,120,.45)', flash: b.hurtFlash > 0, z: b.z, hammer, twoHand: true,
     kneel: b.state === 'dormant' || b.state === 'broken' || b.dead, aura: b.phase === 2 && !b.dead,
     alpha: b.dead ? Math.max(0, 1 - b.t / 2.4) : undefined, eyes: b.dead ? null : '#ffcf5a',
   });
@@ -1687,15 +1816,16 @@ function drawObjects() {
   const t = G.clock;
   for (const l of LEVERS) {
     if (!inView(l.x, l.y, 40)) continue;
-    const on = S.levers.includes(l.id);
+    const on = S.levers.includes(l.id), pk = on && l.pulledAt ? easeO(clamp((t - l.pulledAt) / 0.35, 0, 1)) : on ? 1 : 0, lx = lerp(-12, 12, pk);
     shadow(l.x + 2, l.y + 6, 12, 5, 0.35);
     // bệ sắt có đinh tán và rãnh gạt, cần có viền, núm đồng sáng
     ctx.fillStyle = '#4a4540'; ctx.strokeStyle = OL; ctx.lineWidth = 1.4; ctx.fillRect(l.x - 11, l.y - 5, 22, 11); ctx.strokeRect(l.x - 11, l.y - 5, 22, 11);
     ctx.fillStyle = '#1a1814'; ctx.fillRect(l.x - 7, l.y - 1, 14, 3);
     ctx.fillStyle = '#9a9080'; for (const dx of [-8.5, 8.5]) for (const dy of [-2.5, 3.5]) { ctx.beginPath(); ctx.arc(l.x + dx, l.y + dy, 0.9, 0, TAU); ctx.fill(); }
-    olLine(l.x, l.y, l.x + (on ? 12 : -12), l.y - 22, 3, '#8a8070');
-    ctx.fillStyle = on ? '#8a8070' : '#d8b45a'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(l.x + (on ? 12 : -12), l.y - 22, 4.2, 0, TAU); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(l.x + (on ? 11 : -13), l.y - 23.5, 1.3, 0, TAU); ctx.fill();
+    const ly = -22 + Math.sin(pk * Math.PI) * 3;
+    olLine(l.x, l.y, l.x + lx, l.y + ly, 3, '#8a8070');
+    ctx.fillStyle = on ? '#8a8070' : '#d8b45a'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(l.x + lx, l.y + ly, 4.2, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(l.x + lx - 1, l.y + ly - 1.5, 1.3, 0, TAU); ctx.fill();
   }
   for (const d of DOORS) {
     if (!inView(d.x, d.y, 60)) continue;
@@ -1841,11 +1971,18 @@ function drawChest(c) {
     gr.addColorStop(0, `rgba(255,220,130,${0.18 + Math.sin(t * 2.5 + c.x) * 0.08})`); gr.addColorStop(1, 'rgba(255,220,130,0)');
     ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(c.x, c.y, 34, 0, TAU); ctx.fill();
   }
+  // mở rương: nắp bật lên có nảy, ánh vàng tỏa ra từ lòng rương trong chốc lát
+  const oa = open && c.openAt ? clamp((t - c.openAt) / 0.4, 0, 1) : 1, lidY = open ? lerp(-12, -18, 1 - Math.pow(1 - oa, 3) + Math.sin(oa * Math.PI) * 0.35) : -12;
+  if (open && c.openAt && t - c.openAt < 1.4) {
+    const g = 1 - (t - c.openAt) / 1.4, lg = ctx.createLinearGradient(0, c.y - 6, 0, c.y - 70);
+    lg.addColorStop(0, `rgba(255,230,150,${0.55 * g})`); lg.addColorStop(1, 'rgba(255,230,150,0)');
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(c.x - 12, c.y - 6); ctx.lineTo(c.x - 22, c.y - 70); ctx.lineTo(c.x + 22, c.y - 70); ctx.lineTo(c.x + 12, c.y - 6); ctx.closePath(); ctx.fill();
+  }
   ctx.fillStyle = '#5a3d22'; ctx.fillRect(c.x - 15, c.y - 6, 30, 16);
   ctx.strokeStyle = '#1e140b'; ctx.lineWidth = 1.5; ctx.strokeRect(c.x - 15, c.y - 6, 30, 16);
   if (open) {
     ctx.fillStyle = '#1a120a'; ctx.fillRect(c.x - 13, c.y - 6, 26, 5);
-    ctx.fillStyle = '#6b4a2a'; ctx.fillRect(c.x - 15, c.y - 18, 30, 8); ctx.strokeRect(c.x - 15, c.y - 18, 30, 8);
+    ctx.fillStyle = '#6b4a2a'; ctx.fillRect(c.x - 15, c.y + lidY, 30, 8); ctx.strokeRect(c.x - 15, c.y + lidY, 30, 8);
   } else {
     ctx.fillStyle = '#6b4a2a'; ctx.fillRect(c.x - 15, c.y - 12, 30, 8); ctx.strokeRect(c.x - 15, c.y - 12, 30, 8);
   }
@@ -2288,7 +2425,7 @@ function drawCanopies() {
     else if (enemies.some(e => !e.dead && near(e.x, e.y, 0))) a = 0.6;
     ctx.globalAlpha = a;
     const size = spr.width * (o.cr / 52);
-    const swx = Math.sin(G.clock * 1.1 + o.x * 0.013 + o.y * 0.007) * 2.2, swy = Math.cos(G.clock * 0.9 + o.x * 0.011) * 1.2;
+    const gs = gust(), swx = Math.sin(G.clock * 1.1 * Math.min(1.4, gs) + o.x * 0.013 + o.y * 0.007) * 2.2 * gs, swy = Math.cos(G.clock * 0.9 + o.x * 0.011) * 1.2 * gs;
     ctx.drawImage(spr, o.x - size / 2 + swx, o.y - size / 2 - 10 + swy, size, size);
   }
   ctx.globalAlpha = 1;
@@ -2678,7 +2815,8 @@ function drawGroundDetail() {
 }
 function drawGrass() {
   if (FX_LOW || (cam.x > INST_X && G.mode !== 'title')) return;
-  const cell = 46, t = G.clock;
+  const cell = 46, t = G.clock, gs = gust();
+  const benders = G.mode === 'title' ? [] : [P, ...enemies.filter(e => !e.dead && !e.T.flier && (e.z || 0) < 10 && inView(e.x, e.y, 40))];
   const gx0 = Math.floor(VIEW.x0 / cell), gx1 = Math.ceil(VIEW.x1 / cell), gy0 = Math.floor(VIEW.y0 / cell), gy1 = Math.ceil(VIEW.y1 / cell);
   ctx.lineWidth = 1.6; ctx.lineCap = 'round';
   for (let gx = gx0; gx <= gx1; gx++) for (let gy = gy0; gy <= gy1; gy++) {
@@ -2692,10 +2830,10 @@ function drawGrass() {
       grassCache.set(key, c);
     }
     if (!c) continue;
-    const sway = Math.sin(t * 1.8 + c.x * 0.02 + c.y * 0.013) * 3;
+    const sway = (Math.sin(t * 1.8 + c.x * 0.02 + c.y * 0.013) * 3 + gs * 1.6 - 1.6) * gs;
     let bend = 0;
-    const dx = c.x - P.x, dy = c.y - P.y, d = Math.hypot(dx, dy);
-    if (d < 36 && G.mode !== 'title') bend = (dx >= 0 ? 1 : -1) * (36 - d) * 0.25;
+    // cỏ rạp xuống quanh người chơi và quái đi qua
+    for (const b of benders) { const dx = c.x - b.x, dy = c.y - b.y; if (Math.abs(dx) > 36 || Math.abs(dy) > 36) continue; const d = Math.hypot(dx, dy); if (d < 36) bend += (dx >= 0 ? 1 : -1) * (36 - d) * 0.25; }
     ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(c.x, c.y + 1, 6, 2, 0, 0, TAU); ctx.fill();
     for (let k = 0; k < 4; k++) {
       const bx = c.x + k * 2.6 - 4, hh = 8 + ((k * 5 + c.h * 11) % 5) + c.h * 3;

@@ -359,6 +359,9 @@ function tick(dt) {
   if (G.toast) { G.toast.t += dt; if (G.toast.t > G.toast.dur) G.toast = null; }
   G.regionT += dt; G.hintT += dt; checkAch(dt); updateHints(dt);
   if (G.runeGainT > 0) { G.runeGainT -= dt; if (G.runeGainT <= 0) G.runeGain = 0; }
+  // số rune đếm dần lên thay vì nhảy ngay; tiêu rune thì cập nhật tức thì
+  if (G.runeShow === undefined || S.runes < G.runeShow) G.runeShow = S.runes; else G.runeShow = Math.min(S.runes, G.runeShow + Math.max(dt * 60, (S.runes - G.runeShow) * dt * 5));
+  G.popQ = Math.max(0, (G.popQ || 0) - dt * 3.5); G.popW = Math.max(0, (G.popW || 0) - dt * 3.5); G.hpShake = Math.max(0, (G.hpShake || 0) - dt * 3);
 }
 let last = performance.now();
 // một lỗi bất ngờ trong một khung hình không được làm đứng cả game: ghi lại lỗi rồi chạy tiếp khung sau

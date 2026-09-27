@@ -130,7 +130,7 @@ function toggleTwoHand(side = 'R') {
     if (W.paired) { toast('Vũ khí đôi: mỗi tay đã cầm một lưỡi'); return; }
     if (W.type !== 'melee') return;
   }
-  S.twoH = true; SFX.equip();
+  S.twoH = true; G.popW = 1; SFX.equip();
   if (P.state === 'guard') { P.state = 'idle'; P.t = 0; }
   toast('Cầm hai tay: ' + WEAPONS[S.equipped].name + (S.twoL ? ' (vũ khí trái)' : '') + ' · Sức Mạnh tính ×1.5');
   save();
@@ -260,7 +260,7 @@ function castSpell(id) {
 function quickList() { return ['flask', 'fpflask', ...(S.bell ? ['bell'] : []), ...USE_ORDER.filter(id => (S.inv[id] || 0) > 0)]; }
 function curQuick() { const l = quickList(); return l[S.quick % l.length]; }
 function useQuick(moving, mx, my) {
-  const q = curQuick();
+  const q = curQuick(); G.popQ = 1;
   if (q === 'flask' || q === 'fpflask') {
     if (P.mounted) { toast('Xuống ngựa để uống bình'); return; }
     const fp = q === 'fpflask';
@@ -309,7 +309,7 @@ function equip(id) {
     const old = S.equipped;
     // món đang ở tay trái được chuyển sang tay phải: tay trái nhận lại món cũ của tay phải (nếu cầm một tay được), không thì cầm khiên
     if (S.off === id) S.off = canGrip2(old) ? old : S.weapons.includes('shield') ? 'shield' : OFF_ORDER.find(w => S.weapons.includes(w)) || 'shield';
-    S.equipped = id; SFX.equip(); save();
+    S.equipped = id; G.popW = 1; SFX.equip(); save();
     toast('Tay phải: ' + Wp.name + (reqMet(Wp.req, wStats(id)) ? '' : ' (thiếu chỉ số!)') + (Wp.twoHanded && offDef().type !== 'shield' ? ' · tay trái bị khóa' : '') + (powerStance() && !Wp.paired ? ' · tư thế song kiếm' : ''));
   }
   return true;
@@ -333,7 +333,7 @@ function equipKey(a) {
   else if (a === 'eqprev') equip(own[(own.indexOf(S.equipped) - 1 + own.length) % own.length]);
   else if (own[+a.slice(2) - 1]) equip(own[+a.slice(2) - 1]);
 }
-function cycleQuick() { const l = quickList(); S.quick = (S.quick + 1) % l.length; const q = l[S.quick]; toast(q === 'flask' ? 'Bình Máu' : q === 'fpflask' ? 'Bình FP' : ITEMDEF[q].name + ' ×' + S.inv[q]); SFX.glint(); }
+function cycleQuick() { G.popQ = 1; const l = quickList(); S.quick = (S.quick + 1) % l.length; const q = l[S.quick]; toast(q === 'flask' ? 'Bình Máu' : q === 'fpflask' ? 'Bình FP' : ITEMDEF[q].name + ' ×' + S.inv[q]); SFX.glint(); }
 function cycleSpell() {
   if (!S.att.length) { toast('Chưa ghi nhớ phép nào. Ghi nhớ tại Ân Điển.'); return; }
   S.spellIdx = (S.spellIdx + 1) % S.att.length; toast('Phép: ' + SPELLS[S.att[S.spellIdx]].name); SFX.glint();
@@ -425,7 +425,7 @@ function updatePlayer(dt) {
   if (p.stDelay > 0) p.stDelay -= dt;
   else if (p.state !== 'roll' && p.state !== 'attack') p.st = Math.min(p.maxSt, p.st + (p.state === 'drink' || p.state === 'guard' ? 12 : p.mounted ? 45 : ST_REGEN) * (1 + armorBonus('stRegen') + (hasTal('collar') ? 0.15 : 0)) * dt);
   // bước chân: cỏ, đá lát hay nước; cưỡi ngựa thì tiếng vó; máu dưới một phần tư thì nghe tim đập
-  if (p.stepD > (p.mounted ? 64 : p.sprinting ? 52 : 40)) { p.stepD = 0; if (p.mounted) SFX.gallop(); else SFX.step(wet ? 'water' : p.x > INST_X || PAVED.has(G.region) || regionAt(p.x, p.y) === 'Cổng Gác Thornwall' ? 'stone' : 'grass'); }
+  if (p.stepD > (p.mounted ? 64 : p.sprinting ? 52 : 40)) { p.stepD = 0; if (p.sprinting && !FX_LOW && !wet) puff(p.x - Math.cos(p.face) * 8, p.y + 6, 2); if (p.mounted) SFX.gallop(); else SFX.step(wet ? 'water' : p.x > INST_X || PAVED.has(G.region) || regionAt(p.x, p.y) === 'Cổng Gác Thornwall' ? 'stone' : 'grass'); }
   if (p.hp < p.maxHp * 0.25 && G.mode === 'play' && (p.heartT = (p.heartT || 0) - dt) <= 0) { p.heartT = 0.95; SFX.heart(); }
   const ox = p.x, oy = p.y;
   if (p.vx || p.vy) {
@@ -598,7 +598,7 @@ function hurtPlayer(dmg, fx, fy, heavy, src = null, kind = 'melee', dt = 'phys')
     return true;
   }
   dmg = Math.round(dmg * rand(0.95, 1.05));
-  p.hp -= dmg; p.ghostDelay = 0.6;
+  p.hp -= dmg; p.ghostDelay = 0.6; G.hpShake = Math.min(1, 0.4 + dmg / p.maxHp * 4);
   if (src && src.aff) affixOnHit(src);
   const a = Math.atan2(p.y - fy, p.x - fx);
   if (kind === 'fire') {

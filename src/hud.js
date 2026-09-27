@@ -267,7 +267,9 @@ function drawHUD() {
   HUD_TIPS.length = 0;
   // nút Đỡ trên màn cảm ứng đổi tên khi tay trái cầm vũ khí
   if (G.touch) { const l = offAttack() ? (powerStance() ? 'Song kiếm' : 'Tay trái') : 'Đỡ'; if (l !== guardLbl) { guardLbl = l; const b = document.querySelector('#touch [data-hold="guard"]'); if (b) b.textContent = l; } }
-  bar(x, y, Math.min(maxW * 0.7, P.maxHp * 1.1), 11, P.hp / P.maxHp, P.ghost / P.maxHp, P.poisonT > 0 ? '#86408f' : '#a3201c');
+  // thanh máu rung nhẹ khi vừa trúng đòn
+  const hs = G.hpShake > 0 ? Math.sin(G.clock * 70) * 2.2 * G.hpShake : 0;
+  bar(x + hs, y, Math.min(maxW * 0.7, P.maxHp * 1.1), 11, P.hp / P.maxHp, P.ghost / P.maxHp, P.poisonT > 0 ? '#86408f' : '#a3201c');
   const fpW = Math.min(maxW * 0.6, P.maxFp * 1.5);
   bar(x, y + 19, fpW, 6, P.fp / P.maxFp, null, '#3d5fc6');
   if (G.fpWarn > 0 && Math.sin(G.fpWarn * 30) > 0) { ctx.strokeStyle = '#e0503c'; ctx.lineWidth = 2; ctx.strokeRect(x - 3, y + 16, fpW + 6, 12); ctx.lineWidth = 1; }
@@ -284,15 +286,22 @@ function drawHUD() {
   // ô đồ dùng nhanh
   const fx = x, fy = y + 50, fs = 40, q = curQuick();
   hudTip(fx, fy, fs, fs, () => { const n = q === 'flask' ? 'Bình Máu' : q === 'fpflask' ? 'Bình FP' : ITEMDEF[q].name; return [n + ' · ' + (q === 'flask' ? P.flasks : q === 'fpflask' ? P.fpflasks : invN(q)), 'Dùng: ' + keyOf('item') + ' · đổi món: ' + keyOf('itemnext')]; });
+  // ô đồ nhanh và ô vũ khí nảy lên khi vừa dùng / đổi
+  const popQ = 1 + Math.sin(Math.min(1, 1 - (G.popQ || 0)) * Math.PI) * 0.12 * (G.popQ > 0 ? 1 : 0);
+  ctx.save(); ctx.translate(fx + fs / 2, fy + fs / 2); ctx.scale(popQ, popQ); ctx.translate(-fx - fs / 2, -fy - fs / 2);
   box(fx, fy, fs); drawQuickIcon(q, fx + fs / 2, fy + fs / 2);
+  ctx.restore();
   const qn = q === 'flask' ? P.flasks : q === 'fpflask' ? P.fpflasks : S.inv[q] || 0;
   ctx.font = `700 13px ${FONT_U}`; ctx.textAlign = 'right'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineWidth = 3;
   ctx.strokeText(String(qn), fx + fs - 3, fy + fs - 4); ctx.fillStyle = qn > 0 ? '#f4ead0' : '#9a8a70'; ctx.fillText(String(qn), fx + fs - 3, fy + fs - 4); ctx.textAlign = 'left';
   if (!G.touch) { keycap(fx + 1, fy + fs + 5, keyOf('item'), 14); ctx.font = `500 10px ${FONT_U}`; ctx.fillStyle = 'rgba(236,227,204,.55)'; ctx.fillText('đổi', fx + 19, fy + fs + 16); ctx.fillText(' ' + keyOf('itemnext'), fx + 19 + ctx.measureText('đổi').width, fy + fs + 16); }
   // vũ khí tay phải và tay trái
   const wx = fx + fs + 10, Wp = WEAPONS[S.equipped], off = offDef(), cat = catalyst();
+  const popW = 1 + Math.sin(Math.min(1, 1 - (G.popW || 0)) * Math.PI) * 0.12 * (G.popW > 0 ? 1 : 0);
+  ctx.save(); ctx.translate(wx + fs / 2, fy + fs / 2); ctx.scale(popW, popW); ctx.rotate((G.popW || 0) * 0.25); ctx.translate(-wx - fs / 2, -fy - fs / 2);
   box(wx, fy, fs);
   drawWeaponIcon(S.equipped, wx + fs / 2, fy + fs / 2, fs);
+  ctx.restore();
   hudTip(wx, fy, fs, fs, () => { const W = WEAPONS[S.equipped]; return [W.name + (upLv(S.equipped) ? ' +' + upLv(S.equipped) : ''), W.sp ? 'Sức mạnh phép ' + Math.round(spellPower(S.equipped)) : 'Công ' + Math.round(weaponAR(S.equipped, upLv(S.equipped))) + ' · ' + DT_NAME[W.dt], 'Đổi vũ khí: ' + keyOf('eqprev') + ' ' + keyOf('eqnext')]; });
   const ox = wx + fs + 6, os = 26;
   box(ox, fy + fs - os, os);
@@ -332,7 +341,7 @@ function drawHUD() {
   // rune và Đại Ấn: dải nền mờ dần sang trái, ký hiệu rune, ba ổ ngọc
   const rx = CW - 20, ry = G.touch ? 32 : CH - 26;
   ctx.font = `600 18px ${FONT_U}`; ctx.textAlign = 'right';
-  const rstr = S.runes.toLocaleString(numLoc()), tw = ctx.measureText(rstr).width, dx = rx - tw - 16, dy = ry - 6;
+  const rstr = Math.floor(G.runeShow ?? S.runes).toLocaleString(numLoc()), tw = ctx.measureText(rstr).width, dx = rx - tw - 16, dy = ry - 6;
   { const bw = tw + 130, g = ctx.createLinearGradient(rx + 12 - bw, 0, rx + 12, 0); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.45, 'rgba(8,7,5,.6)'); g.addColorStop(1, 'rgba(8,7,5,.72)');
     ctx.fillStyle = g; ctx.fillRect(rx + 12 - bw, dy - 15, bw, 30);
     const l = ctx.createLinearGradient(rx + 12 - bw, 0, rx + 12, 0); l.addColorStop(0, 'rgba(214,178,94,0)'); l.addColorStop(1, 'rgba(214,178,94,.5)');
@@ -653,10 +662,12 @@ function openGrace(g) {
   currentGrace = g; menuAt = 'grace'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = g.name; $('graceTitle').textContent = 'Nghỉ ngơi'; $('btnLeave').textContent = 'Rời đi';
   $('btnWait').hidden = g.x > INST_X; $('btnWait').textContent = isNight() ? 'Chờ đến sáng' : 'Chờ đến đêm';
-  selectTab('level'); renderGrace(); UI.grace.hidden = false; SFX.uiOpen(); hubButtons();
+  selectTab('level'); renderGrace(); UI.grace.hidden = false; SFX.uiOpen(); hubButtons(); animIn(UI.grace);
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
 // nút Về Sảnh Hearthhold và lời nhắn của Melyra cho người chưa từng tới
+// các ô trong bảng vừa mở hiện lần lượt; chỉ chạy lúc mở, không chạy lại mỗi lần bấm
+function animIn(el) { el.classList.remove('animIn'); void el.offsetWidth; el.classList.add('animIn'); clearTimeout(el._ai); el._ai = setTimeout(() => el.classList.remove('animIn'), 700); }
 function hubButtons() { const h = inHub(); $('btnHub').hidden = h; $('hubCall').hidden = h || !!S.hubSeen || menuAt !== 'grace'; }
 $('btnHub').onclick = () => goHub();
 $('btnPauseHub').onclick = () => goHub();
@@ -665,7 +676,7 @@ function openInventory(tab = 'gear') {
   UI.pause.hidden = true;
   currentGrace = null; menuAt = 'field'; pend = {}; setMode('menu');
   $('graceEyebrow').textContent = regionAt(P.x, P.y); $('graceTitle').textContent = 'Hành trang'; $('btnLeave').textContent = 'Đóng'; $('btnWait').hidden = true;
-  selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.uiOpen(); hubButtons();
+  selectTab(tab); renderGrace(); UI.grace.hidden = false; SFX.uiOpen(); hubButtons(); animIn(UI.grace);
   setTimeout(() => $('btnLeave').focus({ preventScroll: true }), 30);
 }
 function closeGrace() { SFX.uiClose(); seenTab(graceTab); if (pendLv()) toast('Các điểm chưa xác nhận đã được hủy'); pend = {}; UI.grace.hidden = true; setMode('play'); }

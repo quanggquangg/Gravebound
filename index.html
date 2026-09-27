@@ -348,6 +348,20 @@ kbd{background:linear-gradient(180deg,#3a3122,#16120c);border-color:#e2c26c;box-
 .inv2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
 @media (max-width:780px){.inv2{grid-template-columns:1fr}}
 .slots{display:flex;flex-wrap:wrap;gap:6px}
+/* chuyển động giao diện: bảng hiện lên mượt, ô đồ hiện lần lượt, nút nảy khi bấm, thẻ chi tiết mờ dần vào */
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+@keyframes panelIn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes itemIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+.overlay:not([hidden]){animation:ovIn .24s ease-out}
+.title .title-inner>*{animation:itemIn .8s cubic-bezier(.2,.8,.2,1) both}
+.title .title-inner>:nth-child(2){animation-delay:.12s}.title .title-inner>:nth-child(3){animation-delay:.24s}.title .title-inner>:nth-child(4){animation-delay:.36s}.title .title-inner>:nth-child(5){animation-delay:.5s}
+.overlay:not([hidden])>.panel{animation:panelIn .34s cubic-bezier(.2,.8,.2,1)}
+.animIn .tiles li,.animIn .slot{animation:itemIn .3s ease-out both;animation-delay:calc(var(--i,0) * 22ms + 60ms)}
+.detail>*{animation:cardIn .2s ease-out}
+.pbtn,.mini,.tile,.slot,.ci,.chip,.tab{transition:transform .12s ease,background-color .15s,border-color .15s,color .15s}
+.tile:hover,.slot:hover,.ci:hover{transform:translateY(-2px)}
+.pbtn:active,.mini:active,.tile:active,.slot:active,.chip:active{transform:scale(.96)}
 .hubcall{margin:10px 0 0;padding:10px 14px;border:1px solid rgba(214,178,94,.45);border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(214,178,94,.14),rgba(214,178,94,.03));font:400 14px/1.5 var(--ui);color:var(--parch)} .hubcall b{color:var(--gold-hi);font-weight:600} .hubcall em{font-style:normal;color:var(--gold-hi)}
 .grip{display:flex;align-items:center;gap:10px;margin:10px 0 0;flex-wrap:wrap} .grip span{font:400 13px/1.4 var(--ui);color:var(--muted)} .grip .mini.on{border-color:var(--gold);background:rgba(214,178,94,.22)}
 .slot{appearance:none;position:relative;display:grid;justify-items:center;gap:2px;width:92px;padding:7px 4px 6px;background:rgba(214,178,94,.05);border:1px solid rgba(214,178,94,.2);color:var(--muted);cursor:pointer;font:500 11px/1.2 var(--ui)}
