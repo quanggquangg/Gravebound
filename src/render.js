@@ -204,11 +204,13 @@ function swordHilt(s, hw, col, grip = 2.4) {
   ctx.fillStyle = col; ctx.beginPath(); ctx.arc(-2.6 * s - (grip - 2.4) * 2 * s, 0, 1.9 * s, 0, TAU); ctx.fill(); ctx.stroke();
 }
 function drawWeapon(L, s, wAng, o) {
-  const ox = 3 * s + (o.thrust || 0) * 14 * s + (o.armX || 0) * s, oy = 8 * s, len = L.wlen * s;
+  const rig = o.playerRig && o.twoHand ? playerGrip(L, s, wAng, o) : null;
+  const ox = rig ? rig.ox : 3 * s + (o.thrust || 0) * 14 * s + (o.armX || 0) * s, oy = rig ? rig.oy : 8 * s, len = L.wlen * s;
   if (o.twoHand) {
     const g = L.weapon === 'bow' ? 6 * s + Math.cos(1.25) * 13 * s - 3 * s - (o.charge || 0) * 10 * s : L.weapon === 'spear' || L.weapon === 'scythe' || L.weapon === 'staff' ? len * 0.42 : -3.2 * s;
-    HAND2 = [ox + Math.cos(wAng) * g, oy + Math.sin(wAng) * g];
+    HAND2 = rig ? rig.left : [ox + Math.cos(wAng) * g, oy + Math.sin(wAng) * g];
   } else HAND2 = null;
+  if (rig) playerArm(s, 9 * s, rig.right[0], rig.right[1], s, L.body, 1);
   ctx.save(); ctx.translate(ox, oy); ctx.rotate(wAng);
   if (L.form && WFORM[L.form] && o.hammer === undefined) {
     WFORM[L.form](L, s, len, o);
@@ -333,6 +335,7 @@ function atkPose(anim, ph, k, sw = 1, hv = 1) {
 const hurtPose = (k, side = 1) => ({ lean: -4.5 * k, twist: 0.22 * k * side, sq: [1 - 0.09 * k, 1 + 0.06 * k] });
 // hai bàn chân: đứng thì hơi lệch nhau, đi thì so le theo pha bước, lao đòn thì bước chân phải lên trước
 function drawFeet(L, s, o, mv, st, fall) {
+  if (o.playerRig) return drawPlayerFeet(L, s, o, mv, st, fall);
   const col = L.boot || '#5a4330', m = Math.min(1.4, mv);
   for (const side of [-1, 1]) {
     const sw = Math.sin(st) * side;
@@ -361,15 +364,16 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
   }
   ctx.rotate(face);
   if (o.kneel) ctx.scale(0.86, 1.04);
-  else { const br = Math.sin(G.clock * 2.3 + x * 0.013) * 0.022; ctx.scale(1 - br * 0.4, 1 + br); } // thở
+  else { const br = Math.sin(G.clock * 2.3 + (o.playerRig ? 0 : x * 0.013)) * (o.playerRig ? 0.009 : 0.022); ctx.scale(1 - br * 0.4, 1 + br); } // thở
   const mv = o.move || 0, st = o.stride || 0, fall = o.fall || 0;
-  const wave = Math.sin((o.anim || 0) * 6) * 2 * s * (1 + Math.min(1, mv) * 0.7);
+  const wave = o.playerRig ? (o.cape || 0) * s : Math.sin((o.anim || 0) * 6) * 2 * s * (1 + Math.min(1, mv) * 0.7);
   // boss có dáng riêng (bossart.js): áo choàng, thân, đầu và đồ ở tay trái được vẽ theo từng boss
   const BF = L.bform && typeof BFORM !== 'undefined' ? BFORM[L.bform] : null;
   // chân đứng trên đất (không xoay theo thân trên), rồi thân trên nghiêng, vặn, nén-giãn theo tư thế
   if (!o.noFeet && !L.wings && !L.noFeet && z < 30 && !(BF && BF.noFeet)) drawFeet(L, s, o, mv, st, fall);
   if (fall) { ctx.translate(fall * 9 * s, 0); ctx.scale(1 + fall * 0.32, 1 - fall * 0.06); }
-  if (mv) { const m = Math.min(1, mv), b = Math.abs(Math.sin(st)) * 0.03 * m; ctx.translate(0, Math.sin(st) * 0.9 * s * m); ctx.scale(1 + b, 1 + b); }
+  if (o.playerRig && mv) { ctx.translate(-Math.abs(Math.cos(st)) * 0.65 * s * Math.min(1, mv), Math.sin(st) * 0.45 * s * Math.min(1, mv)); }
+  else if (mv) { const m = Math.min(1, mv), b = Math.abs(Math.sin(st)) * 0.03 * m; ctx.translate(0, Math.sin(st) * 0.9 * s * m); ctx.scale(1 + b, 1 + b); }
   if (o.lean) ctx.translate(o.lean * s, 0);
   if (o.twist) ctx.rotate(o.twist);
   if (o.sq) ctx.scale(o.sq[0], o.sq[1]);
@@ -464,9 +468,12 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
   if (o.twoHand && HAND2) {
     // cánh tay trái vươn qua ngực nắm vũ khí
     const [hx, hy] = HAND2;
+    if (o.playerRig) playerArm(1 * s, -9 * s, hx, hy, s, L.body, -1);
+    else {
     ctx.lineCap = 'round'; ctx.strokeStyle = OL; ctx.lineWidth = 4.8 * s; ctx.beginPath(); ctx.moveTo(1 * s, -9 * s); ctx.quadraticCurveTo(7 * s, -2 * s, hx, hy); ctx.stroke();
     ctx.strokeStyle = tint(L.body, 0.85); ctx.lineWidth = 3 * s; ctx.stroke(); ctx.lineCap = 'butt';
     ctx.fillStyle = '#3a2f24'; ctx.strokeStyle = OL; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(hx, hy, 2.7 * s, 0, TAU); ctx.fill(); ctx.stroke();
+    }
     ctx.strokeStyle = 'rgba(10,8,6,.85)'; ctx.lineWidth = 1.6;
   }
   if (o.cat) {
@@ -492,7 +499,16 @@ function drawHumanoid(x, y, face, L, wAng, o = {}) {
     ctx.beginPath(); ctx.arc(up ? 10 * s : 2 * s - (o.armX || 0) * s, up ? -6 * s : -12 * s, (up ? 7.5 : 6) * s, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.strokeStyle = 'rgba(10,8,6,.75)'; ctx.lineWidth = 1.4;
   }
+  if (o.flask !== null && o.flask !== undefined) {
+    const k = o.flask, hx = lerp(1, 10, k) * s, hy = lerp(-12, -3, k) * s;
+    olLine(0, -9 * s, hx, hy, 3 * s, L.body);
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(-0.4 + k * 1.4);
+    ctx.fillStyle = P.drinkFp ? '#649eff' : '#e99b48'; ctx.strokeStyle = OL; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(0, 0, 3 * s, 4 * s, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e2c47c'; ctx.fillRect(-1.5 * s, -5 * s, 3 * s, 2 * s); ctx.restore();
+  }
   // đầu / mũ giáp
+  if (o.playerRig) ctx.rotate(o.headTurn || 0);
   if (BF && BF.head) { BF.head(L, s, o, wave); if (BF.top) BF.top(L, s, o, wave); if (o.flash) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(0, 0, 12 * s, 14 * s, 0, 0, TAU); ctx.fill(); } ctx.restore(); return; }
   ctx.fillStyle = litGrad(L.head, 4 * s, -2.5 * s, 8 * s); ctx.beginPath(); ctx.arc(2 * s, 0, 6.4 * s, 0, TAU); ctx.fill(); ctx.stroke();
   if (L.hood) {
@@ -568,8 +584,8 @@ function drawPlayer() {
   const p = P, LOOK = playerLook();
   if (p.state === 'dead') {
     // chết: khựng lại, khuỵu gối, rồi đổ sấp về phía trước, vũ khí tuột khỏi tay
-    const k = Math.min(1, G.deathT / 1.6), fall = easeO(clamp((G.deathT - 0.35) / 0.55, 0, 1)), jolt = clamp(1 - G.deathT / 0.35, 0, 1);
-    drawHumanoid(p.x, p.y, p.face, LOOK, 1.2 + fall * 0.9, { alpha: 1 - k * 0.55, kneel: true, shield: 1, fall, lean: -3 * jolt, twist: 0.25 * jolt });
+    const k = clamp(G.deathT / 2.2, 0, 1), fall = animSmooth((G.deathT - 0.22) / 0.8), jolt = 1 - animSmooth(G.deathT / 0.22);
+    drawHumanoid(p.x, p.y, p.face, LOOK, lerp(0.6, 2.0, fall), { playerRig: true, alpha: 1 - k * 0.4, kneel: true, shield: twoHanded() || catalyst() || leftWeapon() ? 0 : 1, fall, lean: -4 * jolt + 4 * fall, twist: 0.2 * jolt - 0.18 * fall, sq: [1 + 0.15 * fall, 1 - 0.25 * fall], cape: Math.sin(G.deathT * 6) * (1 - fall) });
     return;
   }
   const mv = p.mounted ? 0 : moveK(p, 145);
@@ -577,34 +593,13 @@ function drawPlayer() {
   const resting = G.mode === 'menu' && !UI.grace.hidden && menuAt === 'grace';
   if (p.mounted) drawHorse(p.x, p.y, p.face, p.walk);
   let wAng = 0.6, trail = null, thrust = 0, stab = false, spinRot = 0, fx = null, charge = 0, castK = 0;
-  if (p.state === 'attack' && p.atk) {
-    const A = p.atk, t = p.t, sw_ = A.swing || 1, anim = A.anim || (A.thrust ? 'thrust' : 'slash');
-    const ph = t < A.wind ? 0 : t < A.wind + A.act ? 1 : 2;
-    const k = ph === 0 ? t / A.wind : ph === 1 ? (t - A.wind) / A.act : (t - A.wind - A.act) / A.rec;
-    if (anim === 'bow') { wAng = -0.1; charge = ph === 0 ? k : 0; if (ph === 0 && A.pierce && k > 0.5) { ctx.strokeStyle = `rgba(255,240,200,${0.4 * k})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + Math.cos(p.face) * 260, p.y + Math.sin(p.face) * 260); ctx.stroke(); } }
-    else if (anim === 'thrust' || (anim === 'dash' && A.thrust)) {
-      wAng = -0.12; thrust = ph === 0 ? -0.5 * k : ph === 1 ? (A.multi ? 0.3 + 0.7 * Math.abs(Math.sin(k * A.multi * Math.PI)) : 1) : 1 - k; stab = ph === 1;
-      if (anim === 'dash' && ph === 1) fx = 'dash';
-    } else if (anim === 'spin') {
-      wAng = ph === 0 ? lerp(0.6, 1.7, k) : ph === 1 ? 1.7 : lerp(1.7, 0.6, k);
-      if (ph === 1) { spinRot = -k * TAU * (A.turns || 1); fx = 'spin'; }
-    } else if (anim === 'overhead') {
-      if (ph === 0) wAng = lerp(0.6, Math.PI * 0.95, 1 - Math.pow(1 - k, 2));
-      else if (ph === 1) { wAng = lerp(Math.PI * 0.95, 0, Math.min(1, k * 2)); thrust = 0.5; fx = 'chop'; }
-      else { wAng = lerp(0, 0.6, k); thrust = 0.5 * (1 - k); if (k < 0.3) fx = 'chop'; }
-    } else if (anim === 'dash') {
-      if (ph === 0) wAng = lerp(0.6, 1.9, k);
-      else if (ph === 1) { wAng = lerp(1.9, -1.4, k); fx = 'dash'; trail = [1.8, wAng]; }
-      else wAng = lerp(-1.4, 0.6, k);
-    } else if (ph === 0) wAng = weaponAngle('wind', k, sw_);
-    else if (ph === 1) { wAng = weaponAngle('act', k, sw_); trail = [1.8 * sw_, wAng]; }
-    else { wAng = weaponAngle('rec', k, sw_); if (k < 0.3) trail = [lerp(1.8 * sw_, -1.3 * sw_, k * 2), -1.3 * sw_]; }
-  } else if (p.state === 'roll') wAng = 2.4;
-  else if (p.state === 'drink') wAng = 1.4;
-  else if (p.state === 'cast') { wAng = 0.9; const sp = p.spell ? SPELLS[p.spell] : null, ct = sp ? sp.cast : 0.1; castK = p.t < ct ? p.t / ct : Math.max(0, 1 - (p.t - ct) / 0.25); }
-  else if (p.state === 'throw') wAng = p.t < 0.15 ? 2 : -0.4;
-  else if (p.state === 'guard') wAng = 1.1;
-  else if (p.state === 'deflect') wAng = -0.95 + Math.min(1, p.t / 0.08) * 0.35;
+  const motion = playerMotion(p, mv);
+  ({ wAng, trail, thrust, stab, spinRot, fx, charge, castK } = motion);
+  // giương cung bắn xuyên: vệt ngắm mờ hiện dần khi kéo dây quá nửa
+  if (p.state === 'attack' && p.atk && p.atk.anim === 'bow' && p.atk.pierce && p.t < p.atk.wind && p.t / p.atk.wind > 0.5) {
+    const k = p.t / p.atk.wind; ctx.strokeStyle = `rgba(255,240,200,${0.4 * k})`; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + Math.cos(p.face) * 260, p.y + Math.sin(p.face) * 260); ctx.stroke();
+  }
   const th = twoHanded(), cat = catalyst(), off = offDef();
   if (th && p.state === 'guard') wAng = -1.1;
   // tay trái cầm vũ khí: đòn tay trái chỉ vung tay trái, đòn song kiếm vung cả hai tay đối xứng
@@ -619,40 +614,30 @@ function drawPlayer() {
   }
   const offW = WEAPONS[S.off], sheath = th && !p.mounted && offW && S.off !== S.equipped ? { type: offW.type, look: offW.type === 'shield' ? null : offW.look || (offW.type === 'staff' ? { weapon: 'staff', wlen: 26, wcol: '#6b5a3e', orb: '#aee4ff' } : null), kite: S.off === 'kite' } : null;
   // tư thế toàn thân theo trạng thái: nghiêng khi chạy, vặn thân khi chém, giật lùi khi trúng đòn, trụ chân khi đỡ
-  let pose = { lean: p.sprinting ? 3 : 0, twist: 0, sq: null, step: 0 }, wide = 0;
-  if (p.state === 'attack' && p.atk) {
-    const A = p.atk, t = p.t, ph = t < A.wind ? 0 : t < A.wind + A.act ? 1 : 2, k = ph === 0 ? t / A.wind : ph === 1 ? (t - A.wind) / A.act : (t - A.wind - A.act) / A.rec;
-    const an = A.anim === 'dash' && A.thrust ? 'thrust' : A.anim || (A.thrust ? 'thrust' : 'slash');
-    pose = atkPose(an, ph, k, A.side === 'left' ? -(A.swing || 1) : A.swing || 1, A.kind === 'heavy' || A.kind === 'skill' || A.kind === 'crit' ? 1.35 : 1);
-    if (A.side === 'dual') pose.twist *= 0.4;
-  } else if (p.state === 'hurt') pose = Object.assign({ step: 0 }, hurtPose(1 - p.t / (p.hurtDur || 0.3)));
-  else if (p.state === 'guard') { pose.lean = -1.2; wide = 1; }
-  else if (p.state === 'cast') { pose.lean = -1 + castK * 2.5; pose.sq = castK > 0.9 ? [1.04, 0.97] : null; }
-  else if (p.state === 'drink') { const k = Math.min(1, p.t / 0.6); pose.lean = -1.5 * Math.sin(k * Math.PI); pose.sq = [1 - 0.04 * Math.sin(k * Math.PI), 1 + 0.03 * Math.sin(k * Math.PI)]; }
-  else if (p.state === 'deflect') { pose.twist = -0.3 * (1 - p.t / 0.42); pose.lean = -1.5; wide = 1; }
-  else if (p.state === 'throw') { const k = Math.min(1, p.t / 0.4); pose.twist = k < 0.35 ? 0.35 * (k / 0.35) : 0.35 - 0.7 * (k - 0.35) / 0.65; pose.lean = k < 0.35 ? -2 : 3; }
+  let pose = motion.pose, wide = motion.wide;
   if (resting) { pose = { lean: -1, twist: 0.1, sq: null, step: 0 }; wAng = 1.5; }
-  const o = { anim: p.walk, kneel: resting, move: p.state === 'roll' ? 0 : mv, stride: p._st || 0, lean: pose.lean, twist: pose.twist, sq: pose.sq, step: pose.step, wide, noFeet: p.mounted || (p.state === 'roll' && !p.roll.back),
-    trail, thrust, stab, charge, left, sheath, z: p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat || lwId ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted };
+  const o = { playerRig: true, gaitDir: motion.gaitDir, cape: motion.cape, headTurn: -pose.twist * 0.55, flask: p.state === 'drink' ? motion.flask : null, anim: p.walk, kneel: resting, move: p.state === 'roll' ? 0 : mv * (p.state === 'attack' ? 0.3 : 1), stride: motion.stride, lean: pose.lean, twist: pose.twist, sq: pose.sq, step: pose.step, wide, noFeet: p.mounted || (p.state === 'roll' && !p.roll.back),
+    trail, thrust, stab, charge, left, sheath, z: p.state === 'mount' ? Math.sin(animSmooth(p.t / 0.3) * Math.PI) * 12 : p.state === 'attack' && p.atk && p.atk.leap && p.t < p.atk.wind ? Math.sin(p.t / p.atk.wind * Math.PI) * 38 : 0, flash: p.invuln > 0.25 && !(p.atk && p.atk.critT) && !(p.atk && p.atk.leap), shield: th || cat || lwId ? 0 : p.state === 'guard' ? 2 : 1, kite: off.id === 'kite', cat: cat ? cat.type : null, castK, twoHand: th && !p.mounted && p.state !== 'drink' };
+  if (p.state === 'drink') { o.shield = 0; o.cat = null; o.left = null; }
   if (trail || (left && left.trail)) { const hv = p.atk && p.atk.kind === 'heavy'; o.trailCol = playerTrailCol(hv); o.hot = hv || P.buffs.flame > 0 || P.buffs.holy > 0; }
-  if (p.state === 'roll' && p.roll.back) {
-    // nhảy lùi: không lộn người, chỉ hơi thu mình
-    const k = p.t / p.roll.dur, s = 1 - Math.sin(k * Math.PI) * 0.08;
-    ctx.save(); ctx.translate(p.x, p.y); ctx.scale(s, s); ctx.translate(-p.x, -p.y);
-    drawHumanoid(p.x, p.y, p.face, LOOK, 0.6, o);
-    ctx.restore();
-  } else if (p.state === 'roll') {
-    const k = p.t / p.roll.dur;
-    // bóng mờ phía sau trong lúc bất tử, để người chơi cảm được khung né
-    if (p.t > p.roll.iframe[0] && p.t < p.roll.iframe[1]) {
-      ctx.globalAlpha = 0.22; drawHumanoid(p.x - Math.cos(p.rollDir) * 14, p.y - Math.sin(p.rollDir) * 14, p.rollDir, LOOK, wAng, o); ctx.globalAlpha = 1;
+  if (p.state === 'roll') {
+    const k = clamp(p.t / p.roll.dur, 0, 1), tuck = Math.sin(Math.PI * animSmooth(k));
+    o.move = 0; o.lean = -3 * tuck; o.trail = null; o.left && (o.left.trail = null);
+    if (p.roll.back) {
+      o.z = 9 * Math.sin(Math.PI * k); o.sq = [1 - 0.12 * tuck, 1 + 0.05 * tuck];
+      o.step = -0.65 * tuck; o.twist = -0.12 * tuck;
+      drawHumanoid(p.x, p.y, p.face, LOOK, lerp(0.6, 1.2, tuck), o);
+    } else {
+      // Tuck, shoulder rotation, then extend into a planted landing.
+      o.z = 6 * tuck; o.sq = [1 - 0.4 * tuck, 1 - 0.18 * tuck];
+      o.twist = Math.sin(k * TAU) * 0.75; o.noFeet = k > 0.12 && k < 0.82;
+      o.step = animSmooth((k - 0.78) / 0.22) * 0.4;
+      const facing = p.face + angDiff(p.face, p.rollDir) * Math.sin(Math.PI * k);
+      if (p.t > p.roll.iframe[0] && p.t < p.roll.iframe[1]) {
+        drawHumanoid(p.x - Math.cos(p.rollDir) * 11, p.y - Math.sin(p.rollDir) * 11, facing, LOOK, wAng, { ...o, alpha: 0.14 });
+      }
+      drawHumanoid(p.x, p.y, facing, LOOK, wAng, o);
     }
-    // lộn người: co tròn lại theo hướng lăn, áo choàng cuộn qua, thân hơi xoay như đang lộn
-    const sn = Math.sin(k * Math.PI);
-    o.sq = [1 - 0.34 * sn, 1 + 0.04 * sn]; o.twist = Math.sin(k * TAU) * 0.35; o.lean = -2 * sn;
-    ctx.save(); ctx.translate(p.x, p.y); ctx.scale(1 - sn * 0.12, 1 - sn * 0.12); ctx.translate(-p.x, -p.y);
-    drawHumanoid(p.x, p.y, p.rollDir, LOOK, wAng, o);
-    ctx.restore();
   } else {
     drawHumanoid(p.x, p.y - (p.mounted ? 6 : 0), p.face + spinRot, LOOK, wAng, o);
   }
