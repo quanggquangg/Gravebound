@@ -217,7 +217,7 @@ const ARMORS = {
   rags: { name: 'Áo Vải Rách', desc: 'Gần như không che chắn gì', wt: 1.5, abs: 0.03, poise: 0 },
   squire: { name: 'Giáp Cận Vệ', desc: 'Giáp da và xích nhẹ của cận vệ', wt: 8, abs: 0.11, poise: 14 },
   samurai: { name: 'Giáp Lãng Khách', desc: 'Giáp lá mỏng, nhẹ nhàng', wt: 6, abs: 0.09, poise: 8 },
-  robe: { name: 'Áo Choàng Học Giả', desc: 'Nhẹ. Phép Trí Tuệ mạnh hơn 8%, FP hồi chậm theo thời gian', wt: 3, abs: 0.04, poise: 0, bonus: { sorc: 0.08, fpRegen: 1.5 } },
+  robe: { name: 'Áo Choàng Học Giả', desc: 'Nhẹ. Phép Trí Tuệ mạnh hơn 8%, niệm phép tốn ít FP hơn 10%', wt: 3, abs: 0.04, poise: 0, bonus: { sorc: 0.08, spellCost: 0.1 } },
   priest: { name: 'Áo Tu Sĩ', desc: 'Nhẹ. Phép Đức Tin mạnh hơn 8%, hồi máu nhiều hơn', wt: 4, abs: 0.05, poise: 0, bonus: { incant: 0.08, heal: 0.15 } },
   leather: { name: 'Giáp Da Thợ Săn', desc: 'Nhẹ. Thể lực hồi nhanh hơn', wt: 5, abs: 0.07, poise: 4, bonus: { stRegen: 0.15 } },
   knightset: { name: 'Giáp Kỵ Sĩ Tro', desc: 'Nặng, chắc chắn, chịu đòn tốt', wt: 14, abs: 0.18, poise: 30 },

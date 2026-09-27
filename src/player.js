@@ -226,7 +226,7 @@ function startSpell(moving, mx, my) {
   if (!id) { toast(cat.type === 'staff' ? 'Chưa ghi nhớ phép Trí Tuệ nào' : 'Chưa ghi nhớ phép Đức Tin nào'); return; }
   const sp = SPELLS[id];
   if (!reqMet(sp.req)) { toast('Không đủ chỉ số để dùng ' + sp.name); return; }
-  const fpCost = Math.ceil(sp.fp * (hasTal('pages') ? 0.85 : 1));
+  const fpCost = Math.max(1, Math.round(sp.fp * (hasTal('pages') ? 0.85 : 1) * (1 - armorBonus('spellCost'))));
   if (P.fp < fpCost) { toast('Không đủ FP'); G.fpWarn = 1; return; }
   P.fp -= fpCost; P.state = 'cast'; P.t = 0; P.cast = false; P.spell = id; P.face = aimFace(moving, mx, my);
 }
@@ -413,7 +413,6 @@ function updatePlayer(dt) {
   if (hasTal('tidelocket')) { p.hp = Math.min(p.maxHp, p.hp + 2 * dt); p.poisonB = 0; p.poisonT = 0; }
   if (p.ghostDelay > 0) p.ghostDelay -= dt; else p.ghost = Math.max(p.hp, p.ghost - p.maxHp * 0.5 * dt);
   if (p.ghost < p.hp) p.ghost = p.hp;
-  if (armorBonus('fpRegen')) p.fp = Math.min(p.maxFp, p.fp + armorBonus('fpRegen') * dt);
   const pooled = !p.mounted && (inPool(p.x, p.y) || puddles.some(q => dist(q.x, q.y, p.x, p.y) < q.r));
   if (pooled) {
     p.poisonB += 42 * dt * poisonMul();
